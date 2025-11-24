@@ -46,6 +46,7 @@
 }
 
 .tab-content {
+  position: relative;
   background: #ffffff;
   padding: 16px;
   border-radius: 6px;

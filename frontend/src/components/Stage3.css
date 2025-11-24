@@ -4,6 +4,7 @@
 }
 
 .final-response {
+  position: relative;
   background: #ffffff;
   padding: 20px;
   border-radius: 6px;
