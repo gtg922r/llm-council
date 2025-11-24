@@ -50,6 +50,9 @@ export default function ChatInterface({
 
   return (
     <div className="chat-interface">
+      <div className="chat-header">
+        <h2>{conversation.title || 'New Conversation'}</h2>
+      </div>
       <div className="messages-container">
         {conversation.messages.length === 0 ? (
           <div className="empty-state">
