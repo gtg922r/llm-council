@@ -115,16 +115,33 @@
 
 .input-form {
   display: flex;
-  align-items: flex-end;
+  /* align-items: flex-end; Removed to allow stretch for height animation */
   gap: 12px;
   padding: 24px;
   border-top: 1px solid #e0e0e0;
   background: #fafafa;
+  transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  height: 140px; /* Fixed starting height for smooth transition */
+  overflow: hidden; /* Prevent content from overflowing during transition */
+}
+
+.input-form.expanded {
+  height: 50vh;
+}
+
+.input-wrapper {
+  flex: 1;
+  position: relative;
+  /* Height is handled by parent stretch */
+  display: flex;
+  flex-direction: column;
 }
 
 .message-input {
-  flex: 1;
+  flex: 1; 
+  width: 100%;
   padding: 14px;
+  padding-right: 40px; /* Space for expand button */
   background: #ffffff;
   border: 1px solid #d0d0d0;
   border-radius: 8px;
@@ -133,9 +150,8 @@
   font-family: inherit;
   line-height: 1.5;
   outline: none;
-  resize: vertical;
+  resize: none; 
   min-height: 80px;
-  max-height: 300px;
 }
 
 .message-input:focus {
@@ -149,6 +165,28 @@
   background: #f5f5f5;
 }
 
+.expand-button {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: transparent;
+  border: none;
+  color: #999;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  z-index: 5;
+}
+
+.expand-button:hover {
+  color: #666;
+  background: rgba(0,0,0,0.05);
+}
+
 .send-button {
   padding: 14px 28px;
   background: #4a90e2;
@@ -160,7 +198,8 @@
   cursor: pointer;
   transition: background 0.2s;
   white-space: nowrap;
-  align-self: flex-end;
+  align-self: flex-end; /* Push to bottom since we removed align-items: flex-end from parent */
+  height: 52px; /* Match input default height visual alignment */
 }
 
 .send-button:hover:not(:disabled) {
