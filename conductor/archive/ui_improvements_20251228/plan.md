@@ -25,12 +25,27 @@ Ellipsis menu in the header for advanced conversation actions.
 - [x] Task: TDD - Wire up Menu Actions to API (Frontend) b113ab4
 - [x] Task: Conductor - User Manual Verification 'Phase 3: Header Actions & Conversation Duplication' (Protocol in workflow.md) 40abf1d
 
-## Phase 4: Collapsible Processing Stages
+## Phase 4: Collapsible Processing Stages [checkpoint: 843d39e]
 Improve chat interface density by collapsing intermediate stages.
 
-- [ ] Task: TDD - Create Collapsible Section Component (Frontend)
-  - Develop a reusable component for toggling content visibility.
-- [ ] Task: TDD - Integrate Collapsible Sections in ChatInterface (Frontend)
-  - Wrap Stage 1 (Council) and Stage 2 (Review) in the new component.
-  - Ensure they start collapsed by default.
-- [ ] Task: Conductor - User Manual Verification 'Phase 4: Collapsible Processing Stages' (Protocol in workflow.md)
+- [x] Task: TDD - Create Collapsible Section Component (Frontend) 53c9532
+- [x] Task: TDD - Integrate Collapsible Sections in ChatInterface (Frontend) 843d39e
+- [x] Task: Conductor - User Manual Verification 'Phase 4: Collapsible Processing Stages' (Protocol in workflow.md) 843d39e
+
+## Phase 5: Lucide Icon Integration [checkpoint: 587b518]
+Replace emojis and simple text icons with a consistent icon library.
+
+- [x] Task: TDD - Install lucide-react (Frontend) 35f397a
+- [x] Task: TDD - Update Sidebar Icons (Frontend) 587b518
+- [x] Task: TDD - Update Header Menu Icons (Frontend) 587b518
+- [x] Task: TDD - Update Collapsible Section Icons (Frontend) 587b518
+- [x] Task: Conductor - User Manual Verification 'Phase 5: Lucide Icon Integration' (Protocol in workflow.md) 587b518
+
+## Phase 6: Title Editing [checkpoint: b3ea609]
+Allow users to click and edit the conversation title in the main header.
+
+- [x] Task: TDD - Create EditableTitle Component (Frontend) 6d41c72
+- [x] Task: TDD - Integrate EditableTitle into ChatInterface (Frontend) b3ea609
+- [x] Task: Conductor - User Manual Verification 'Phase 6: Title Editing' (Protocol in workflow.md) b3ea609
+
+
