@@ -10,14 +10,22 @@ import json
 import asyncio
 
 from . import storage
+from . import config
 from .council import run_full_council, generate_conversation_title, stage1_collect_responses, stage2_collect_rankings, stage3_synthesize_final, calculate_aggregate_rankings
 
 app = FastAPI(title="LLM Council API")
 
-# Enable CORS for local development
+# Configure CORS origins based on environment
+if config.IS_CODESPACE or config.DEBUG_MODE:
+    # Relaxed CORS for Codespaces/Development
+    allow_origins = ["*"]
+else:
+    # Strict CORS for production
+    allow_origins = ["http://localhost:5173", "http://localhost:3000"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allow_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
