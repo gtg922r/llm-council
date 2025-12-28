@@ -1,0 +1,6 @@
+Task: Update ChatInterface for file support
+Summary: Added drag-and-drop zones, file picker, and staging area to the chat interface. Fixed input form visibility and added Paperclip icon.
+Files:
+- frontend/src/components/ChatInterface.jsx
+- frontend/src/components/ChatInterface.css
+- frontend/src/components/ChatInterface.test.jsx
