@@ -1,0 +1,8 @@
+{
+  "track_id": "file_context_20251228",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2025-12-28T12:00:00Z",
+  "updated_at": "2025-12-28T12:00:00Z",
+  "description": "User should be able to drag in text files as context. Content of the file and its file name should be included in the context to each model following best practices and whatever is the idiomatic approach for the API. UX should be clean and elegant highlighting the files, allowing the user to delete them, etc"
+}
