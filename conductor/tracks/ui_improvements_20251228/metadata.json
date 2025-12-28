@@ -1,0 +1,8 @@
+{
+  "track_id": "ui_improvements_20251228",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2025-12-28T00:00:00Z",
+  "updated_at": "2025-12-28T00:00:00Z",
+  "description": "UI Improvements: archiving, pinning, duplication, and collapsible stages."
+}
