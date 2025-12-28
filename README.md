@@ -18,6 +18,13 @@ This project was 99% vibe coded as a fun Saturday hack because I wanted to explo
 
 ### 1. Install Dependencies
 
+**Option 1: Use the install script**
+```bash
+./install.sh
+```
+
+**Option 2: Manual installation**
+
 The project uses [uv](https://docs.astral.sh/uv/) for project management.
 
 **Backend:**
