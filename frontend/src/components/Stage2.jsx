@@ -36,15 +36,16 @@ export default function Stage2({ rankings, labelToModel, aggregateRankings }) {
         {rankings.map((rank, index) => (
           <button
             key={index}
-            className={`tab ${activeTab === index ? 'active' : ''}`}
+            className={`tab ${activeTab === index ? 'active' : ''} ${rank.status === 'error' ? 'error' : ''}`}
             onClick={() => setActiveTab(index)}
           >
             {rank.model.split('/')[1] || rank.model}
+            {rank.status === 'error' && <span className="error-dot" title="Failed to get evaluation">!</span>}
           </button>
         ))}
       </div>
 
-      <div className="tab-content">
+      <div className={`tab-content ${rankings[activeTab].status === 'error' ? 'content-error' : ''}`}>
         <CopyButton text={deAnonymizeText(rankings[activeTab].ranking, labelToModel)} />
         <div className="ranking-model">
           {rankings[activeTab].model}
@@ -54,6 +55,7 @@ export default function Stage2({ rankings, labelToModel, aggregateRankings }) {
             {deAnonymizeText(rankings[activeTab].ranking, labelToModel)}
           </ReactMarkdown>
         </div>
+
 
         {rankings[activeTab].parsed_ranking &&
          rankings[activeTab].parsed_ranking.length > 0 && (
