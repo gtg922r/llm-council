@@ -1,0 +1,6 @@
+Task: TDD - Update Storage Model (Backend)
+Summary: Added 'is_pinned' and 'is_archived' boolean fields to the Conversation model and metadata listing in 'backend/storage.py'.
+Files:
+- backend/storage.py
+- tests/test_storage_improvements.py
+Why: To support conversation pinning and archiving features in the UI.
