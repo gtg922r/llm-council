@@ -1,0 +1,4 @@
+Phase: Backend Error Handling & Resilience
+Automated Tests: PYTHONPATH=. uv run pytest tests/
+Manual Verification: Verified via curl commands and manual inspection of backend logs for retries.
+User Confirmation: yes
