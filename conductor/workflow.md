@@ -129,8 +129,8 @@ All tasks follow a strict lifecycle:
     -   **Step 7.3: Write Plan:** Write the updated content back to `plan.md`.
 
 9. **Commit Plan Update:**
-    - **Action:** Stage the modified `plan.md` file.
-    - **Action:** Commit this change with a descriptive message following the format `conductor(plan): Mark phase '<PHASE NAME>' as complete`.
+    -   **Action:** Stage the modified `plan.md` file.
+    -   **Action:** Commit this change with a descriptive message following the format `conductor(plan): Mark phase '<PHASE NAME>' as complete`.
 
 10.  **Announce Completion:** Inform the user that the phase is complete and the checkpoint has been created, with the detailed verification report attached as a git note.
 
@@ -331,3 +331,17 @@ A task is complete when:
 - Document lessons learned
 - Optimize for user happiness
 - Keep things simple and maintainable
+
+## Track Cleanup
+
+When a track is completed, follow these steps to archive or delete it:
+
+1.  **Archive or Delete:**
+    -   **Archive:** Move the track folder to `conductor/archive/` and remove the track entry from `conductor/tracks.md`.
+    -   **Delete:** Permanently delete the track folder and remove the track entry from `conductor/tracks.md`.
+
+2.  **Clean Up Git:**
+    -   **CRITICAL:** After moving or deleting files and updating `tracks.md`, you MUST verify the git status.
+    -   Stage all changes related to the cleanup (file moves, deletions, `tracks.md` updates).
+    -   Commit these changes immediately with a message like `conductor: Archive track '<track_name>'`.
+    -   Ensure the working directory is clean before finishing the session.

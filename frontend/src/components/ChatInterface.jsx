@@ -1,18 +1,43 @@
 import { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
+import {
+  MoreVertical,
+  Copy,
+  Archive,
+  Trash2,
+  Send,
+  Maximize2,
+  Minimize2
+} from 'lucide-react';
 import Stage1 from './Stage1';
 import Stage2 from './Stage2';
 import Stage3 from './Stage3';
+import CollapsibleSection from './CollapsibleSection';
+import EditableTitle from './EditableTitle';
 import './ChatInterface.css';
 
 export default function ChatInterface({
   conversation,
   onSendMessage,
+  onHeaderAction,
+  onUpdateTitle,
   isLoading,
 }) {
   const [input, setInput] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
   const messagesEndRef = useRef(null);
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setShowMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -38,6 +63,11 @@ export default function ChatInterface({
     }
   };
 
+  const handleMenuAction = (action) => {
+    setShowMenu(false);
+    onHeaderAction(action, conversation.id);
+  };
+
   if (!conversation) {
     return (
       <div className="chat-interface">
@@ -52,7 +82,33 @@ export default function ChatInterface({
   return (
     <div className="chat-interface">
       <div className="chat-header">
-        <h2>{conversation.title || 'New Conversation'}</h2>
+        <div className="title-wrapper" style={{ flex: 1, minWidth: 0, marginRight: 16 }}>
+          <EditableTitle 
+            title={conversation.title} 
+            onSave={(newTitle) => onUpdateTitle(conversation.id, newTitle)} 
+          />
+        </div>
+        <div className="header-actions" ref={menuRef}>          <button 
+            className="menu-toggle"
+            onClick={() => setShowMenu(!showMenu)}
+            title="Conversation Options"
+          >
+            <MoreVertical size={20} />
+          </button>
+          {showMenu && (
+            <div className="header-menu">
+              <button onClick={() => handleMenuAction('duplicate')}>
+                <Copy size={16} /> Duplicate
+              </button>
+              <button onClick={() => handleMenuAction('archive')}>
+                <Archive size={16} /> Archive
+              </button>
+              <button className="danger" onClick={() => handleMenuAction('delete')}>
+                <Trash2 size={16} /> Delete
+              </button>
+            </div>
+          )}
+        </div>
       </div>
       <div className="messages-container">
         {conversation.messages.length === 0 ? (
@@ -83,7 +139,11 @@ export default function ChatInterface({
                       <span>Running Stage 1: Collecting individual responses...</span>
                     </div>
                   )}
-                  {msg.stage1 && <Stage1 responses={msg.stage1} />}
+                  {msg.stage1 && (
+                    <CollapsibleSection title="Stage 1: Council Responses" defaultExpanded={false}>
+                      <Stage1 responses={msg.stage1} />
+                    </CollapsibleSection>
+                  )}
 
                   {/* Stage 2 */}
                   {msg.loading?.stage2 && (
@@ -93,11 +153,13 @@ export default function ChatInterface({
                     </div>
                   )}
                   {msg.stage2 && (
-                    <Stage2
-                      rankings={msg.stage2}
-                      labelToModel={msg.metadata?.label_to_model}
-                      aggregateRankings={msg.metadata?.aggregate_rankings}
-                    />
+                    <CollapsibleSection title="Stage 2: Peer Review & Rankings" defaultExpanded={false}>
+                      <Stage2
+                        rankings={msg.stage2}
+                        labelToModel={msg.metadata?.label_to_model}
+                        aggregateRankings={msg.metadata?.aggregate_rankings}
+                      />
+                    </CollapsibleSection>
                   )}
 
                   {/* Stage 3 */}
@@ -142,17 +204,7 @@ export default function ChatInterface({
               onClick={() => setIsExpanded(!isExpanded)}
               title={isExpanded ? "Collapse" : "Expand"}
             >
-              {isExpanded ? (
-                // Minimize/Collapse icon
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
-                </svg>
-              ) : (
-                // Maximize/Expand icon
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
-                </svg>
-              )}
+              {isExpanded ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
             </button>
           </div>
           <button
@@ -160,7 +212,8 @@ export default function ChatInterface({
             className="send-button"
             disabled={!input.trim() || isLoading}
           >
-            Send
+            <Send size={18} />
+            <span>Send</span>
           </button>
         </form>
       )}

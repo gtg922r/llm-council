@@ -67,6 +67,49 @@ export const api = {
   },
 
   /**
+   * Update conversation metadata (title, pinned, archived).
+   */
+  async updateConversation(conversationId, updates) {
+    const response = await fetch(`${API_BASE}/api/conversations/${conversationId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(updates),
+    });
+    if (!response.ok) {
+      throw new Error('Failed to update conversation');
+    }
+    return response.json();
+  },
+
+  /**
+   * Permanently delete a conversation.
+   */
+  async deleteConversation(conversationId) {
+    const response = await fetch(`${API_BASE}/api/conversations/${conversationId}`, {
+      method: 'DELETE',
+    });
+    if (!response.ok) {
+      throw new Error('Failed to delete conversation');
+    }
+    return response.json();
+  },
+
+  /**
+   * Duplicate a conversation.
+   */
+  async duplicateConversation(conversationId) {
+    const response = await fetch(`${API_BASE}/api/conversations/${conversationId}/duplicate`, {
+      method: 'POST',
+    });
+    if (!response.ok) {
+      throw new Error('Failed to duplicate conversation');
+    }
+    return response.json();
+  },
+
+  /**
    * Send a message and receive streaming updates.
    * @param {string} conversationId - The conversation ID
    * @param {string} content - The message content

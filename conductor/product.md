@@ -17,6 +17,7 @@ The LLM Council solves the problem of "single-model bias" for challenging questi
 - **Resilient Reliability:** Gracefully handles individual model timeouts or API failures, ensuring the council process continues even if some experts are unavailable.
 
 ## Core Features
-- **Stage 1: Resilient Parallel Execution:** Simultaneously send user queries to a configurable council of LLMs, with robust error handling for individual model failures.
+- **Stage 1: Resilient Parallel Execution:** Simultaneously send user queries to a configurable council of LLMs, with robust error handling for individual model failures. Intermediate steps are collapsible to maintain a clean workspace.
 - **Stage 2: Blinded Peer Review:** Anonymized cross-review where models rank and critique each other's insights and accuracy, maintaining flow even if some models fail to respond.
 - **Stage 3: Chairman Synthesis:** A designated Chairman LLM synthesizes all individual outputs and peer reviews into a single, high-quality final response.
+- **Conversation Management:** Robust sidebar controls for pinning important chats, archiving old ones, and duplicating conversations. Inline title editing allows for easy organization.

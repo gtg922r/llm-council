@@ -1,5 +1,5 @@
 .stage2 {
-  background: #fafafa;
+  background: transparent;
 }
 
 .stage2 h4 {
@@ -74,8 +74,10 @@
 .stage2 .tabs {
   display: flex;
   gap: 8px;
-  margin-bottom: 16px;
+  margin-bottom: -1px;
   flex-wrap: wrap;
+  position: relative;
+  z-index: 1;
 }
 
 .stage2 .tab {

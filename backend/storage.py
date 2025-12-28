@@ -2,7 +2,7 @@
 
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Dict, Any, Optional
 from pathlib import Path
 from .config import DATA_DIR
@@ -32,8 +32,10 @@ def create_conversation(conversation_id: str) -> Dict[str, Any]:
 
     conversation = {
         "id": conversation_id,
-        "created_at": datetime.utcnow().isoformat(),
+        "created_at": datetime.now(timezone.utc).isoformat(),
         "title": "New Conversation",
+        "is_pinned": False,
+        "is_archived": False,
         "messages": []
     }
 
@@ -98,6 +100,8 @@ def list_conversations() -> List[Dict[str, Any]]:
                     "id": data["id"],
                     "created_at": data["created_at"],
                     "title": data.get("title", "New Conversation"),
+                    "is_pinned": data.get("is_pinned", False),
+                    "is_archived": data.get("is_archived", False),
                     "message_count": len(data["messages"])
                 })
 
@@ -170,3 +174,43 @@ def update_conversation_title(conversation_id: str, title: str):
 
     conversation["title"] = title
     save_conversation(conversation)
+
+
+def duplicate_conversation(original_id: str, new_id: str) -> Dict[str, Any]:
+    """
+    Duplicate an existing conversation.
+
+    Args:
+        original_id: ID of the conversation to duplicate
+        new_id: ID for the new conversation
+
+    Returns:
+        The new duplicated conversation
+    """
+    original = get_conversation(original_id)
+    if original is None:
+        raise ValueError(f"Original conversation {original_id} not found")
+
+    new_conversation = {
+        "id": new_id,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "title": f"{original.get('title', 'New Conversation')} (Copy)",
+        "is_pinned": False,
+        "is_archived": False,
+        "messages": original["messages"].copy()
+    }
+
+    save_conversation(new_conversation)
+    return new_conversation
+
+
+def delete_conversation(conversation_id: str):
+    """
+    Permanently delete a conversation.
+
+    Args:
+        conversation_id: ID of the conversation to delete
+    """
+    path = get_conversation_path(conversation_id)
+    if os.path.exists(path):
+        os.remove(path)

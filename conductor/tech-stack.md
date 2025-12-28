@@ -12,6 +12,7 @@
 - **Framework:** React
 - **Build Tool:** Vite
 - **Markdown Rendering:** react-markdown
+- **Icons:** lucide-react
 - **Styling:** Standard CSS
 
 ## Tooling & Infrastructure

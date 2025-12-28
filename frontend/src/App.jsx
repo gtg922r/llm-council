@@ -57,6 +57,94 @@ function App() {
     setCurrentConversationId(id);
   };
 
+  const handleTogglePin = async (id, isPinned) => {
+    try {
+      await api.updateConversation(id, { is_pinned: isPinned });
+      loadConversations();
+    } catch (error) {
+      console.error('Failed to toggle pin:', error);
+    }
+  };
+
+  const handleToggleArchive = async (id, isArchived) => {
+    try {
+      await api.updateConversation(id, { is_archived: isArchived });
+      loadConversations();
+      if (isArchived && currentConversationId === id) {
+        setCurrentConversationId(null);
+        setCurrentConversation(null);
+      }
+    } catch (error) {
+      console.error('Failed to toggle archive:', error);
+    }
+  };
+
+  const handleDeleteConversation = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this conversation forever?')) return;
+    try {
+      await api.deleteConversation(id);
+      loadConversations();
+      if (currentConversationId === id) {
+        setCurrentConversationId(null);
+        setCurrentConversation(null);
+      }
+    } catch (error) {
+      console.error('Failed to delete conversation:', error);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    const archived = conversations.filter(c => c.is_archived);
+    if (archived.length === 0) return;
+    if (!window.confirm(`Are you sure you want to delete all ${archived.length} archived conversations?`)) return;
+    
+    try {
+      await Promise.all(archived.map(c => api.deleteConversation(c.id)));
+      loadConversations();
+    } catch (error) {
+      console.error('Failed bulk delete:', error);
+    }
+  };
+
+  const handleDuplicateConversation = async (id) => {
+    try {
+      const newConv = await api.duplicateConversation(id);
+      await loadConversations();
+      setCurrentConversationId(newConv.id);
+    } catch (error) {
+      console.error('Failed to duplicate conversation:', error);
+    }
+  };
+
+  const handleHeaderAction = async (action, id) => {
+    switch (action) {
+      case 'duplicate':
+        await handleDuplicateConversation(id);
+        break;
+      case 'archive':
+        await handleToggleArchive(id, true);
+        break;
+      case 'delete':
+        await handleDeleteConversation(id);
+        break;
+      default:
+        console.warn('Unknown header action:', action);
+    }
+  };
+
+  const handleUpdateTitle = async (id, newTitle) => {
+    try {
+      await api.updateConversation(id, { title: newTitle });
+      // Update local state immediately for responsiveness
+      if (currentConversation && currentConversation.id === id) {
+        setCurrentConversation(prev => ({ ...prev, title: newTitle }));
+      }
+      loadConversations();
+    } catch (error) {
+      console.error('Failed to update title:', error);
+    }
+  };
+
   const handleSendMessage = async (content) => {
     if (!currentConversationId) return;
 
@@ -188,10 +276,16 @@ function App() {
         currentConversationId={currentConversationId}
         onSelectConversation={handleSelectConversation}
         onNewConversation={handleNewConversation}
+        onTogglePin={handleTogglePin}
+        onToggleArchive={handleToggleArchive}
+        onDeleteConversation={handleDeleteConversation}
+        onBulkDelete={handleBulkDelete}
       />
       <ChatInterface
         conversation={currentConversation}
         onSendMessage={handleSendMessage}
+        onHeaderAction={handleHeaderAction}
+        onUpdateTitle={handleUpdateTitle}
         isLoading={isLoading}
       />
     </div>
