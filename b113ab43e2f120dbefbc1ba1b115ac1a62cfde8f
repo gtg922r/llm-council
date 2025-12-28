@@ -1,0 +1,11 @@
+Task: Phase 3: Header Actions & Conversation Duplication
+Summary: Implemented an ellipsis menu in the ChatInterface header:
+- Added 'Duplicate' action that clones the current conversation and selects the new one.
+- Added 'Archive' action that moves the current conversation to the archive.
+- Added 'Delete' action that permanently removes the current conversation.
+- Implemented dropdown UI with click-outside-to-close behavior.
+Files:
+- frontend/src/components/ChatInterface.jsx
+- frontend/src/components/ChatInterface.css
+- frontend/src/App.jsx
+Why: Provides centralized, easily accessible management actions for the active conversation.
