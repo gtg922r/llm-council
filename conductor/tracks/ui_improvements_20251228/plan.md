@@ -10,7 +10,7 @@ Support for pinning, archiving, and duplicating conversations in the storage lay
   - Update `storage.py` to handle these fields.
 - [x] Task: TDD - Implement Duplicate Conversation Logic (Backend) 59d0565
   - Add a method in `storage.py` to clone a conversation and its messages.
-- [ ] Task: TDD - Update API Endpoints (Backend)
+- [x] Task: TDD - Update API Endpoints (Backend) ae4e624
   - Update GET `/conversations` to support filtering or include status flags.
   - Add PATCH `/conversations/{id}` to update pinned/archived status.
   - Add POST `/conversations/{id}/duplicate` endpoint.
