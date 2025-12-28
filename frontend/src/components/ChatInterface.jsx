@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { 
-  MoreVertical, 
-  Copy, 
-  Archive, 
+import {
+  MoreVertical,
+  Copy,
+  Archive,
   Trash2,
   Send,
   Maximize2,
@@ -13,12 +13,14 @@ import Stage1 from './Stage1';
 import Stage2 from './Stage2';
 import Stage3 from './Stage3';
 import CollapsibleSection from './CollapsibleSection';
+import EditableTitle from './EditableTitle';
 import './ChatInterface.css';
 
 export default function ChatInterface({
   conversation,
   onSendMessage,
   onHeaderAction,
+  onUpdateTitle,
   isLoading,
 }) {
   const [input, setInput] = useState('');
@@ -80,9 +82,13 @@ export default function ChatInterface({
   return (
     <div className="chat-interface">
       <div className="chat-header">
-        <h2>{conversation.title || 'New Conversation'}</h2>
-        <div className="header-actions" ref={menuRef}>
-          <button 
+        <div className="title-wrapper" style={{ flex: 1, minWidth: 0, marginRight: 16 }}>
+          <EditableTitle 
+            title={conversation.title} 
+            onSave={(newTitle) => onUpdateTitle(conversation.id, newTitle)} 
+          />
+        </div>
+        <div className="header-actions" ref={menuRef}>          <button 
             className="menu-toggle"
             onClick={() => setShowMenu(!showMenu)}
             title="Conversation Options"

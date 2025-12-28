@@ -15,16 +15,7 @@
   align-items: center;
 }
 
-.chat-header h2 {
-  margin: 0;
-  font-size: 18px;
-  color: #333;
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 70%;
-}
+/* h2 style removed to allow EditableTitle to control styling */
 
 .header-actions {
   position: relative;

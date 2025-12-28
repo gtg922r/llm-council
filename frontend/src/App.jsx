@@ -132,6 +132,19 @@ function App() {
     }
   };
 
+  const handleUpdateTitle = async (id, newTitle) => {
+    try {
+      await api.updateConversation(id, { title: newTitle });
+      // Update local state immediately for responsiveness
+      if (currentConversation && currentConversation.id === id) {
+        setCurrentConversation(prev => ({ ...prev, title: newTitle }));
+      }
+      loadConversations();
+    } catch (error) {
+      console.error('Failed to update title:', error);
+    }
+  };
+
   const handleSendMessage = async (content) => {
     if (!currentConversationId) return;
 
@@ -272,6 +285,7 @@ function App() {
         conversation={currentConversation}
         onSendMessage={handleSendMessage}
         onHeaderAction={handleHeaderAction}
+        onUpdateTitle={handleUpdateTitle}
         isLoading={isLoading}
       />
     </div>
