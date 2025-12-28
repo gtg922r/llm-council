@@ -20,4 +20,5 @@ The LLM Council solves the problem of "single-model bias" for challenging questi
 - **Stage 1: Resilient Parallel Execution:** Simultaneously send user queries to a configurable council of LLMs, with robust error handling for individual model failures. Intermediate steps are collapsible to maintain a clean workspace.
 - **Stage 2: Blinded Peer Review:** Anonymized cross-review where models rank and critique each other's insights and accuracy, maintaining flow even if some models fail to respond.
 - **Stage 3: Chairman Synthesis:** A designated Chairman LLM synthesizes all individual outputs and peer reviews into a single, high-quality final response.
+- **Chairman Follow-up:** Direct dialogue with the Chairman model after synthesis, allowing for clarifications or deeper exploration of the final response without re-running the full council.
 - **Conversation Management:** Robust sidebar controls for pinning important chats, archiving old ones, and duplicating conversations. Inline title editing allows for easy organization.

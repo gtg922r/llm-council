@@ -14,6 +14,7 @@ import Stage2 from './Stage2';
 import Stage3 from './Stage3';
 import CollapsibleSection from './CollapsibleSection';
 import EditableTitle from './EditableTitle';
+import FollowUpInput from './FollowUpInput';
 import './ChatInterface.css';
 
 export default function ChatInterface({
@@ -130,7 +131,9 @@ export default function ChatInterface({
                 </div>
               ) : (
                 <div className="assistant-message">
-                  <div className="message-label">LLM Council</div>
+                  <div className="message-label">
+                    {msg.stage3 && (!msg.stage1 || msg.stage1.length === 0) ? 'Chairman' : 'LLM Council'}
+                  </div>
 
                   {/* Stage 1 */}
                   {msg.loading?.stage1 && (
@@ -139,7 +142,7 @@ export default function ChatInterface({
                       <span>Running Stage 1: Collecting individual responses...</span>
                     </div>
                   )}
-                  {msg.stage1 && (
+                  {msg.stage1 && msg.stage1.length > 0 && (
                     <CollapsibleSection title="Stage 1: Council Responses" defaultExpanded={false}>
                       <Stage1 responses={msg.stage1} />
                     </CollapsibleSection>
@@ -152,7 +155,7 @@ export default function ChatInterface({
                       <span>Running Stage 2: Peer rankings...</span>
                     </div>
                   )}
-                  {msg.stage2 && (
+                  {msg.stage2 && msg.stage2.length > 0 && (
                     <CollapsibleSection title="Stage 2: Peer Review & Rankings" defaultExpanded={false}>
                       <Stage2
                         rankings={msg.stage2}
@@ -170,6 +173,14 @@ export default function ChatInterface({
                     </div>
                   )}
                   {msg.stage3 && <Stage3 finalResponse={msg.stage3} />}
+
+                  {/* Follow-up Trigger */}
+                  {msg.stage3 && index === conversation.messages.length - 1 && !isLoading && (
+                    <FollowUpInput 
+                      onSendFollowUp={(content) => onSendMessage(content, 'chairman')}
+                      isLoading={isLoading}
+                    />
+                  )}
                 </div>
               )}
             </div>
@@ -186,37 +197,35 @@ export default function ChatInterface({
         <div ref={messagesEndRef} />
       </div>
 
-      {conversation.messages.length === 0 && (
-        <form className={`input-form ${isExpanded ? 'expanded' : ''}`} onSubmit={handleSubmit}>
-          <div className="input-wrapper">
-            <textarea
-              className="message-input"
-              placeholder="Ask your question... (Shift+Enter for new line, Enter to send)"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              disabled={isLoading}
-              rows={3}
-            />
-            <button
-              type="button"
-              className="expand-button"
-              onClick={() => setIsExpanded(!isExpanded)}
-              title={isExpanded ? "Collapse" : "Expand"}
-            >
-              {isExpanded ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
-            </button>
-          </div>
+      <form className={`input-form ${isExpanded ? 'expanded' : ''}`} onSubmit={handleSubmit}>
+        <div className="input-wrapper">
+          <textarea
+            className="message-input"
+            placeholder="Ask your question... (Shift+Enter for new line, Enter to send)"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            disabled={isLoading}
+            rows={3}
+          />
           <button
-            type="submit"
-            className="send-button"
-            disabled={!input.trim() || isLoading}
+            type="button"
+            className="expand-button"
+            onClick={() => setIsExpanded(!isExpanded)}
+            title={isExpanded ? "Collapse" : "Expand"}
           >
-            <Send size={18} />
-            <span>Send</span>
+            {isExpanded ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
           </button>
-        </form>
-      )}
+        </div>
+        <button
+          type="submit"
+          className="send-button"
+          disabled={!input.trim() || isLoading}
+        >
+          <Send size={18} />
+          <span>Send</span>
+        </button>
+      </form>
     </div>
   );
 }

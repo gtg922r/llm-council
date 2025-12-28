@@ -354,3 +354,74 @@ async def run_full_council(user_query: str) -> Tuple[List, List, Dict, Dict]:
     }
 
     return stage1_results, stage2_results, stage3_result, metadata
+
+
+async def chairman_followup(
+    original_query: str,
+    stage1_results: List[Dict[str, Any]],
+    stage2_results: List[Dict[str, Any]],
+    stage3_response: str,
+    followup_query: str
+) -> Dict[str, Any]:
+    """
+    Handle a follow-up question to the Chairman.
+
+    Args:
+        original_query: The initial user question
+        stage1_results: Results from Stage 1
+        stage2_results: Rankings from Stage 2
+        stage3_response: The Chairman's initial response
+        followup_query: The user's follow-up question
+
+    Returns:
+        Dict with 'model' and 'response' keys
+    """
+    # Build comprehensive context for chairman
+    stage1_text = ""
+    for result in stage1_results:
+        status_info = "" if result.get('status') == "success" else f" [STATUS: {result.get('status').upper()}]"
+        stage1_text += f"Model: {result['model']}{status_info}\nResponse: {result['response']}\n\n"
+
+    stage2_text = ""
+    for result in stage2_results:
+        status_info = "" if result.get('status') == "success" else f" [STATUS: {result.get('status').upper()}]"
+        stage2_text += f"Model: {result['model']}{status_info}\nRanking: {result['ranking']}\n\n"
+
+    chairman_prompt = f"""You are the Chairman of an LLM Council. You have previously synthesized a response based on the council's input. The user now has a follow-up question.
+
+Original Question: {original_query}
+
+STAGE 1 - Individual Responses:
+{stage1_text}
+
+STAGE 2 - Peer Rankings:
+{stage2_text}
+
+Chairman's Initial Response:
+{stage3_response}
+
+User Follow-up Question: {followup_query}
+
+Your task is to answer the follow-up question. You should:
+- Maintain the persona of the Chairman (wise, synthesizing, authoritative but balanced).
+- Refer back to the council's findings if relevant to the follow-up.
+- If the follow-up challenges your previous conclusion, re-evaluate based on the evidence.
+- Provide a direct and helpful answer.
+
+Answer:"""
+
+    messages = [{"role": "user", "content": chairman_prompt}]
+
+    # Query the chairman model
+    response = await query_model(CHAIRMAN_MODEL, messages)
+
+    if response is None:
+        return {
+            "model": CHAIRMAN_MODEL,
+            "response": "Error: Unable to generate follow-up response."
+        }
+
+    return {
+        "model": CHAIRMAN_MODEL,
+        "response": response.get('content', '')
+    }

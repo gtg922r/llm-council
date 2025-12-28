@@ -11,7 +11,15 @@ import asyncio
 
 from . import storage
 from . import config
-from .council import run_full_council, generate_conversation_title, stage1_collect_responses, stage2_collect_rankings, stage3_synthesize_final, calculate_aggregate_rankings
+from .council import (
+    run_full_council,
+    generate_conversation_title,
+    stage1_collect_responses,
+    stage2_collect_rankings,
+    stage3_synthesize_final,
+    calculate_aggregate_rankings,
+    chairman_followup
+)
 
 app = FastAPI(title="LLM Council API")
 
@@ -40,6 +48,7 @@ class CreateConversationRequest(BaseModel):
 class SendMessageRequest(BaseModel):
     """Request to send a message in a conversation."""
     content: str
+    target_model: str | None = None # e.g., "chairman" for follow-up
 
 
 class ConversationMetadata(BaseModel):
@@ -156,7 +165,74 @@ async def send_message(conversation_id: str, request: SendMessageRequest):
         title = await generate_conversation_title(request.content)
         storage.update_conversation_title(conversation_id, title)
 
-    # Run the 3-stage council process
+    # Check for Follow-up (Target: Chairman)
+    if request.target_model == "chairman":
+        # We need to find the previous context.
+        # Logic: Look for the last assistant message that has Stage 1/2/3 results.
+        # Iterate backwards through messages
+        last_assistant_msg = None
+        for msg in reversed(conversation["messages"]):
+            if msg["role"] == "assistant" and "stage3" in msg:
+                last_assistant_msg = msg
+                break
+        
+        if last_assistant_msg:
+            # We found context
+            # Call chairman_followup
+            # Note: We need the original query too. Ideally, it's the user message immediately preceding the assistant message.
+            # But finding that might be tricky if there are multiple user messages.
+            # Let's assume the user message *before* the last assistant message is the original query.
+            # Or we can just pass "Previous Context" as the query if strictly following the function signature?
+            # The function expects 'original_query'.
+            # Let's try to find it.
+            
+            # Simplified approach: Use the "stage3" response as the base.
+            # The 'original_query' is less critical if we have the full stage1/2 text which includes the query usually?
+            # Actually, `chairman_followup` uses `original_query` in the prompt.
+            # We can try to extract it from the message history if we really want to be precise, 
+            # but for now, let's look for the user message before the last_assistant_msg.
+            
+            # This is a bit complex to find efficiently in a simple list without IDs/links.
+            # We'll use a placeholder or try to find it.
+            original_query = "Unknown (Context from previous turn)"
+            # A better way might be to look at `last_assistant_msg` index - 1
+            try:
+                idx = conversation["messages"].index(last_assistant_msg)
+                if idx > 0 and conversation["messages"][idx-1]["role"] == "user":
+                    original_query = conversation["messages"][idx-1]["content"]
+            except ValueError:
+                pass
+
+            stage3_result = await chairman_followup(
+                original_query=original_query,
+                stage1_results=last_assistant_msg.get("stage1", []),
+                stage2_results=last_assistant_msg.get("stage2", []),
+                stage3_response=last_assistant_msg.get("stage3", {}).get("response", ""),
+                followup_query=request.content
+            )
+
+            # Store result
+            # For a follow-up, Stage 1 and Stage 2 are empty/skipped.
+            storage.add_assistant_message(
+                conversation_id,
+                stage1=[],
+                stage2=[],
+                stage3=stage3_result
+            )
+
+            return {
+                "stage1": [],
+                "stage2": [],
+                "stage3": stage3_result,
+                "metadata": {}
+            }
+        else:
+            # Fallback if no context found? Just run full council?
+            # Or raise error?
+            # Let's run full council as fallback but maybe log it?
+            pass
+
+    # Run the 3-stage council process (Default)
     stage1_results, stage2_results, stage3_result, metadata = await run_full_council(
         request.content
     )
