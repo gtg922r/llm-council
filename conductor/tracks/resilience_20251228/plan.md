@@ -1,11 +1,11 @@
 # Track Plan: Council Resilience & Error Handling
 
-## Phase 1: Backend Error Handling & Resilience
+## Phase 1: Backend Error Handling & Resilience [checkpoint: c8894cf]
 - [x] Task: Create a reproduction script/test case that simulates OpenRouter API failures (timeouts, 500s) to verify current behavior (crash vs. hang). [00154bf]
 - [x] Task: Modify `backend/openrouter.py` to add a configurable timeout and basic retry logic (1 retry) for `httpx` requests. [86d8dd7]
 - [x] Task: Update `backend/council.py` (specifically `get_initial_opinions` and `get_reviews`) to handle exceptions from individual model calls using `asyncio.gather(..., return_exceptions=True)` or similar pattern, ensuring one failure doesn't stop the batch. [929ec0c]
 - [x] Task: Ensure the Chairman (Stage 3) logic in `backend/council.py` can handle missing or error-flagged inputs from previous stages. [c07edbb]
-- [ ] Task: Conductor - User Manual Verification 'Backend Error Handling & Resilience' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Backend Error Handling & Resilience' (Protocol in workflow.md) [c8894cf]
 
 ## Phase 2: Frontend Error Visualization
 - [ ] Task: Update the API response format in `backend/main.py` or `backend/council.py` to explicitly return error status and messages for failed models instead of just crashing or returning null.
