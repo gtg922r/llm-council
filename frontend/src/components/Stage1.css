@@ -16,8 +16,10 @@
 .tabs {
   display: flex;
   gap: 8px;
-  margin-bottom: 16px;
+  margin-bottom: -1px;
   flex-wrap: wrap;
+  position: relative;
+  z-index: 1;
 }
 
 .tab {
