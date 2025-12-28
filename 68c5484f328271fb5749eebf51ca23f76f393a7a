@@ -1,0 +1,7 @@
+Task: UI refinement and dependency cleanup
+Summary: Moved Paperclip and Expand buttons to the right of the Send button. Uninstalled vitest coverage package as it was not needed.
+Files:
+- frontend/src/components/ChatInterface.jsx
+- frontend/src/components/ChatInterface.css
+- frontend/package.json
+- frontend/package-lock.json
