@@ -1,0 +1,5 @@
+Task: UI refinement
+Summary: Positioned Send, Paperclip, and Expand buttons in a column to the right of the message textarea.
+Files:
+- frontend/src/components/ChatInterface.jsx
+- frontend/src/components/ChatInterface.css
