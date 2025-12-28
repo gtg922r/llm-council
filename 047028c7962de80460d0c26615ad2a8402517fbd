@@ -1,0 +1,3 @@
+Task: Implement visual indicators for failed models in the UI.
+Summary: Updated Stage1 and Stage2 components to check for 'status === error'. Added conditional CSS classes and a red '!' icon to tabs of failed models. Applied 'content-error' styling to the response area for failed models.
+Files: frontend/src/components/Stage1.jsx, frontend/src/components/Stage2.jsx, frontend/src/components/Stage1.css
