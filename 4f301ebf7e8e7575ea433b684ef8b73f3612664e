@@ -1,0 +1,1 @@
+Task: Refactor frontend/src/api.js to remove the hardcoded API_BASE and use relative paths.\nSummary: Changed API_BASE from 'http://localhost:8001' to '' in frontend/src/api.js.\nFiles: frontend/src/api.js\nWhy: To allow the browser to send requests to the frontend origin, which are then proxied by the Vite dev server to the backend. This bypasses CORS issues in Codespaces.
