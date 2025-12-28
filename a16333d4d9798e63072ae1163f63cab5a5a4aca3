@@ -1,0 +1,6 @@
+Merge Summary:
+- Resolved conflicts in App.jsx, ChatInterface.jsx, product.md, tracks.md.
+- Extracted MessageInput.jsx to reuse file upload logic (drag & drop, chips, validation).
+- Updated ChatInterface.jsx to use MessageInput.
+- Updated FollowUpInput.jsx to use MessageInput, enabling file attachments for chairman follow-ups.
+- Verified with tests.
