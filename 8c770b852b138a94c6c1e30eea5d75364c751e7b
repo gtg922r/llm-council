@@ -1,0 +1,3 @@
+Task: Update API Endpoint for Follow-up
+Summary: Modified 'backend/main.py' to accept 'target_model' in 'SendMessageRequest'. Implemented logic to route requests to 'chairman_followup' when target is 'chairman', utilizing context from previous assistant messages.
+Files: backend/main.py, tests/test_api_followup.py
