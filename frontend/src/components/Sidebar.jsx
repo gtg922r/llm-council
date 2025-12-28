@@ -6,8 +6,7 @@ import {
   Trash2, 
   RefreshCw, 
   ChevronDown, 
-  ChevronRight,
-  MessageSquare
+  ChevronRight
 } from 'lucide-react';
 import './Sidebar.css';
 
@@ -54,9 +53,6 @@ export default function Sidebar({
               } ${conv.is_pinned ? 'pinned' : ''}`}
               onClick={() => onSelectConversation(conv.id)}
             >
-              <div className="conversation-icon">
-                <MessageSquare size={16} />
-              </div>
               <div className="conversation-content">
                 <div className="conversation-title">
                   {conv.title || 'New Conversation'}
