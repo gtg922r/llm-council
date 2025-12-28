@@ -18,21 +18,23 @@ export default function Stage1({ responses }) {
         {responses.map((resp, index) => (
           <button
             key={index}
-            className={`tab ${activeTab === index ? 'active' : ''}`}
+            className={`tab ${activeTab === index ? 'active' : ''} ${resp.status === 'error' ? 'error' : ''}`}
             onClick={() => setActiveTab(index)}
           >
             {resp.model.split('/')[1] || resp.model}
+            {resp.status === 'error' && <span className="error-dot" title="Failed to get response">!</span>}
           </button>
         ))}
       </div>
 
-      <div className="tab-content">
+      <div className={`tab-content ${responses[activeTab].status === 'error' ? 'content-error' : ''}`}>
         <CopyButton text={responses[activeTab].response} />
         <div className="model-name">{responses[activeTab].model}</div>
         <div className="response-text markdown-content">
           <ReactMarkdown>{responses[activeTab].response}</ReactMarkdown>
         </div>
       </div>
+
     </div>
   );
 }

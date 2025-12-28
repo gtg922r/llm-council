@@ -45,6 +45,35 @@
   font-weight: 600;
 }
 
+.tab.error {
+  border-color: #ffcccc;
+  color: #cc0000;
+}
+
+.tab.error:hover {
+  background: #fff5f5;
+  border-color: #ff0000;
+}
+
+.tab.error.active {
+  border-color: #cc0000;
+  border-bottom-color: #ffffff;
+}
+
+.error-dot {
+  display: inline-block;
+  margin-left: 6px;
+  background: #cc0000;
+  color: white;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  font-size: 10px;
+  line-height: 14px;
+  text-align: center;
+  font-weight: bold;
+}
+
 .tab-content {
   position: relative;
   background: #ffffff;
@@ -52,6 +81,12 @@
   border-radius: 6px;
   border: 1px solid #e0e0e0;
 }
+
+.tab-content.content-error {
+  border-color: #ffcccc;
+  background-color: #fffafa;
+}
+
 
 .model-name {
   color: #888;

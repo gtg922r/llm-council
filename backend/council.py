@@ -13,7 +13,7 @@ async def stage1_collect_responses(user_query: str) -> List[Dict[str, Any]]:
         user_query: The user's question
 
     Returns:
-        List of dicts with 'model' and 'response' keys
+        List of dicts with 'model', 'response', and 'status' keys
     """
     messages = [{"role": "user", "content": user_query}]
 
@@ -23,10 +23,17 @@ async def stage1_collect_responses(user_query: str) -> List[Dict[str, Any]]:
     # Format results
     stage1_results = []
     for model, response in responses.items():
-        if response is not None:  # Only include successful responses
+        if response is not None:
             stage1_results.append({
                 "model": model,
-                "response": response.get('content', '')
+                "response": response.get('content', ''),
+                "status": "success"
+            })
+        else:
+            stage1_results.append({
+                "model": model,
+                "response": "Error: Failed to get response from this model.",
+                "status": "error"
             })
 
     return stage1_results
@@ -46,19 +53,21 @@ async def stage2_collect_rankings(
     Returns:
         Tuple of (rankings list, label_to_model mapping)
     """
-    # Create anonymized labels for responses (Response A, Response B, etc.)
-    labels = [chr(65 + i) for i in range(len(stage1_results))]  # A, B, C, ...
+    # Create anonymized labels for successful responses (Response A, Response B, etc.)
+    successful_results = [r for r in stage1_results if r.get('status') == "success"]
+    
+    labels = [chr(65 + i) for i in range(len(successful_results))]  # A, B, C, ...
 
     # Create mapping from label to model name
     label_to_model = {
         f"Response {label}": result['model']
-        for label, result in zip(labels, stage1_results)
+        for label, result in zip(labels, successful_results)
     }
 
     # Build the ranking prompt
     responses_text = "\n\n".join([
         f"Response {label}:\n{result['response']}"
-        for label, result in zip(labels, stage1_results)
+        for label, result in zip(labels, successful_results)
     ])
 
     ranking_prompt = f"""You are evaluating different responses to the following question:
@@ -106,10 +115,19 @@ Now provide your evaluation and ranking:"""
             stage2_results.append({
                 "model": model,
                 "ranking": full_text,
-                "parsed_ranking": parsed
+                "parsed_ranking": parsed,
+                "status": "success"
+            })
+        else:
+            stage2_results.append({
+                "model": model,
+                "ranking": "Error: Failed to get ranking from this model.",
+                "parsed_ranking": [],
+                "status": "error"
             })
 
     return stage2_results, label_to_model
+
 
 
 async def stage3_synthesize_final(
@@ -129,15 +147,15 @@ async def stage3_synthesize_final(
         Dict with 'model' and 'response' keys
     """
     # Build comprehensive context for chairman
-    stage1_text = "\n\n".join([
-        f"Model: {result['model']}\nResponse: {result['response']}"
-        for result in stage1_results
-    ])
+    stage1_text = ""
+    for result in stage1_results:
+        status_info = "" if result.get('status') == "success" else f" [STATUS: {result.get('status').upper()}]"
+        stage1_text += f"Model: {result['model']}{status_info}\nResponse: {result['response']}\n\n"
 
-    stage2_text = "\n\n".join([
-        f"Model: {result['model']}\nRanking: {result['ranking']}"
-        for result in stage2_results
-    ])
+    stage2_text = ""
+    for result in stage2_results:
+        status_info = "" if result.get('status') == "success" else f" [STATUS: {result.get('status').upper()}]"
+        stage2_text += f"Model: {result['model']}{status_info}\nRanking: {result['ranking']}\n\n"
 
     chairman_prompt = f"""You are the Chairman of an LLM Council. Multiple AI models have provided responses to a user's question, and then ranked each other's responses.
 
@@ -153,8 +171,10 @@ Your task as Chairman is to synthesize all of this information into a single, co
 - The individual responses and their insights
 - The peer rankings and what they reveal about response quality
 - Any patterns of agreement or disagreement
+- Note: Some models may have failed to respond (indicated by STATUS: ERROR).
 
 Provide a clear, well-reasoned final answer that represents the council's collective wisdom:"""
+
 
     messages = [{"role": "user", "content": chairman_prompt}]
 
@@ -307,8 +327,9 @@ async def run_full_council(user_query: str) -> Tuple[List, List, Dict, Dict]:
     stage1_results = await stage1_collect_responses(user_query)
 
     # If no models responded successfully, return error
-    if not stage1_results:
-        return [], [], {
+    successful_stage1 = [r for r in stage1_results if r.get('status') == "success"]
+    if not successful_stage1:
+        return stage1_results, [], {
             "model": "error",
             "response": "All models failed to respond. Please try again."
         }, {}
