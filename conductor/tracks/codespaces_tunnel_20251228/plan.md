@@ -11,7 +11,7 @@ Focus on making the backend aware of the Codespaces environment and dynamically 
 Configure the frontend build tool to handle request forwarding and update the API client to use origin-agnostic paths.
 
 - [x] Task: Configure `frontend/vite.config.js` with a development proxy for the `/api` prefix. 2ea8b48
-- [ ] Task: Refactor `frontend/src/api.js` to remove the hardcoded `API_BASE` and use relative paths.
+- [x] Task: Refactor `frontend/src/api.js` to remove the hardcoded `API_BASE` and use relative paths. 4f301eb
 - [ ] Task: Conductor - User Manual Verification 'Frontend Proxy & Client Refactor' (Protocol in workflow.md)
 
 ## Phase 3: Integration & Validation
