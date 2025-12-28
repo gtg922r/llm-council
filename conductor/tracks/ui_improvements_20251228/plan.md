@@ -2,7 +2,7 @@
 
 This plan implements pinning, archiving, duplicating conversations, and collapsible processing stages in the chat interface.
 
-## Phase 1: Backend Support
+## Phase 1: Backend Support [checkpoint: 6428a72]
 Support for pinning, archiving, and duplicating conversations in the storage layer and API.
 
 - [x] Task: TDD - Update Storage Model (Backend) 3592faf
