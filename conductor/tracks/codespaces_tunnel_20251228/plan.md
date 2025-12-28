@@ -14,9 +14,9 @@ Configure the frontend build tool to handle request forwarding and update the AP
 - [x] Task: Refactor `frontend/src/api.js` to remove the hardcoded `API_BASE` and use relative paths. 4f301eb
 - [x] Task: Conductor - User Manual Verification 'Frontend Proxy & Client Refactor' (Protocol in workflow.md) b0c4a08
 
-## Phase 3: Integration & Validation
+## Phase 3: Integration & Validation [checkpoint: 8c238f0]
 Verify that the entire system works seamlessly within a GitHub Codespace.
 
 - [x] Task: Perform end-to-end connectivity test: verify stage-by-stage LLM Council execution through the proxied frontend. 5be3f55
 - [x] Task: Verify that the system still functions correctly in a standard local (non-Codespace) environment. 634af85
-- [ ] Task: Conductor - User Manual Verification 'Integration & Validation' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Integration & Validation' (Protocol in workflow.md) 8c238f0
