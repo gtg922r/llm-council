@@ -1,0 +1,3 @@
+Task: Update the API response format in backend/main.py or backend/council.py to explicitly return error status.
+Summary: The 'status' field (success/error) was already added to Stage 1 and Stage 2 response objects in Task 4. This ensures the frontend receives explicit error signals for each model's response.
+Files: backend/council.py
