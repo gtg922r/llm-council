@@ -1,8 +1,8 @@
 # Track Plan: Chairman Follow-up Interaction
 
 ## Phase 1: Backend Support for Follow-up Context
-- [ ] Task: Create a reproduction script/test case to verify the current context construction for the Chairman and simulate a follow-up request.
-- [ ] Task: Modify `backend/council.py` (or create a new function) to support generating a prompt that includes the previous conversation history (Original Query -> Council Context -> Chairman Response -> User Follow-up).
+- [x] Task: Create a reproduction script/test case to verify the current context construction for the Chairman and simulate a follow-up request. [d535e1d]
+- [x] Task: Modify `backend/council.py` (or create a new function) to support generating a prompt that includes the previous conversation history (Original Query -> Council Context -> Chairman Response -> User Follow-up). [d535e1d]
 - [ ] Task: Update the API endpoint in `backend/main.py` (likely `/api/conversations/{conversation_id}/message`) to handle a "follow-up" flag or detect context to route strictly to the Chairman instead of the full Council.
     -   *Design Note:* Alternatively, create a specific endpoint `/api/conversations/{conversation_id}/follow-up` to keep logic clean.
 - [ ] Task: Conductor - User Manual Verification 'Backend Support for Follow-up Context' (Protocol in workflow.md)
