@@ -1,0 +1,5 @@
+Task: Implement file validation
+Summary: Added checks for file size (<1MB) and file type (text-only based on extension/mime). Used browser alerts for user feedback as per plan.
+Files:
+- frontend/src/components/ChatInterface.jsx
+- frontend/src/components/ChatInterface.test.jsx
