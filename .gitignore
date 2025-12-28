@@ -12,6 +12,9 @@ wheels/
 # Keys and secrets
 .env
 
+# Firebase logs
+firebase-debug.log
+
 # Data files
 data/
 
