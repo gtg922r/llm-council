@@ -57,6 +57,55 @@ function App() {
     setCurrentConversationId(id);
   };
 
+  const handleTogglePin = async (id, isPinned) => {
+    try {
+      await api.updateConversation(id, { is_pinned: isPinned });
+      loadConversations();
+    } catch (error) {
+      console.error('Failed to toggle pin:', error);
+    }
+  };
+
+  const handleToggleArchive = async (id, isArchived) => {
+    try {
+      await api.updateConversation(id, { is_archived: isArchived });
+      loadConversations();
+      if (isArchived && currentConversationId === id) {
+        setCurrentConversationId(null);
+        setCurrentConversation(null);
+      }
+    } catch (error) {
+      console.error('Failed to toggle archive:', error);
+    }
+  };
+
+  const handleDeleteConversation = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this conversation forever?')) return;
+    try {
+      await api.deleteConversation(id);
+      loadConversations();
+      if (currentConversationId === id) {
+        setCurrentConversationId(null);
+        setCurrentConversation(null);
+      }
+    } catch (error) {
+      console.error('Failed to delete conversation:', error);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    const archived = conversations.filter(c => c.is_archived);
+    if (archived.length === 0) return;
+    if (!window.confirm(`Are you sure you want to delete all ${archived.length} archived conversations?`)) return;
+    
+    try {
+      await Promise.all(archived.map(c => api.deleteConversation(c.id)));
+      loadConversations();
+    } catch (error) {
+      console.error('Failed bulk delete:', error);
+    }
+  };
+
   const handleSendMessage = async (content) => {
     if (!currentConversationId) return;
 
@@ -188,6 +237,10 @@ function App() {
         currentConversationId={currentConversationId}
         onSelectConversation={handleSelectConversation}
         onNewConversation={handleNewConversation}
+        onTogglePin={handleTogglePin}
+        onToggleArchive={handleToggleArchive}
+        onDeleteConversation={handleDeleteConversation}
+        onBulkDelete={handleBulkDelete}
       />
       <ChatInterface
         conversation={currentConversation}
