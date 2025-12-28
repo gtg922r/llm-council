@@ -24,3 +24,7 @@ OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
 
 # Data directory for conversation storage
 DATA_DIR = "data/conversations"
+
+# Environment detection
+IS_CODESPACE = os.getenv("CODESPACES") == "true"
+DEBUG_MODE = os.getenv("DEBUG") == "true"
