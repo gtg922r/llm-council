@@ -1,0 +1,1 @@
+Phase: Frontend Proxy & Client Refactor\nManual Verification:\n1. Start frontend: npm run dev\n2. Start backend: uv run uvicorn backend.main:app\n3. Verify: Browser network tab confirms /api requests are proxied via frontend origin.\nUser Confirmation: 'yes'
