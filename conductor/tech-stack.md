@@ -19,5 +19,6 @@
 - **JavaScript Package Management:** npm
 - **LLM Gateway:** OpenRouter API
 - **Local Development:**
-  - Backend: http://localhost:8001
-  - Frontend: http://localhost:5173
+  - Backend: http://localhost:8001 (FastAPI)
+  - Frontend: http://localhost:5173 (Vite with Development Proxy to Backend)
+  - **Codespaces Support:** Automatically detects `CODESPACES` environment to relax CORS and enable seamless tunneling via the Vite proxy.
