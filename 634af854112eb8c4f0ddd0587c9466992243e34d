@@ -1,0 +1,1 @@
+Task: Verify backward compatibility.\nSummary: Confirmed that the automated tests pass in a default local environment (non-Codespace). The use of relative paths and Vite proxy maintains functionality for standard local development.
