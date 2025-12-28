@@ -1,0 +1,12 @@
+Task: Phase 6: Title Editing
+Summary: Implemented inline title editing:
+- Created 'EditableTitle' component that swaps between an H2 and an Input.
+- Integrated it into 'ChatInterface', replacing the static title.
+- Connected the update logic in 'App.jsx' to persist changes via the API.
+- Ensured updates are reflected immediately in the sidebar list.
+Files:
+- frontend/src/components/EditableTitle.jsx
+- frontend/src/components/EditableTitle.css
+- frontend/src/components/ChatInterface.jsx
+- frontend/src/App.jsx
+Why: Allows users to easily rename conversations for better organization.
