@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 import './CollapsibleSection.css';
 
 export default function CollapsibleSection({ 
@@ -17,7 +18,9 @@ export default function CollapsibleSection({
         role="button"
         aria-expanded={isExpanded}
       >
-        <span className="collapsible-icon">{isExpanded ? '▼' : '▶'}</span>
+        <span className="collapsible-icon">
+          {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+        </span>
         <span className="collapsible-title">{title}</span>
       </div>
       {isExpanded && (

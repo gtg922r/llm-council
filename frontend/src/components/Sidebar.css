@@ -29,6 +29,10 @@
   font-size: 14px;
   transition: background 0.2s;
   font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .new-conversation-btn:hover {
@@ -58,7 +62,19 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
+}
+
+.conversation-icon {
+  color: #666;
+  display: flex;
+  align-items: center;
+  opacity: 0.7;
+}
+
+.conversation-item.active .conversation-icon {
+  color: #4a90e2;
+  opacity: 1;
 }
 
 .conversation-item:hover {
@@ -78,7 +94,7 @@
 .conversation-title {
   color: #333;
   font-size: 14px;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -86,7 +102,7 @@
 
 .conversation-meta {
   color: #999;
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .item-actions {
@@ -102,6 +118,10 @@
   opacity: 0;
   transition: opacity 0.2s, transform 0.1s;
   font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
 }
 
 .conversation-item:hover .action-btn,
@@ -111,6 +131,11 @@
 
 .action-btn:hover {
   transform: scale(1.1);
+  color: #333;
+}
+
+.pin-btn[title="Unpin"] {
+  color: #4a90e2;
 }
 
 .archive-section {
@@ -131,6 +156,12 @@
 
 .archive-header:hover {
   background: #e8e8e8;
+}
+
+.archive-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .archived-list {
@@ -159,6 +190,9 @@
   cursor: pointer;
   padding: 4px;
   text-decoration: underline;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .empty-trash-btn:hover {

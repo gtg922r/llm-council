@@ -1,4 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { 
+  Plus, 
+  Pin, 
+  Archive, 
+  Trash2, 
+  RefreshCw, 
+  ChevronDown, 
+  ChevronRight,
+  MessageSquare
+} from 'lucide-react';
 import './Sidebar.css';
 
 export default function Sidebar({
@@ -28,7 +38,7 @@ export default function Sidebar({
       <div className="sidebar-header">
         <h1>LLM Council</h1>
         <button className="new-conversation-btn" onClick={onNewConversation}>
-          + New Conversation
+          <Plus size={16} /> New Conversation
         </button>
       </div>
 
@@ -44,6 +54,9 @@ export default function Sidebar({
               } ${conv.is_pinned ? 'pinned' : ''}`}
               onClick={() => onSelectConversation(conv.id)}
             >
+              <div className="conversation-icon">
+                <MessageSquare size={16} />
+              </div>
               <div className="conversation-content">
                 <div className="conversation-title">
                   {conv.title || 'New Conversation'}
@@ -61,7 +74,7 @@ export default function Sidebar({
                   }}
                   title={conv.is_pinned ? 'Unpin' : 'Pin'}
                 >
-                  {conv.is_pinned ? '📌' : '📍'}
+                  <Pin size={14} fill={conv.is_pinned ? "currentColor" : "none"} />
                 </button>
                 <button
                   className="action-btn archive-btn"
@@ -71,7 +84,7 @@ export default function Sidebar({
                   }}
                   title="Archive"
                 >
-                  📦
+                  <Archive size={14} />
                 </button>
               </div>
             </div>
@@ -85,15 +98,18 @@ export default function Sidebar({
             className="archive-header"
             onClick={() => setIsArchiveExpanded(!isArchiveExpanded)}
           >
-            <span>Archived ({archivedConversations.length})</span>
-            <span>{isArchiveExpanded ? '▾' : '▸'}</span>
+            <div className="archive-title">
+              <Archive size={14} />
+              <span>Archived ({archivedConversations.length})</span>
+            </div>
+            {isArchiveExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
           </div>
           
           {isArchiveExpanded && (
             <div className="archived-list">
               <div className="bulk-actions">
                 <button className="empty-trash-btn" onClick={onBulkDelete}>
-                  Empty Trash
+                  <Trash2 size={12} /> Empty Trash
                 </button>
               </div>
               {archivedConversations.map((conv) => (
@@ -116,7 +132,7 @@ export default function Sidebar({
                       }}
                       title="Restore"
                     >
-                      ↺
+                      <RefreshCw size={14} />
                     </button>
                     <button
                       className="action-btn delete-btn"
@@ -126,7 +142,7 @@ export default function Sidebar({
                       }}
                       title="Delete Forever"
                     >
-                      🗑️
+                      <Trash2 size={14} />
                     </button>
                   </div>
                 </div>
