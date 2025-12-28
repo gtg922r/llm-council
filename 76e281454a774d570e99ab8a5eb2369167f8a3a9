@@ -1,0 +1,5 @@
+Task: Fix streaming and state issues
+Summary: Implemented a buffered SSE parser in api.js to handle split JSON chunks. Switched to immutable state updates in App.jsx to ensure proper React re-renders during streaming.
+Files:
+- frontend/src/api.js
+- frontend/src/App.jsx
