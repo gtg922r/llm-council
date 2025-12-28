@@ -12,8 +12,6 @@ export default function Stage1({ responses }) {
 
   return (
     <div className="stage stage1">
-      <h3 className="stage-title">Stage 1: Individual Responses</h3>
-
       <div className="tabs">
         {responses.map((resp, index) => (
           <button
