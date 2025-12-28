@@ -17,6 +17,6 @@ Configure the frontend build tool to handle request forwarding and update the AP
 ## Phase 3: Integration & Validation
 Verify that the entire system works seamlessly within a GitHub Codespace.
 
-- [ ] Task: Perform end-to-end connectivity test: verify stage-by-stage LLM Council execution through the proxied frontend.
-- [ ] Task: Verify that the system still functions correctly in a standard local (non-Codespace) environment.
+- [x] Task: Perform end-to-end connectivity test: verify stage-by-stage LLM Council execution through the proxied frontend. 5be3f55
+- [x] Task: Verify that the system still functions correctly in a standard local (non-Codespace) environment. 634af85
 - [ ] Task: Conductor - User Manual Verification 'Integration & Validation' (Protocol in workflow.md)
