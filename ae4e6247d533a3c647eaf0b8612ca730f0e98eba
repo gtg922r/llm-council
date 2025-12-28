@@ -1,0 +1,11 @@
+Task: TDD - Update API Endpoints (Backend)
+Summary: Updated FastAPI backend with new endpoints and models:
+- Updated 'ConversationMetadata' and 'Conversation' models with 'is_pinned' and 'is_archived' flags.
+- Added PATCH '/api/conversations/{id}' to update metadata.
+- Added DELETE '/api/conversations/{id}' to remove conversations.
+- Added POST '/api/conversations/{id}/duplicate' to clone conversations.
+Files:
+- backend/main.py
+- backend/storage.py
+- tests/test_api_improvements.py
+Why: Provides the necessary API surface for the new UI management features.
