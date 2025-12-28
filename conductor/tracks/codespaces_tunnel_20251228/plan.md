@@ -7,12 +7,12 @@ Focus on making the backend aware of the Codespaces environment and dynamically 
 - [x] Task: Update `backend/main.py` to use dynamic CORS origins based on the detected environment. 37288d1
 - [x] Task: Conductor - User Manual Verification 'Backend Environment & CORS Configuration' (Protocol in workflow.md) 2e04672
 
-## Phase 2: Frontend Proxy & Client Refactor
+## Phase 2: Frontend Proxy & Client Refactor [checkpoint: b0c4a08]
 Configure the frontend build tool to handle request forwarding and update the API client to use origin-agnostic paths.
 
 - [x] Task: Configure `frontend/vite.config.js` with a development proxy for the `/api` prefix. 2ea8b48
 - [x] Task: Refactor `frontend/src/api.js` to remove the hardcoded `API_BASE` and use relative paths. 4f301eb
-- [ ] Task: Conductor - User Manual Verification 'Frontend Proxy & Client Refactor' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Frontend Proxy & Client Refactor' (Protocol in workflow.md) b0c4a08
 
 ## Phase 3: Integration & Validation
 Verify that the entire system works seamlessly within a GitHub Codespace.
