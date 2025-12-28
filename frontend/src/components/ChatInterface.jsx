@@ -140,7 +140,7 @@ export default function ChatInterface({
                       <span>Running Stage 1: Collecting individual responses...</span>
                     </div>
                   )}
-                  {msg.stage1 && (
+                  {msg.stage1 && msg.stage1.length > 0 && (
                     <CollapsibleSection title="Stage 1: Council Responses" defaultExpanded={false}>
                       <Stage1 responses={msg.stage1} />
                     </CollapsibleSection>
@@ -153,7 +153,7 @@ export default function ChatInterface({
                       <span>Running Stage 2: Peer rankings...</span>
                     </div>
                   )}
-                  {msg.stage2 && (
+                  {msg.stage2 && msg.stage2.length > 0 && (
                     <CollapsibleSection title="Stage 2: Peer Review & Rankings" defaultExpanded={false}>
                       <Stage2
                         rankings={msg.stage2}

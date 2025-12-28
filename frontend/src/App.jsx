@@ -206,8 +206,11 @@ function App() {
           case 'stage1_start':
             setCurrentConversation((prev) => {
               const messages = [...prev.messages];
-              const lastMsg = messages[messages.length - 1];
-              lastMsg.loading.stage1 = true;
+              const lastMsgIndex = messages.length - 1;
+              messages[lastMsgIndex] = {
+                ...messages[lastMsgIndex],
+                loading: { ...messages[lastMsgIndex].loading, stage1: true }
+              };
               return { ...prev, messages };
             });
             break;
@@ -215,9 +218,12 @@ function App() {
           case 'stage1_complete':
             setCurrentConversation((prev) => {
               const messages = [...prev.messages];
-              const lastMsg = messages[messages.length - 1];
-              lastMsg.stage1 = event.data;
-              lastMsg.loading.stage1 = false;
+              const lastMsgIndex = messages.length - 1;
+              messages[lastMsgIndex] = {
+                ...messages[lastMsgIndex],
+                stage1: event.data,
+                loading: { ...messages[lastMsgIndex].loading, stage1: false }
+              };
               return { ...prev, messages };
             });
             break;
@@ -225,8 +231,11 @@ function App() {
           case 'stage2_start':
             setCurrentConversation((prev) => {
               const messages = [...prev.messages];
-              const lastMsg = messages[messages.length - 1];
-              lastMsg.loading.stage2 = true;
+              const lastMsgIndex = messages.length - 1;
+              messages[lastMsgIndex] = {
+                ...messages[lastMsgIndex],
+                loading: { ...messages[lastMsgIndex].loading, stage2: true }
+              };
               return { ...prev, messages };
             });
             break;
@@ -234,10 +243,13 @@ function App() {
           case 'stage2_complete':
             setCurrentConversation((prev) => {
               const messages = [...prev.messages];
-              const lastMsg = messages[messages.length - 1];
-              lastMsg.stage2 = event.data;
-              lastMsg.metadata = event.metadata;
-              lastMsg.loading.stage2 = false;
+              const lastMsgIndex = messages.length - 1;
+              messages[lastMsgIndex] = {
+                ...messages[lastMsgIndex],
+                stage2: event.data,
+                metadata: event.metadata,
+                loading: { ...messages[lastMsgIndex].loading, stage2: false }
+              };
               return { ...prev, messages };
             });
             break;
@@ -245,8 +257,11 @@ function App() {
           case 'stage3_start':
             setCurrentConversation((prev) => {
               const messages = [...prev.messages];
-              const lastMsg = messages[messages.length - 1];
-              lastMsg.loading.stage3 = true;
+              const lastMsgIndex = messages.length - 1;
+              messages[lastMsgIndex] = {
+                ...messages[lastMsgIndex],
+                loading: { ...messages[lastMsgIndex].loading, stage3: true }
+              };
               return { ...prev, messages };
             });
             break;
@@ -254,9 +269,12 @@ function App() {
           case 'stage3_complete':
             setCurrentConversation((prev) => {
               const messages = [...prev.messages];
-              const lastMsg = messages[messages.length - 1];
-              lastMsg.stage3 = event.data;
-              lastMsg.loading.stage3 = false;
+              const lastMsgIndex = messages.length - 1;
+              messages[lastMsgIndex] = {
+                ...messages[lastMsgIndex],
+                stage3: event.data,
+                loading: { ...messages[lastMsgIndex].loading, stage3: false }
+              };
               return { ...prev, messages };
             });
             break;
