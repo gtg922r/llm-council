@@ -2,7 +2,7 @@
 
 import json
 import os
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import List, Dict, Any, Optional
 from pathlib import Path
 from .config import DATA_DIR
@@ -32,8 +32,10 @@ def create_conversation(conversation_id: str) -> Dict[str, Any]:
 
     conversation = {
         "id": conversation_id,
-        "created_at": datetime.utcnow().isoformat(),
+        "created_at": datetime.now(UTC).isoformat(),
         "title": "New Conversation",
+        "is_pinned": False,
+        "is_archived": False,
         "messages": []
     }
 
@@ -98,6 +100,8 @@ def list_conversations() -> List[Dict[str, Any]]:
                     "id": data["id"],
                     "created_at": data["created_at"],
                     "title": data.get("title", "New Conversation"),
+                    "is_pinned": data.get("is_pinned", False),
+                    "is_archived": data.get("is_archived", False),
                     "message_count": len(data["messages"])
                 })
 
