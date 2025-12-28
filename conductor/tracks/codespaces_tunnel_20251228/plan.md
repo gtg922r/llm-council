@@ -1,11 +1,11 @@
 # Plan: Codespaces Frontend-Backend Tunneling
 
-## Phase 1: Backend Environment & CORS Configuration
+## Phase 1: Backend Environment & CORS Configuration [checkpoint: 2e04672]
 Focus on making the backend aware of the Codespaces environment and dynamically adjusting CORS permissions.
 
 - [x] Task: Implement Environment-Aware Configuration logic in `backend/config.py` to detect `CODESPACES` or `DEBUG` mode. 1d6afb0
 - [x] Task: Update `backend/main.py` to use dynamic CORS origins based on the detected environment. 37288d1
-- [ ] Task: Conductor - User Manual Verification 'Backend Environment & CORS Configuration' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Backend Environment & CORS Configuration' (Protocol in workflow.md) 2e04672
 
 ## Phase 2: Frontend Proxy & Client Refactor
 Configure the frontend build tool to handle request forwarding and update the API client to use origin-agnostic paths.
