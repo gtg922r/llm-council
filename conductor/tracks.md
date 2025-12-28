@@ -4,5 +4,5 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-## [ ] Track: Improve Council resilience with better error handling for LLM timeouts and API failures.
-*Link: [./conductor/tracks/resilience_20251228/](./conductor/tracks/resilience_20251228/)*
+## [ ] Track: User should be able to submit a follow-up message to the chairman model.
+*Link: [./conductor/tracks/chairman_followup_20251228/](./conductor/tracks/chairman_followup_20251228/)*
