@@ -1,0 +1,3 @@
+Task: Frontend UI for Follow-up (Phase 2)
+Summary: Integrated 'FollowUpInput' into 'ChatInterface.jsx'. Updated 'api.js' to support 'target_model'. Modified 'App.jsx' to handle follow-up message routing to the chairman.
+Files: frontend/src/api.js, frontend/src/App.jsx, frontend/src/components/ChatInterface.jsx
