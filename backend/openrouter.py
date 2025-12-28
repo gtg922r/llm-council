@@ -83,8 +83,17 @@ async def query_models_parallel(
     # Create tasks for all models
     tasks = [query_model(model, messages) for model in models]
 
-    # Wait for all to complete
-    responses = await asyncio.gather(*tasks)
+    # Wait for all to complete, catching exceptions
+    results = await asyncio.gather(*tasks, return_exceptions=True)
 
-    # Map models to their responses
-    return {model: response for model, response in zip(models, responses)}
+    # Map models to their responses, handling any raised exceptions
+    mapped_responses = {}
+    for model, result in zip(models, results):
+        if isinstance(result, Exception):
+            print(f"Exception raised while querying model {model}: {result}")
+            mapped_responses[model] = None
+        else:
+            mapped_responses[model] = result
+
+    return mapped_responses
+
