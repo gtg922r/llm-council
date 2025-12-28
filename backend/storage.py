@@ -174,3 +174,31 @@ def update_conversation_title(conversation_id: str, title: str):
 
     conversation["title"] = title
     save_conversation(conversation)
+
+
+def duplicate_conversation(original_id: str, new_id: str) -> Dict[str, Any]:
+    """
+    Duplicate an existing conversation.
+
+    Args:
+        original_id: ID of the conversation to duplicate
+        new_id: ID for the new conversation
+
+    Returns:
+        The new duplicated conversation
+    """
+    original = get_conversation(original_id)
+    if original is None:
+        raise ValueError(f"Original conversation {original_id} not found")
+
+    new_conversation = {
+        "id": new_id,
+        "created_at": datetime.now(UTC).isoformat(),
+        "title": f"{original.get('title', 'New Conversation')} (Copy)",
+        "is_pinned": False,
+        "is_archived": False,
+        "messages": original["messages"].copy()
+    }
+
+    save_conversation(new_conversation)
+    return new_conversation
