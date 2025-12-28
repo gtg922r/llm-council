@@ -1,0 +1,13 @@
+Task: Phase 2: Sidebar UI Improvements
+Summary: Implemented comprehensive sidebar management:
+- Added pinning/unpinning with reordering logic.
+- Added archiving UI with collapsible 'Archived' section.
+- Added restore from archive functionality.
+- Added permanent deletion (individual and bulk).
+- Updated API client and main App state to support these actions.
+Files:
+- frontend/src/components/Sidebar.jsx
+- frontend/src/components/Sidebar.css
+- frontend/src/App.jsx
+- frontend/src/api.js
+Why: Enables users to manage their conversation history effectively.
