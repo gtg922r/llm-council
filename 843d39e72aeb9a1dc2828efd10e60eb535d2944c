@@ -1,0 +1,10 @@
+Task: Phase 4: Collapsible Processing Stages
+Summary: Implemented collapsible sections for intermediate council stages:
+- Created a reusable 'CollapsibleSection' component with expand/collapse states.
+- Integrated the component into 'ChatInterface.jsx' to wrap Stage 1 and Stage 2.
+- Set default state to collapsed to reduce UI noise and focus on the final answer.
+Files:
+- frontend/src/components/CollapsibleSection.jsx
+- frontend/src/components/CollapsibleSection.css
+- frontend/src/components/ChatInterface.jsx
+Why: Improves chat density and user focus by hiding technical details by default.
