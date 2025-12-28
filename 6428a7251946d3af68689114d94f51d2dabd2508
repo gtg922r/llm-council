@@ -1,0 +1,8 @@
+Phase: Phase 1: Backend Support
+Automated Tests: uv run pytest (14 passed)
+Manual Verification:
+1. Create conversation via API and verify is_pinned/is_archived flags.
+2. Update is_pinned via PATCH and verify change.
+3. Duplicate conversation via POST and verify copy title.
+4. Delete conversation via DELETE and verify removal.
+User Confirmation: Received (yes)
