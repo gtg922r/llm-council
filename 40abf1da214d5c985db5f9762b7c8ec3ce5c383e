@@ -1,0 +1,8 @@
+Phase: Phase 3: Header Actions & Conversation Duplication
+Automated Tests: uv run pytest (14 passed), npm run build (passed)
+Manual Verification:
+1. Open header menu.
+2. Verify 'Duplicate' clones and selects new conversation.
+3. Verify 'Archive' moves conversation to sidebar archive.
+4. Verify 'Delete' removes conversation with confirmation.
+User Confirmation: Received (yes)
