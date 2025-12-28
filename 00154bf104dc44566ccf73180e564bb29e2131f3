@@ -1,0 +1,3 @@
+Task: Create a reproduction script/test case that simulates OpenRouter API failures.
+Summary: Created reproduce_resilience.py which uses unittest.mock to simulate partial failures in individual LLM calls. Verified that the current backend handles these failures by returning None for failed models, avoiding a total system crash.
+Files: reproduce_resilience.py
