@@ -3,7 +3,7 @@
 import asyncio
 import unittest
 from unittest.mock import patch, MagicMock
-from backend.council import stage1_collect_responses, stage2_collect_rankings
+from backend.council import stage1_collect_responses, stage2_collect_rankings, stage3_synthesize_final, run_full_council, CHAIRMAN_MODEL
 from backend.config import COUNCIL_MODELS
 
 class TestCouncilResilience(unittest.IsolatedAsyncioTestCase):
@@ -21,15 +21,17 @@ class TestCouncilResilience(unittest.IsolatedAsyncioTestCase):
         
         results = await stage1_collect_responses("Test query")
         
-        # We expect the other models to still succeed
-        self.assertEqual(len(results), len(COUNCIL_MODELS) - 1)
+        # We expect ALL models to be present
+        self.assertEqual(len(results), len(COUNCIL_MODELS))
+        error_results = [r for r in results if r.get('status') == "error"]
+        self.assertEqual(len(error_results), 1)
 
     @patch('backend.openrouter.query_model')
     async def test_stage2_handles_exceptions(self, mock_query):
         """Test Stage 2 handles exceptions from query_model."""
         stage1_results = [
-            {"model": "model-A", "response": "Response A"},
-            {"model": "model-B", "response": "Response B"}
+            {"model": m, "response": f"Response {m}", "status": "success"}
+            for m in COUNCIL_MODELS
         ]
         
         # One model fails in Stage 2
@@ -42,15 +44,14 @@ class TestCouncilResilience(unittest.IsolatedAsyncioTestCase):
         
         results, mapping = await stage2_collect_rankings("Test query", stage1_results)
         
-        self.assertEqual(len(results), len(COUNCIL_MODELS) - 1)
-        self.assertGreater(len(results), 0)
+        self.assertEqual(len(results), len(COUNCIL_MODELS))
+        error_results = [r for r in results if r.get('status') == "error"]
+        self.assertEqual(len(error_results), 1)
 
-    @patch('backend.openrouter.query_model')
     @patch('backend.council.query_model')
-    async def test_stage3_handles_failure(self, mock_council_query, mock_openrouter_query):
+    async def test_stage3_handles_failure(self, mock_query):
         """Test Stage 3 handles chairman failure."""
-        mock_council_query.return_value = None
-        mock_openrouter_query.return_value = None
+        mock_query.return_value = None
         
         from backend.council import stage3_synthesize_final, CHAIRMAN_MODEL
         result = await stage3_synthesize_final("Test query", [], [])
@@ -68,7 +69,7 @@ class TestCouncilResilience(unittest.IsolatedAsyncioTestCase):
         from backend.council import run_full_council
         stage1, stage2, stage3, metadata = await run_full_council("Test query")
         
-        self.assertEqual(len(stage1), 0)
+        self.assertEqual(len(stage1), len(COUNCIL_MODELS))
         self.assertEqual(stage3['model'], "error")
         self.assertIn("All models failed", stage3['response'])
 
