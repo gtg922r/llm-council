@@ -4,7 +4,7 @@
 Focus on making the backend aware of the Codespaces environment and dynamically adjusting CORS permissions.
 
 - [x] Task: Implement Environment-Aware Configuration logic in `backend/config.py` to detect `CODESPACES` or `DEBUG` mode. 1d6afb0
-- [ ] Task: Update `backend/main.py` to use dynamic CORS origins based on the detected environment.
+- [x] Task: Update `backend/main.py` to use dynamic CORS origins based on the detected environment. 37288d1
 - [ ] Task: Conductor - User Manual Verification 'Backend Environment & CORS Configuration' (Protocol in workflow.md)
 
 ## Phase 2: Frontend Proxy & Client Refactor
