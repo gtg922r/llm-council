@@ -1,0 +1,6 @@
+Task: TDD - Implement Duplicate Conversation Logic (Backend)
+Summary: Implemented 'duplicate_conversation' function in 'backend/storage.py' to clone an existing conversation and its messages.
+Files:
+- backend/storage.py
+- tests/test_storage_improvements.py
+Why: Required for the 'Duplicate' action in the conversation header menu.
