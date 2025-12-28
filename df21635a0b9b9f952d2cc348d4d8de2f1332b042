@@ -1,0 +1,12 @@
+Phase 2 Verification Report
+Automated Tests: npm test (All 10 tests passed)
+Manual Verification:
+1. Drag and drop file -> Chip appears.
+2. Send message -> File content concatenated and sent to backend.
+3. Message history -> Read-only chips display, raw content hidden.
+4. UI fix -> Send/Attach buttons aligned to the right.
+5. UX fix -> Textarea height matches button stack.
+6. Bug fix -> Robust SSE parser for split chunks.
+7. Bug fix -> Immutable state updates for streaming.
+8. Layout fix -> Code blocks wrap correctly.
+User Feedback: 'ok perfect!'
