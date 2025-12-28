@@ -7,7 +7,7 @@
     -   *Design Note:* Alternatively, create a specific endpoint `/api/conversations/{conversation_id}/follow-up` to keep logic clean.
 - [x] Task: Conductor - User Manual Verification 'Backend Support for Follow-up Context' (Protocol in workflow.md)
 
-## Phase 2: Frontend UI for Follow-up
+## Phase 2: Frontend UI for Follow-up [checkpoint: 1981619]
 - [x] Task: Update `ChatInterface.jsx` to render this `FollowUpInput` component after the last assistant message if the process is complete. [eb7632f]
 - [x] Task: Wire up the `FollowUpInput` to call the appropriate backend API (new endpoint or modified existing one) with the user's message. [eb7632f]
 - [x] Task: Handle the API response to append the User's message and the Chairman's new response to the local conversation state so it renders immediately. [eb7632f]
