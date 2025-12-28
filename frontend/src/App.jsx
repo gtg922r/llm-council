@@ -106,6 +106,32 @@ function App() {
     }
   };
 
+  const handleDuplicateConversation = async (id) => {
+    try {
+      const newConv = await api.duplicateConversation(id);
+      await loadConversations();
+      setCurrentConversationId(newConv.id);
+    } catch (error) {
+      console.error('Failed to duplicate conversation:', error);
+    }
+  };
+
+  const handleHeaderAction = async (action, id) => {
+    switch (action) {
+      case 'duplicate':
+        await handleDuplicateConversation(id);
+        break;
+      case 'archive':
+        await handleToggleArchive(id, true);
+        break;
+      case 'delete':
+        await handleDeleteConversation(id);
+        break;
+      default:
+        console.warn('Unknown header action:', action);
+    }
+  };
+
   const handleSendMessage = async (content) => {
     if (!currentConversationId) return;
 
@@ -245,6 +271,7 @@ function App() {
       <ChatInterface
         conversation={currentConversation}
         onSendMessage={handleSendMessage}
+        onHeaderAction={handleHeaderAction}
         isLoading={isLoading}
       />
     </div>

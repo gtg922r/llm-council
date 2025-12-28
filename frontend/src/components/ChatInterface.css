@@ -10,6 +10,9 @@
   padding: 16px 24px;
   border-bottom: 1px solid #e0e0e0;
   background: #ffffff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .chat-header h2 {
@@ -17,6 +20,79 @@
   font-size: 18px;
   color: #333;
   font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 70%;
+}
+
+.header-actions {
+  position: relative;
+}
+
+.menu-toggle {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #666;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.menu-toggle:hover {
+  background: #f0f0f0;
+  color: #333;
+}
+
+.header-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  min-width: 160px;
+  padding: 4px 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.header-menu button {
+  background: none;
+  border: none;
+  padding: 10px 16px;
+  text-align: left;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: background 0.1s;
+}
+
+.header-menu button:hover {
+  background: #f5f5f5;
+}
+
+.header-menu button.danger {
+  color: #d93025;
+}
+
+.header-menu button.danger:hover {
+  background: #fef1f0;
+}
+
+.header-menu .icon {
+  font-size: 16px;
+  width: 20px;
+  display: inline-block;
+  text-align: center;
 }
 
 .messages-container {

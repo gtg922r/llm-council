@@ -8,11 +8,24 @@ import './ChatInterface.css';
 export default function ChatInterface({
   conversation,
   onSendMessage,
+  onHeaderAction,
   isLoading,
 }) {
   const [input, setInput] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
   const messagesEndRef = useRef(null);
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setShowMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -38,6 +51,11 @@ export default function ChatInterface({
     }
   };
 
+  const handleMenuAction = (action) => {
+    setShowMenu(false);
+    onHeaderAction(action, conversation.id);
+  };
+
   if (!conversation) {
     return (
       <div className="chat-interface">
@@ -53,6 +71,28 @@ export default function ChatInterface({
     <div className="chat-interface">
       <div className="chat-header">
         <h2>{conversation.title || 'New Conversation'}</h2>
+        <div className="header-actions" ref={menuRef}>
+          <button 
+            className="menu-toggle"
+            onClick={() => setShowMenu(!showMenu)}
+            title="Conversation Options"
+          >
+            ⋮
+          </button>
+          {showMenu && (
+            <div className="header-menu">
+              <button onClick={() => handleMenuAction('duplicate')}>
+                <span className="icon">👯</span> Duplicate
+              </button>
+              <button onClick={() => handleMenuAction('archive')}>
+                <span className="icon">📦</span> Archive
+              </button>
+              <button className="danger" onClick={() => handleMenuAction('delete')}>
+                <span className="icon">🗑️</span> Delete
+              </button>
+            </div>
+          )}
+        </div>
       </div>
       <div className="messages-container">
         {conversation.messages.length === 0 ? (
