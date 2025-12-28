@@ -8,8 +8,7 @@
 - [x] Task: Conductor - User Manual Verification 'Backend Support for Follow-up Context' (Protocol in workflow.md)
 
 ## Phase 2: Frontend UI for Follow-up
-- [ ] Task: Create a new `FollowUpInput` component that contains the "Send Message to Chairman" button and the conditionally rendered text input.
-- [ ] Task: Update `ChatInterface.jsx` to render this `FollowUpInput` component after the last assistant message if the process is complete.
-- [ ] Task: Wire up the `FollowUpInput` to call the appropriate backend API (new endpoint or modified existing one) with the user's message.
-- [ ] Task: Handle the API response to append the User's message and the Chairman's new response to the local conversation state so it renders immediately.
-- [ ] Task: Conductor - User Manual Verification 'Frontend UI for Follow-up' (Protocol in workflow.md)
+- [x] Task: Update `ChatInterface.jsx` to render this `FollowUpInput` component after the last assistant message if the process is complete. [eb7632f]
+- [x] Task: Wire up the `FollowUpInput` to call the appropriate backend API (new endpoint or modified existing one) with the user's message. [eb7632f]
+- [x] Task: Handle the API response to append the User's message and the Chairman's new response to the local conversation state so it renders immediately. [eb7632f]
+- [x] Task: Conductor - User Manual Verification 'Frontend UI for Follow-up' (Protocol in workflow.md)
