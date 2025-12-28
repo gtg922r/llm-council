@@ -1,0 +1,1 @@
+Task: Configure frontend/vite.config.js with a development proxy for the /api prefix.\nSummary: Added server.proxy configuration to Vite to forward /api requests to http://localhost:8001.\nFiles: frontend/vite.config.js\nWhy: To enable the frontend to communicate with the backend as if it were on the same origin, simplifying connection issues in Codespaces.
