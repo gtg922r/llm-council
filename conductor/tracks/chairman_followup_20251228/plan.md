@@ -5,7 +5,7 @@
 - [x] Task: Modify `backend/council.py` (or create a new function) to support generating a prompt that includes the previous conversation history (Original Query -> Council Context -> Chairman Response -> User Follow-up). [d535e1d]
 - [x] Task: Update the API endpoint in `backend/main.py` (likely `/api/conversations/{conversation_id}/message`) to handle a "follow-up" flag or detect context to route strictly to the Chairman instead of the full Council. [8c770b8]
     -   *Design Note:* Alternatively, create a specific endpoint `/api/conversations/{conversation_id}/follow-up` to keep logic clean.
-- [ ] Task: Conductor - User Manual Verification 'Backend Support for Follow-up Context' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Backend Support for Follow-up Context' (Protocol in workflow.md)
 
 ## Phase 2: Frontend UI for Follow-up
 - [ ] Task: Create a new `FollowUpInput` component that contains the "Send Message to Chairman" button and the conditionally rendered text input.

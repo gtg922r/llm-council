@@ -4,7 +4,7 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-## [ ] Track: User should be able to submit a follow-up message to the chairman model.
+## [~] Track: User should be able to submit a follow-up message to the chairman model.
 *Link: [./conductor/tracks/chairman_followup_20251228/](./conductor/tracks/chairman_followup_20251228/)*
 
 ---
