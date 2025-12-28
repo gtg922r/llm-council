@@ -2,7 +2,7 @@
 
 import json
 import os
-from datetime import datetime, UTC
+from datetime import datetime, timezone
 from typing import List, Dict, Any, Optional
 from pathlib import Path
 from .config import DATA_DIR
@@ -32,7 +32,7 @@ def create_conversation(conversation_id: str) -> Dict[str, Any]:
 
     conversation = {
         "id": conversation_id,
-        "created_at": datetime.now(UTC).isoformat(),
+        "created_at": datetime.now(timezone.utc).isoformat(),
         "title": "New Conversation",
         "is_pinned": False,
         "is_archived": False,
@@ -193,7 +193,7 @@ def duplicate_conversation(original_id: str, new_id: str) -> Dict[str, Any]:
 
     new_conversation = {
         "id": new_id,
-        "created_at": datetime.now(UTC).isoformat(),
+        "created_at": datetime.now(timezone.utc).isoformat(),
         "title": f"{original.get('title', 'New Conversation')} (Copy)",
         "is_pinned": False,
         "is_archived": False,
@@ -202,3 +202,15 @@ def duplicate_conversation(original_id: str, new_id: str) -> Dict[str, Any]:
 
     save_conversation(new_conversation)
     return new_conversation
+
+
+def delete_conversation(conversation_id: str):
+    """
+    Permanently delete a conversation.
+
+    Args:
+        conversation_id: ID of the conversation to delete
+    """
+    path = get_conversation_path(conversation_id)
+    if os.path.exists(path):
+        os.remove(path)

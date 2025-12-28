@@ -39,6 +39,8 @@ class ConversationMetadata(BaseModel):
     id: str
     created_at: str
     title: str
+    is_pinned: bool = False
+    is_archived: bool = False
     message_count: int
 
 
@@ -47,7 +49,16 @@ class Conversation(BaseModel):
     id: str
     created_at: str
     title: str
+    is_pinned: bool = False
+    is_archived: bool = False
     messages: List[Dict[str, Any]]
+
+
+class UpdateConversationRequest(BaseModel):
+    """Request to update conversation flags."""
+    title: str | None = None
+    is_pinned: bool | None = None
+    is_archived: bool | None = None
 
 
 @app.get("/")
@@ -77,6 +88,42 @@ async def get_conversation(conversation_id: str):
     if conversation is None:
         raise HTTPException(status_code=404, detail="Conversation not found")
     return conversation
+
+
+@app.patch("/api/conversations/{conversation_id}", response_model=Conversation)
+async def update_conversation(conversation_id: str, request: UpdateConversationRequest):
+    """Update conversation metadata (title, pinned, archived)."""
+    conversation = storage.get_conversation(conversation_id)
+    if conversation is None:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    
+    if request.title is not None:
+        conversation["title"] = request.title
+    if request.is_pinned is not None:
+        conversation["is_pinned"] = request.is_pinned
+    if request.is_archived is not None:
+        conversation["is_archived"] = request.is_archived
+        
+    storage.save_conversation(conversation)
+    return conversation
+
+
+@app.delete("/api/conversations/{conversation_id}")
+async def delete_conversation(conversation_id: str):
+    """Permanently delete a conversation."""
+    storage.delete_conversation(conversation_id)
+    return {"status": "success"}
+
+
+@app.post("/api/conversations/{conversation_id}/duplicate", response_model=Conversation)
+async def duplicate_conversation(conversation_id: str):
+    """Duplicate a conversation."""
+    new_id = str(uuid.uuid4())
+    try:
+        new_conv = storage.duplicate_conversation(conversation_id, new_id)
+        return new_conv
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
 
 
 @app.post("/api/conversations/{conversation_id}/message")
