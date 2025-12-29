@@ -13,12 +13,12 @@
 - [x] Task: Render removable file chips for currently staged files within `ChatInput`. 0a04288
 - [x] Task: Conductor - User Manual Verification 'Frontend - File Staging & UI' (Protocol in workflow.md) 9afc47f
 
-## Phase 3: Transmission & Rendering [checkpoint: adb7a2f]
+## Phase 3: Transmission & Rendering [checkpoint: e58d372]
 - [x] Task: Update the message submission logic to read staged file contents and concatenate them into the payload with clear delimiters. 0eb45e5
 - [x] Task: Update the conversation history rendering to display file chips within the user's message blocks. 43057ee
 - [x] Task: Ensure that sending a message correctly clears both text and staged files. 1c95fbc
-- [~] Task: Conductor - User Manual Verification 'Transmission & Rendering' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Transmission & Rendering' (Protocol in workflow.md) e58d372
 
 ## Phase 4: End-to-End Verification
-- [ ] Task: Perform a full council run with multiple text files to verify correct context injection and Chairman synthesis.
+- [~] Task: Perform a full council run with multiple text files to verify correct context injection and Chairman synthesis.
 - [ ] Task: Conductor - User Manual Verification 'End-to-End Verification' (Protocol in workflow.md)
