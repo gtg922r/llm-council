@@ -4,7 +4,8 @@ import {
   MoreVertical,
   Copy,
   Archive,
-  Trash2
+  Trash2,
+  Paperclip
 } from 'lucide-react';
 import Stage1 from './Stage1';
 import Stage2 from './Stage2';
@@ -113,6 +114,7 @@ export default function ChatInterface({
 
   const handleSendMessage = useCallback(async (content) => {
     let finalContent = content;
+    const filesToAttach = [...stagedFiles];
 
     if (stagedFiles.length > 0) {
       const fileContents = await Promise.all(
@@ -124,7 +126,7 @@ export default function ChatInterface({
       finalContent = `${content}\n\nRelevant context from attached files:\n${fileContents.join('\n')}`;
     }
 
-    onSendMessage(finalContent, inputMode === 'chairman' ? 'chairman' : undefined);
+    onSendMessage(finalContent, inputMode === 'chairman' ? 'chairman' : undefined, filesToAttach);
     setIsInputManual(false);
     setInputMode('council');
     setStagedFiles([]); // Clear staged files after sending
@@ -190,6 +192,16 @@ export default function ChatInterface({
                 <div className="user-message">
                   <div className="message-label">You</div>
                   <div className="message-content">
+                    {msg.files && msg.files.length > 0 && (
+                      <div className="message-files">
+                        {msg.files.map((file, fIndex) => (
+                          <div key={fIndex} className="file-chip">
+                            <Paperclip size={14} />
+                            <span className="file-chip-name">{file.name}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                     <div className="markdown-content">
                       <ReactMarkdown>{msg.content}</ReactMarkdown>
                     </div>

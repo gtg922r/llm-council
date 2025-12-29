@@ -160,9 +160,35 @@ describe('ChatInterface', () => {
 
     expect(onSendMessage).toHaveBeenCalledWith(
       expect.stringMatching(/my query[\s\S]*--- FILE: test.txt ---[\s\S]*file content/i),
-      undefined
+      undefined,
+      expect.arrayContaining([file])
     );
 
     vi.unstubAllGlobals();
+  });
+
+  it('renders file chips in user message history', () => {
+    const conversationWithFiles = {
+      id: '1',
+      messages: [
+        { 
+          role: 'user', 
+          content: 'hello',
+          files: [{ name: 'context.txt' }]
+        }
+      ]
+    };
+
+    render(
+      <ChatInterface 
+        conversation={conversationWithFiles} 
+        onSendMessage={vi.fn()}
+        onHeaderAction={vi.fn()}
+        onUpdateTitle={vi.fn()}
+        isLoading={false}
+      />
+    );
+
+    expect(screen.getByText('context.txt')).toBeInTheDocument();
   });
 });

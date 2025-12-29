@@ -138,6 +138,13 @@
   white-space: pre-wrap;
 }
 
+.message-files {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
 .loading-indicator {
   display: flex;
   align-items: center;
