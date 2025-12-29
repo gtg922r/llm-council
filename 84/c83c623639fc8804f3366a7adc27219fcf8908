@@ -1,0 +1,4 @@
+Task: Frontend - Modify Sidebar.jsx to display a blue dot if conv.has_unread is true
+Summary: Updated the Sidebar component to conditionally render a blue dot next to conversation titles when they have unread messages. Added necessary CSS for the indicator.
+Files: frontend/src/components/Sidebar.jsx, frontend/src/components/Sidebar.css, frontend/src/components/__tests__/Sidebar.test.jsx
+Why: Provides visual feedback to the user when a background conversation has new content.
