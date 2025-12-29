@@ -1,0 +1,10 @@
+Task: Frontend - Verify ChatInterface.jsx and ChatInput.jsx correctly handle the new flow (cleanup).
+
+Summary:
+- Removed unused FileReader stubbing in ChatInterface file staging test and clarified test name.
+
+Files:
+- frontend/src/components/__tests__/ChatInterface.test.jsx
+
+Why:
+- Keep tests aligned with the new structured file flow while confirming staged files are passed through.
