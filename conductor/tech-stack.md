@@ -22,4 +22,10 @@
 - **Local Development:**
   - Backend: http://localhost:8001 (FastAPI)
   - Frontend: http://localhost:5173 (Vite with Development Proxy to Backend)
+  - Testing:
+    - Backend: pytest
+    - Frontend: Vitest + React Testing Library
   - **Codespaces Support:** Automatically detects `CODESPACES` environment to relax CORS and enable seamless tunneling via the Vite proxy.
+
+## Changes & Deviations
+- **2025-12-29:** Added Vitest and React Testing Library to the frontend tech stack to support TDD as required by the project workflow.
