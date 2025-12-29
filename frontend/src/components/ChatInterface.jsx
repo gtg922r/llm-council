@@ -23,8 +23,24 @@ export default function ChatInterface({
   isLoading,
 }) {
   const [showMenu, setShowMenu] = useState(false);
+  const [inputMode, setInputMode] = useState('council'); // 'council' or 'chairman'
+  const [isInputManual, setIsInputManual] = useState(false); // Used to show input for follow-up
   const messagesEndRef = useRef(null);
   const menuRef = useRef(null);
+
+  useEffect(() => {
+    // Reset manual input state when loading starts
+    if (isLoading) {
+      setIsInputManual(false);
+    }
+  }, [isLoading]);
+
+  // Determine if we should show the input
+  const isNewConversation = conversation?.messages.length === 0;
+  const lastMessage = conversation?.messages[conversation.messages.length - 1];
+  const isWaitingForCouncil = lastMessage?.role === 'user' || isLoading;
+  
+  const showInput = (isNewConversation || isInputManual) && !isLoading;
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -43,6 +59,12 @@ export default function ChatInterface({
   useEffect(() => {
     scrollToBottom();
   }, [conversation]);
+
+  const handleSendMessage = (content) => {
+    onSendMessage(content, inputMode === 'chairman' ? 'chairman' : undefined);
+    setIsInputManual(false);
+    setInputMode('council');
+  };
 
   const handleMenuAction = (action) => {
     setShowMenu(false);
@@ -165,9 +187,12 @@ export default function ChatInterface({
                   {msg.stage3 && <Stage3 finalResponse={msg.stage3} />}
 
                   {/* Follow-up Trigger */}
-                  {msg.stage3 && index === conversation.messages.length - 1 && !isLoading && (
+                  {msg.stage3 && index === conversation.messages.length - 1 && !isLoading && !isInputManual && (
                     <FollowUpInput 
-                      onSendFollowUp={(content) => onSendMessage(content, 'chairman')}
+                      onActivate={() => {
+                        setInputMode('chairman');
+                        setIsInputManual(true);
+                      }}
                       isLoading={isLoading}
                     />
                   )}
@@ -187,7 +212,18 @@ export default function ChatInterface({
         <div ref={messagesEndRef} />
       </div>
 
-      <ChatInput onSendMessage={onSendMessage} isLoading={isLoading} />
+      {showInput && (
+        <ChatInput 
+          onSendMessage={handleSendMessage} 
+          isLoading={isLoading}
+          onCancel={isInputManual ? () => {
+            setIsInputManual(false);
+            setInputMode('council');
+          } : undefined}
+          placeholder={inputMode === 'chairman' ? "Follow up with the Chairman..." : undefined}
+          autoFocus={inputMode === 'chairman'}
+        />
+      )}
     </div>
   );
 }

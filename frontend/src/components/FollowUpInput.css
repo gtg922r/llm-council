@@ -29,11 +29,3 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
-
-.follow-up-container {
-  margin-top: 1rem;
-  padding: 1rem;
-  background-color: var(--secondary-bg, #f3f4f6);
-  border-radius: 0.75rem;
-  border: 1px solid var(--border-color, #e5e7eb);
-}

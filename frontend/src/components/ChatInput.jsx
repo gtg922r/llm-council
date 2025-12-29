@@ -38,7 +38,6 @@ export default function ChatInput({
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             disabled={isLoading}
-            rows={isExpanded ? 10 : 3}
             autoFocus={autoFocus}
           />
           <button
