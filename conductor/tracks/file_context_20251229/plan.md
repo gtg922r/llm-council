@@ -7,7 +7,7 @@
 - [x] Task: Conductor - User Manual Verification 'Refactor - Unified ChatInput Component' (Protocol in workflow.md) c6e32c4
 
 ## Phase 2: Frontend - File Staging & UI [checkpoint: c6e32c4]
-- [ ] Task: Implement Drag & Drop logic in `ChatInput` with border highlights and a "Drop files here" overlay.
+- [x] Task: Implement Drag & Drop logic in `ChatInput` with border highlights and a "Drop files here" overlay. c3fc1bd
 - [ ] Task: Add a file attachment icon (paperclip) to `ChatInput` and integrate with the system file picker.
 - [ ] Task: Implement file validation (size < 1MB, text-based extensions) and staging state management.
 - [ ] Task: Render removable file chips for currently staged files within `ChatInput`.
