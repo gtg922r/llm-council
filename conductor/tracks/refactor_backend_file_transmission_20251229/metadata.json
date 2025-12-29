@@ -1,0 +1,8 @@
+{
+  "track_id": "refactor_backend_file_transmission_20251229",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2025-12-29T00:00:00Z",
+  "updated_at": "2025-12-29T00:00:00Z",
+  "description": "Refactor the backend to support structured file context in the API and storage layer, moving concatenation logic from the frontend to the server."
+}
