@@ -10,7 +10,7 @@
 - [x] Task: Implement Drag & Drop logic in `ChatInput` with border highlights and a "Drop files here" overlay. c3fc1bd
 - [x] Task: Add a file attachment icon (paperclip) to `ChatInput` and integrate with the system file picker. 0e03724
 - [x] Task: Implement file validation (size < 1MB, text-based extensions) and staging state management. 2241b99
-- [ ] Task: Render removable file chips for currently staged files within `ChatInput`.
+- [x] Task: Render removable file chips for currently staged files within `ChatInput`. 0a04288
 - [ ] Task: Conductor - User Manual Verification 'Frontend - File Staging & UI' (Protocol in workflow.md)
 
 ## Phase 3: Transmission & Rendering
