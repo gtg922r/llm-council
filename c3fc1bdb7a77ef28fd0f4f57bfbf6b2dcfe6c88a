@@ -1,0 +1,6 @@
+Task: Implement Drag & Drop logic in ChatInput
+Summary: Added drag-and-drop support to ChatInput with visual border highlights and a 'Drop files here' overlay. Integrated onFilesDropped callback.
+Files:
+- frontend/src/components/ChatInput.jsx
+- frontend/src/components/ChatInput.css
+- frontend/src/components/__tests__/ChatInput.test.jsx
