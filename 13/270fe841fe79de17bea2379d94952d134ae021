@@ -1,0 +1,4 @@
+Task: Frontend - Add logic in App.jsx to automatically clear has_unread if a message arrives while the conversation is already active
+Summary: Added logic to the handleSendMessage stream completion and chairman follow-up handlers to automatically call api.markAsRead if the conversation being updated is the one currently being viewed.
+Files: frontend/src/App.jsx, frontend/src/__tests__/App.test.jsx
+Why: Prevents active conversations from being flagged as unread when the user is already watching the response.
