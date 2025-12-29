@@ -42,6 +42,12 @@ export default function ChatInterface({
   
   const showInput = (isNewConversation || isInputManual) && !isLoading;
 
+  const lastMessageIsAssistantLoading = lastMessage?.role === 'assistant' && (
+    lastMessage.loading?.stage1 || 
+    lastMessage.loading?.stage2 || 
+    lastMessage.loading?.stage3
+  );
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -202,7 +208,7 @@ export default function ChatInterface({
           ))
         )}
 
-        {isLoading && (
+        {isLoading && !lastMessageIsAssistantLoading && (
           <div className="loading-indicator">
             <div className="spinner"></div>
             <span>Consulting the council...</span>
