@@ -60,6 +60,22 @@ class SendMessageRequest(BaseModel):
     target_model: str | None = None # e.g., "chairman" for follow-up
 
 
+def build_prompt_content(content: str, files: List[FileContext]) -> str:
+    """Construct the final prompt with user content and file blocks."""
+    if not files:
+        return content
+
+    sections = [content]
+    for file_context in files:
+        sections.append(
+            f"--- FILE: {file_context.name} ---\n"
+            f"{file_context.content}\n"
+            f"--- END FILE: {file_context.name} ---"
+        )
+
+    return "\n\n".join(sections)
+
+
 class ConversationMetadata(BaseModel):
     """Conversation metadata for list view."""
     id: str

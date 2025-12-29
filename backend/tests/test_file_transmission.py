@@ -1,4 +1,4 @@
-from backend.main import SendMessageRequest, FileContext
+from backend.main import SendMessageRequest, FileContext, build_prompt_content
 from backend import storage
 
 
@@ -34,3 +34,23 @@ def test_add_user_message_stores_files(tmp_path, monkeypatch):
     conversation = storage.get_conversation("conv-1")
 
     assert conversation["messages"][-1]["files"] == files
+
+
+def test_build_prompt_content_appends_files():
+    """Prompt builder should append file blocks after the user message."""
+    files = [
+        FileContext(name="notes.txt", content="example", size=7),
+        FileContext(name="todo.md", content="- item", size=6),
+    ]
+
+    prompt = build_prompt_content("hello", files)
+
+    assert prompt == (
+        "hello\n\n"
+        "--- FILE: notes.txt ---\n"
+        "example\n"
+        "--- END FILE: notes.txt ---\n\n"
+        "--- FILE: todo.md ---\n"
+        "- item\n"
+        "--- END FILE: todo.md ---"
+    )
