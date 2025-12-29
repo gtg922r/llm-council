@@ -1,13 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import {
   MoreVertical,
   Copy,
   Archive,
   Trash2,
-  Send,
-  Maximize2,
-  Minimize2
+  Paperclip
 } from 'lucide-react';
 import Stage1 from './Stage1';
 import Stage2 from './Stage2';
@@ -15,6 +13,7 @@ import Stage3 from './Stage3';
 import CollapsibleSection from './CollapsibleSection';
 import EditableTitle from './EditableTitle';
 import FollowUpInput from './FollowUpInput';
+import ChatInput from './ChatInput';
 import './ChatInterface.css';
 
 export default function ChatInterface({
@@ -24,11 +23,68 @@ export default function ChatInterface({
   onUpdateTitle,
   isLoading,
 }) {
-  const [input, setInput] = useState('');
-  const [isExpanded, setIsExpanded] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [inputMode, setInputMode] = useState('council'); // 'council' or 'chairman'
+  const [isInputManual, setIsInputManual] = useState(false); // Used to show input for follow-up
+  const [stagedFiles, setStagedFiles] = useState([]);
   const messagesEndRef = useRef(null);
   const menuRef = useRef(null);
+
+  useEffect(() => {
+    // Reset manual input state when loading starts
+    if (isLoading) {
+      setIsInputManual(false);
+    }
+  }, [isLoading]);
+
+  const handleFilesDropped = (files) => {
+    const MAX_SIZE = 1024 * 1024; // 1MB
+    const SUPPORTED_EXTENSIONS = [
+      'txt', 'md', 'py', 'js', 'jsx', 'ts', 'tsx', 'html', 'css', 'json', 'csv', 'c', 'cpp', 'h', 'java', 'go', 'rs', 'php', 'rb', 'sh', 'sql', 'yaml', 'yml'
+    ];
+
+    const validFiles = [];
+    for (const file of files) {
+      const ext = file.name.split('.').pop().toLowerCase();
+      
+      if (file.size > MAX_SIZE) {
+        alert(`File "${file.name}" is too large (> 1MB).`);
+        continue;
+      }
+      
+      if (!SUPPORTED_EXTENSIONS.includes(ext)) {
+        alert(`File "${file.name}" has an unsupported extension. Please provide text-based files.`);
+        continue;
+      }
+
+      // Avoid duplicates
+      if (!stagedFiles.find(f => f.name === file.name && f.size === file.size)) {
+        validFiles.push(file);
+      }
+    }
+
+    if (validFiles.length > 0) {
+      setStagedFiles(prev => [...prev, ...validFiles]);
+    }
+  };
+
+  const handleRemoveFile = (index) => {
+    setStagedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Determine if we should show the input
+  const isNewConversation = conversation?.messages.length === 0;
+  const lastMessage = conversation?.messages[conversation.messages.length - 1];
+  const isWaitingForCouncil = lastMessage?.role === 'user' || isLoading;
+  
+  const showInput = (isNewConversation || isInputManual) && !isLoading;
+
+  const lastMessageIsAssistant = lastMessage?.role === 'assistant';
+  const lastMessageHasLoadingState = lastMessageIsAssistant && (
+    lastMessage.loading?.stage1 || 
+    lastMessage.loading?.stage2 || 
+    lastMessage.loading?.stage3
+  );
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -48,21 +104,24 @@ export default function ChatInterface({
     scrollToBottom();
   }, [conversation]);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (input.trim() && !isLoading) {
-      onSendMessage(input);
-      setInput('');
-    }
+  const readFileContent = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target.result);
+      reader.onerror = (e) => reject(e);
+      reader.readAsText(file);
+    });
   };
 
-  const handleKeyDown = (e) => {
-    // Submit on Enter (without Shift)
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit(e);
-    }
-  };
+  const handleSendMessage = useCallback(async (content) => {
+    // We pass the raw content and the files separately.
+    // The concatenation for the LLM prompt will happen in the API handler.
+    onSendMessage(content, inputMode === 'chairman' ? 'chairman' : undefined, stagedFiles);
+    
+    setIsInputManual(false);
+    setInputMode('council');
+    setStagedFiles([]); // Clear staged files after sending
+  }, [stagedFiles, inputMode, onSendMessage]);
 
   const handleMenuAction = (action) => {
     setShowMenu(false);
@@ -124,6 +183,16 @@ export default function ChatInterface({
                 <div className="user-message">
                   <div className="message-label">You</div>
                   <div className="message-content">
+                    {msg.files && msg.files.length > 0 && (
+                      <div className="message-files">
+                        {msg.files.map((file, fIndex) => (
+                          <div key={fIndex} className="file-chip">
+                            <Paperclip size={14} />
+                            <span className="file-chip-name">{file.name}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                     <div className="markdown-content">
                       <ReactMarkdown>{msg.content}</ReactMarkdown>
                     </div>
@@ -185,9 +254,12 @@ export default function ChatInterface({
                   {msg.stage3 && <Stage3 finalResponse={msg.stage3} />}
 
                   {/* Follow-up Trigger */}
-                  {msg.stage3 && index === conversation.messages.length - 1 && !isLoading && (
+                  {msg.stage3 && index === conversation.messages.length - 1 && !isLoading && !isInputManual && (
                     <FollowUpInput 
-                      onSendFollowUp={(content) => onSendMessage(content, 'chairman')}
+                      onActivate={() => {
+                        setInputMode('chairman');
+                        setIsInputManual(true);
+                      }}
                       isLoading={isLoading}
                     />
                   )}
@@ -197,7 +269,7 @@ export default function ChatInterface({
           ))
         )}
 
-        {isLoading && (
+        {isLoading && !lastMessageHasLoadingState && (
           <div className="loading-indicator">
             <div className="spinner"></div>
             <span>Consulting the council...</span>
@@ -207,35 +279,22 @@ export default function ChatInterface({
         <div ref={messagesEndRef} />
       </div>
 
-      <form className={`input-form ${isExpanded ? 'expanded' : ''}`} onSubmit={handleSubmit}>
-        <div className="input-wrapper">
-          <textarea
-            className="message-input"
-            placeholder="Ask your question... (Shift+Enter for new line, Enter to send)"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            disabled={isLoading}
-            rows={3}
-          />
-          <button
-            type="button"
-            className="expand-button"
-            onClick={() => setIsExpanded(!isExpanded)}
-            title={isExpanded ? "Collapse" : "Expand"}
-          >
-            {isExpanded ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
-          </button>
-        </div>
-        <button
-          type="submit"
-          className="send-button"
-          disabled={!input.trim() || isLoading}
-        >
-          <Send size={18} />
-          <span>Send</span>
-        </button>
-      </form>
+      {showInput && (
+        <ChatInput 
+          onSendMessage={handleSendMessage} 
+          isLoading={isLoading}
+          onFilesDropped={handleFilesDropped}
+          stagedFiles={stagedFiles}
+          onRemoveFile={handleRemoveFile}
+          onCancel={isInputManual ? () => {
+            setIsInputManual(false);
+            setInputMode('council');
+            setStagedFiles([]);
+          } : undefined}
+          placeholder={inputMode === 'chairman' ? "Follow up with the Chairman..." : undefined}
+          autoFocus={inputMode === 'chairman'}
+        />
+      )}
     </div>
   );
 }

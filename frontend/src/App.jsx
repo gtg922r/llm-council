@@ -145,19 +145,29 @@ function App() {
     }
   };
 
-  const handleSendMessage = async (content, targetModel = null) => {
+  const readFileContent = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target.result);
+      reader.onerror = (e) => reject(e);
+      reader.readAsText(file);
+    });
+  };
+
+  const handleSendMessage = async (content, targetModel = null, files = []) => {
     if (!currentConversationId) return;
 
     setIsLoading(true);
     try {
-      // Optimistically add user message to UI
-      const userMessage = { role: 'user', content };
+      // Optimistically add user message to UI (original content + file metadata)
+      const fileMetadata = files.map(f => ({ name: f.name, size: f.size }));
+      const userMessage = { role: 'user', content, files: fileMetadata };
       setCurrentConversation((prev) => ({
         ...prev,
         messages: [...prev.messages, userMessage],
       }));
 
-      // Create a partial assistant message that will be updated progressively
+      // Create and add a partial assistant message immediately
       const assistantMessage = {
         role: 'assistant',
         stage1: null,
@@ -175,16 +185,27 @@ function App() {
         },
       };
 
-      // Add the partial assistant message
       setCurrentConversation((prev) => ({
         ...prev,
         messages: [...prev.messages, assistantMessage],
       }));
 
+      // Prepare final content for LLM (including concatenated file contents)
+      let finalContentForLLM = content;
+      if (files.length > 0) {
+        const fileContents = await Promise.all(
+          files.map(async (file) => {
+            const text = await readFileContent(file);
+            return `\n--- FILE: ${file.name} ---\n${text}\n--- END FILE: ${file.name} ---`;
+          })
+        );
+        finalContentForLLM = `${content}\n\nRelevant context from attached files:\n${fileContents.join('\n')}`;
+      }
+
       // For follow-ups, we currently use the non-streaming endpoint as simple fallback
       if (targetModel === 'chairman') {
         try {
-          const response = await api.sendMessage(currentConversationId, content, 'chairman');
+          const response = await api.sendMessage(currentConversationId, finalContentForLLM, 'chairman');
           setCurrentConversation((prev) => {
             const messages = [...prev.messages];
             const lastMsg = messages[messages.length - 1];
@@ -205,7 +226,7 @@ function App() {
       }
 
       // Send message with streaming (Default Council flow)
-      await api.sendMessageStream(currentConversationId, content, (eventType, event) => {
+      await api.sendMessageStream(currentConversationId, finalContentForLLM, (eventType, event) => {
         switch (eventType) {
           case 'stage1_start':
             setCurrentConversation((prev) => {
