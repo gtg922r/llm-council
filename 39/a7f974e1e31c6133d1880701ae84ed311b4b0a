@@ -1,0 +1,4 @@
+Task: Frontend - Update App.jsx to remove string concatenation logic and pass stagedFiles to the API.
+Summary: Refactored handleSendMessage in App.jsx. It now reads file contents and creates a structured 'structuredFiles' array which is passed directly to the API client. Removed the previous logic that concatenated file contents into a single prompt string on the frontend.
+Files: frontend/src/App.jsx, frontend/src/__tests__/App_Files.test.jsx
+Why: To shift the responsibility of prompt construction to the backend and support structured file storage.
