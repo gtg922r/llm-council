@@ -1,0 +1,4 @@
+Task: Frontend - Update api.js to accept and transmit files array in sendMessage and sendMessageStream.
+Summary: Modified api.sendMessage and api.sendMessageStream in frontend/src/api.js to accept an optional 'files' parameter and include it in the JSON request body. Added unit tests for these modifications.
+Files: frontend/src/api.js, frontend/src/__tests__/api.test.js
+Why: To enable the frontend to send structured file data to the refactored backend API.
