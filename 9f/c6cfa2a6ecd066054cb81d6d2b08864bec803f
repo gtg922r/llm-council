@@ -1,0 +1,4 @@
+Task: Backend - Update backend/storage.py to accept and store files in add_user_message.
+Summary: Modified add_user_message to accept an optional 'files' argument (List[Dict]). If provided, files are stored within the user message object in the JSON conversation file. Maintained backward compatibility for calls without the 'files' argument.
+Files: backend/storage.py, tests/test_storage_files.py
+Why: To persist structured file context alongside user messages in the storage layer.
