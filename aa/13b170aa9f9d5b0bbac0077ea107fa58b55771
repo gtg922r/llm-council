@@ -1,0 +1,7 @@
+Task: Finalize Transmission & Rendering Improvements
+Summary: Unified ChatInput visual box (chips + text + buttons) with consistent focus border. Separated message display logic from LLM prompt transmission: history now only shows user text and chips, while the full content is sent to LLMs.
+Files:
+- frontend/src/components/ChatInput.css
+- frontend/src/components/ChatInterface.jsx
+- frontend/src/App.jsx
+- frontend/src/components/__tests__/ChatInterface.test.jsx
