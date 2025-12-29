@@ -24,7 +24,7 @@
   - Frontend: http://localhost:5173 (Vite with Development Proxy to Backend)
   - Testing:
     - Backend: pytest
-    - Frontend: Vitest + React Testing Library
+    - Frontend: Vitest + React Testing Library + @vitest/coverage-v8
   - **Codespaces Support:** Automatically detects `CODESPACES` environment to relax CORS and enable seamless tunneling via the Vite proxy.
 
 ## Changes & Deviations
