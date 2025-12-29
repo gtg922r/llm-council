@@ -1,0 +1,4 @@
+Task: Backend - Implement build_prompt_content helper in backend/main.py (or utility) to concatenate text + files.
+Summary: Implemented build_prompt_content function in backend/main.py. This function takes user text and a list of FileContext objects and returns a single string formatted for LLM consumption. Added unit tests for various scenarios.
+Files: backend/main.py, backend/tests/test_prompt_builder.py
+Why: To centralize the logic for constructing the LLM prompt from multiple sources (text and files) on the backend.
