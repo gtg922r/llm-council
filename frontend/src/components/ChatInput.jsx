@@ -5,12 +5,14 @@ import './ChatInput.css';
 export default function ChatInput({ 
   onSendMessage, 
   onCancel,
+  onFilesDropped,
   isLoading, 
   placeholder = "Ask your question... (Shift+Enter for new line, Enter to send)",
   autoFocus = false
 }) {
   const [input, setInput] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   const handleSubmit = (e) => {
     if (e) e.preventDefault();
@@ -27,9 +29,46 @@ export default function ChatInput({
     }
   };
 
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isLoading) {
+      setIsDragging(true);
+    }
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    if (isLoading) return;
+
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0 && onFilesDropped) {
+      onFilesDropped(files);
+    }
+  };
+
   return (
-    <div className={`chat-input-container ${isExpanded ? 'expanded' : ''}`}>
-      <form className="chat-input-form" onSubmit={handleSubmit}>
+    <div 
+      className={`chat-input-container ${isExpanded ? 'expanded' : ''} ${isDragging ? 'dragging' : ''}`}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      {isDragging && (
+        <div className="drag-overlay">
+          <div className="drag-message">Drop files here</div>
+        </div>
+      )}
+      <form className="chat-input-form" onSubmit={handleSubmit} aria-label="Chat Input Form">
         <div className="chat-input-wrapper">
           <textarea
             className="chat-input-textarea"

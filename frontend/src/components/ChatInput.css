@@ -13,6 +13,39 @@
   height: 50vh;
 }
 
+.chat-input-container.dragging {
+  border-top-color: #4a90e2;
+  background: #f0f7ff;
+}
+
+.drag-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(74, 144, 226, 0.1);
+  border: 2px dashed #4a90e2;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  pointer-events: none;
+  margin: 12px;
+  transition: all 0.2s ease;
+}
+
+.drag-message {
+  background: #4a90e2;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 14px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
 .chat-input-form {
   display: flex;
   gap: 12px;

@@ -74,4 +74,33 @@ describe('ChatInput', () => {
     fireEvent.click(cancelButton);
     expect(onCancel).toHaveBeenCalled();
   });
+
+  it('highlights border on drag over', () => {
+    render(<ChatInput onSendMessage={vi.fn()} />);
+    const container = screen.getByRole('form').parentElement;
+    
+    fireEvent.dragOver(container);
+    expect(container).toHaveClass('dragging');
+    
+    fireEvent.dragLeave(container);
+    expect(container).not.toHaveClass('dragging');
+  });
+
+  it('calls onFilesDropped when files are dropped', () => {
+    const onFilesDropped = vi.fn();
+    render(<ChatInput onSendMessage={vi.fn()} onFilesDropped={onFilesDropped} />);
+    const container = screen.getByRole('form').parentElement;
+    
+    const file = new File(['hello'], 'hello.txt', { type: 'text/plain' });
+    const dragEvent = {
+      dataTransfer: {
+        files: [file],
+        types: ['Files'],
+      },
+    };
+    
+    fireEvent.drop(container, dragEvent);
+    expect(onFilesDropped).toHaveBeenCalledWith([file]);
+    expect(container).not.toHaveClass('dragging');
+  });
 });
