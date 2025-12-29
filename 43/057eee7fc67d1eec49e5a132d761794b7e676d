@@ -1,0 +1,6 @@
+Task: Update the conversation history rendering to display file chips within the user's message blocks
+Summary: Updated ChatInterface to render file chips for user messages that included attachments. Passed the list of files through the onSendMessage callback to ensure they are tracked in the message history.
+Files:
+- frontend/src/components/ChatInterface.jsx
+- frontend/src/components/ChatInterface.css
+- frontend/src/components/__tests__/ChatInterface.test.jsx
