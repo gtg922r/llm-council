@@ -164,3 +164,36 @@ Frontend: Display with tabs + validation UI
 ```
 
 The entire flow is async/parallel where possible to minimize latency.
+
+## Development Workflows
+
+### Creating a New Feature Worktree
+
+1.  **Create the Worktree:**
+    Run the following command from the project root (creating the folder in the parent directory):
+
+    *   **Standard Feature:**
+        ```bash
+        # Syntax: git worktree add ../feat-<feature-name> -b feat/<feature-name> master
+        git worktree add ../feat-new-ability -b feat/new-ability master
+        ```
+
+    *   **LLM-Specific Feature:** (If referencing a specific agent/model)
+        ```bash
+        # Syntax: git worktree add ../feat-<model>-<feature-name> -b feat/<model>/<feature-name> master
+        git worktree add ../feat-gemini-new-ability -b feat/gemini/new-ability master
+        ```
+
+2.  **Install Dependencies:**
+    Navigate to the new directory and run the install script:
+    ```bash
+    cd ../feat-new-ability
+    ./install.sh
+    ```
+
+3.  **Configure Environment:**
+    Copy the `.env` file from the original project root to the new worktree:
+    ```bash
+    cp ../llm-council/.env .
+    ```
+
