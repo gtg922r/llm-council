@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import {
   MoreVertical,
@@ -102,12 +102,33 @@ export default function ChatInterface({
     scrollToBottom();
   }, [conversation]);
 
-  const handleSendMessage = (content) => {
-    onSendMessage(content, inputMode === 'chairman' ? 'chairman' : undefined);
+  const readFileContent = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target.result);
+      reader.onerror = (e) => reject(e);
+      reader.readAsText(file);
+    });
+  };
+
+  const handleSendMessage = useCallback(async (content) => {
+    let finalContent = content;
+
+    if (stagedFiles.length > 0) {
+      const fileContents = await Promise.all(
+        stagedFiles.map(async (file) => {
+          const text = await readFileContent(file);
+          return `\n--- FILE: ${file.name} ---\n${text}\n--- END FILE: ${file.name} ---`;
+        })
+      );
+      finalContent = `${content}\n\nRelevant context from attached files:\n${fileContents.join('\n')}`;
+    }
+
+    onSendMessage(finalContent, inputMode === 'chairman' ? 'chairman' : undefined);
     setIsInputManual(false);
     setInputMode('council');
     setStagedFiles([]); // Clear staged files after sending
-  };
+  }, [stagedFiles, inputMode, onSendMessage]);
 
   const handleMenuAction = (action) => {
     setShowMenu(false);

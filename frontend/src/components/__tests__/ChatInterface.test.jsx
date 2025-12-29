@@ -1,18 +1,6 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, act, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeAll } from 'vitest';
 import ChatInterface from '../ChatInterface';
-
-const mockChatInput = vi.fn();
-vi.mock('../ChatInput', () => ({
-  default: (props) => {
-    mockChatInput(props);
-    return (
-      <div data-testid="chat-input">
-        <button onClick={() => props.onSendMessage('test message')}>Send Test</button>
-      </div>
-    );
-  }
-}));
 
 describe('ChatInterface', () => {
   const mockConversation = {
@@ -44,7 +32,7 @@ describe('ChatInterface', () => {
         isLoading={false}
       />
     );
-    expect(screen.getByTestId('chat-input')).toBeInTheDocument();
+    expect(screen.getByRole('form', { name: /chat input form/i })).toBeInTheDocument();
   });
 
   it('hides input when loading', () => {
@@ -57,7 +45,7 @@ describe('ChatInterface', () => {
         isLoading={true}
       />
     );
-    expect(screen.queryByTestId('chat-input')).not.toBeInTheDocument();
+    expect(screen.queryByRole('form', { name: /chat input form/i })).not.toBeInTheDocument();
   });
 
   it('hides input after message is sent (waiting for council)', () => {
@@ -74,7 +62,7 @@ describe('ChatInterface', () => {
         isLoading={false}
       />
     );
-    expect(screen.queryByTestId('chat-input')).not.toBeInTheDocument();
+    expect(screen.queryByRole('form', { name: /chat input form/i })).not.toBeInTheDocument();
   });
 
   it('shows follow-up trigger after council response', () => {
@@ -88,10 +76,10 @@ describe('ChatInterface', () => {
       />
     );
     expect(screen.getByText(/Send Message to Chairman/i)).toBeInTheDocument();
-    expect(screen.queryByTestId('chat-input')).not.toBeInTheDocument();
+    expect(screen.queryByRole('form', { name: /chat input form/i })).not.toBeInTheDocument();
   });
 
-  it('validates and stages files', () => {
+  it('validates and stages files', async () => {
     render(
       <ChatInterface 
         conversation={mockConversation} 
@@ -102,7 +90,7 @@ describe('ChatInterface', () => {
       />
     );
 
-    const onFilesDropped = mockChatInput.mock.calls[0][0].onFilesDropped;
+    const container = screen.getByRole('form', { name: /chat input form/i }).parentElement;
 
     const validFile = new File(['content'], 'test.txt', { type: 'text/plain' });
     const largeFile = new File(['a'.repeat(1024 * 1024 + 1)], 'large.txt', { type: 'text/plain' });
@@ -111,11 +99,70 @@ describe('ChatInterface', () => {
     // Mock alert
     const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
 
-    onFilesDropped([validFile, largeFile, invalidType]);
+    await act(async () => {
+      fireEvent.drop(container, {
+        dataTransfer: {
+          files: [validFile, largeFile, invalidType],
+          types: ['Files'],
+        },
+      });
+    });
 
     expect(alertSpy).toHaveBeenCalledWith(expect.stringMatching(/too large/i));
     expect(alertSpy).toHaveBeenCalledWith(expect.stringMatching(/unsupported/i));
     
     alertSpy.mockRestore();
+  });
+
+  it('transmits file contents during message submission', async () => {
+    const onSendMessage = vi.fn();
+    render(
+      <ChatInterface 
+        conversation={mockConversation} 
+        onSendMessage={onSendMessage}
+        onHeaderAction={vi.fn()}
+        onUpdateTitle={vi.fn()}
+        isLoading={false}
+      />
+    );
+
+    const container = screen.getByRole('form', { name: /chat input form/i }).parentElement;
+    const textarea = screen.getByPlaceholderText(/Ask your question.../i);
+    const sendButton = screen.getByRole('button', { name: /send/i });
+
+    const file = new File(['file content'], 'test.txt', { type: 'text/plain' });
+    
+    // Mock FileReader as a class
+    class MockFileReader {
+      readAsText(f) {
+        this.onload({ target: { result: 'file content' } });
+      }
+    }
+    vi.stubGlobal('FileReader', MockFileReader);
+
+    // Stage the file
+    await act(async () => {
+      fireEvent.drop(container, {
+        dataTransfer: {
+          files: [file],
+          types: ['Files'],
+        },
+      });
+    });
+
+    // Enter query
+    fireEvent.change(textarea, { target: { value: 'my query' } });
+
+    // Send message
+    await act(async () => {
+      fireEvent.click(sendButton);
+    });
+
+    expect(onSendMessage).toHaveBeenCalledWith(
+      expect.stringMatching(/my query[\s\S]*--- FILE: test.txt ---[\s\S]*file content/i),
+      undefined
+    );
+
+    vi.unstubAllGlobals();
   });
 });
