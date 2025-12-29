@@ -1,0 +1,13 @@
+Task: Backend - Update send_message logic to use build_prompt_content and store files correctly.
+
+Summary:
+- send_message now stores files separately and builds a formatted prompt for LLM calls.
+- Streaming pathway now uses formatted prompt for stage1/2/3 and stores files.
+- Added async unit test to verify send_message uses prompt builder and persists files.
+
+Files:
+- backend/main.py
+- backend/tests/test_file_transmission.py
+
+Why:
+- Ensure backend owns prompt concatenation while persisting raw user content and file metadata.
