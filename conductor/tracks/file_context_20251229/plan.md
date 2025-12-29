@@ -6,14 +6,14 @@
 - [x] Task: Integrate `ChatInput` into the Chairman follow-up flow (replacing or refactoring `FollowUpInput.jsx`) acfb4b2
 - [x] Task: Conductor - User Manual Verification 'Refactor - Unified ChatInput Component' (Protocol in workflow.md) c6e32c4
 
-## Phase 2: Frontend - File Staging & UI [checkpoint: c6e32c4]
+## Phase 2: Frontend - File Staging & UI [checkpoint: 9afc47f]
 - [x] Task: Implement Drag & Drop logic in `ChatInput` with border highlights and a "Drop files here" overlay. c3fc1bd
 - [x] Task: Add a file attachment icon (paperclip) to `ChatInput` and integrate with the system file picker. 0e03724
 - [x] Task: Implement file validation (size < 1MB, text-based extensions) and staging state management. 2241b99
 - [x] Task: Render removable file chips for currently staged files within `ChatInput`. 0a04288
-- [ ] Task: Conductor - User Manual Verification 'Frontend - File Staging & UI' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Frontend - File Staging & UI' (Protocol in workflow.md) 9afc47f
 
-## Phase 3: Transmission & Rendering
+## Phase 3: Transmission & Rendering [checkpoint: 9afc47f]
 - [ ] Task: Update the message submission logic to read staged file contents and concatenate them into the payload with clear delimiters.
 - [ ] Task: Update the conversation history rendering to display file chips within the user's message blocks.
 - [ ] Task: Ensure that sending a message correctly clears both text and staged files.
