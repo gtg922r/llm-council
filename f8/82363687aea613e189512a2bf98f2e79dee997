@@ -1,0 +1,12 @@
+Phase 1 Verification Report: Backend Data Model & Storage
+
+Automated Tests:
+- Command: uv run pytest backend/tests/test_file_transmission.py
+- Command: uv run pytest backend/tests/test_file_transmission.py --cov=backend --cov-report=term-missing
+
+Manual Verification Steps (User confirmed: yes):
+1. Ensure the server is running: python -m backend.main
+2. Create a conversation: curl -X POST http://localhost:8001/api/conversations
+3. Send a message with files: curl -X POST http://localhost:8001/api/conversations/<id>/message -H 'Content-Type: application/json' -d '{content:hello,files:[{name:notes.txt,content:example,size:7}]}'
+4. Confirm response includes stage1/stage2/stage3.
+5. Confirm storage in data/conversations/<id>.json has user message with files array and content without concatenated file text.
