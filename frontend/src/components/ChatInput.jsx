@@ -1,11 +1,13 @@
 import { useState, useRef } from 'react';
-import { Send, Maximize2, Minimize2, Paperclip } from 'lucide-react';
+import { Send, Maximize2, Minimize2, Paperclip, X } from 'lucide-react';
 import './ChatInput.css';
 
 export default function ChatInput({ 
   onSendMessage, 
   onCancel,
   onFilesDropped,
+  stagedFiles = [],
+  onRemoveFile,
   isLoading, 
   placeholder = "Ask your question... (Shift+Enter for new line, Enter to send)",
   autoFocus = false
@@ -84,6 +86,23 @@ export default function ChatInput({
       )}
       <form className="chat-input-form" onSubmit={handleSubmit} aria-label="Chat Input Form">
         <div className="chat-input-wrapper">
+          {stagedFiles.length > 0 && (
+            <div className="chat-input-staged-files">
+              {stagedFiles.map((file, index) => (
+                <div key={`${file.name}-${index}`} className="file-chip">
+                  <span className="file-chip-name">{file.name}</span>
+                  <button
+                    type="button"
+                    className="file-chip-remove"
+                    onClick={() => onRemoveFile(index)}
+                    title="Remove file"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
           <textarea
             className="chat-input-textarea"
             placeholder={placeholder}
@@ -96,12 +115,15 @@ export default function ChatInput({
           <div className="chat-input-toolbar">
             <button
               type="button"
-              className="chat-input-tool-button"
+              className={`chat-input-tool-button ${stagedFiles.length > 0 ? 'has-files' : ''}`}
               onClick={handleAttachClick}
               title="Attach Files"
               disabled={isLoading}
             >
               <Paperclip size={18} />
+              {stagedFiles.length > 0 && (
+                <span className="file-count-badge">{stagedFiles.length}</span>
+              )}
             </button>
             <button
               type="button"
@@ -135,7 +157,7 @@ export default function ChatInput({
           <button
             type="submit"
             className="chat-input-send-button"
-            disabled={!input.trim() || isLoading}
+            disabled={(!input.trim() && stagedFiles.length === 0) || isLoading}
           >
             <Send size={18} />
             <span>Send</span>

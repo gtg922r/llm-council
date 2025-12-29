@@ -129,4 +129,29 @@ describe('ChatInput', () => {
     
     expect(onFilesDropped).toHaveBeenCalledWith([file]);
   });
+
+  it('renders file chips and calls onRemoveFile', () => {
+    const onRemoveFile = vi.fn();
+    const stagedFiles = [
+      { name: 'test.txt' },
+      { name: 'data.csv' }
+    ];
+    
+    render(
+      <ChatInput 
+        onSendMessage={vi.fn()} 
+        stagedFiles={stagedFiles} 
+        onRemoveFile={onRemoveFile} 
+      />
+    );
+    
+    expect(screen.getByText('test.txt')).toBeInTheDocument();
+    expect(screen.getByText('data.csv')).toBeInTheDocument();
+    
+    const removeButtons = screen.getAllByTitle(/remove/i);
+    expect(removeButtons).toHaveLength(2);
+    
+    fireEvent.click(removeButtons[0]);
+    expect(onRemoveFile).toHaveBeenCalledWith(0);
+  });
 });

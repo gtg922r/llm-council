@@ -61,6 +61,55 @@
   height: 100%;
 }
 
+.chat-input-staged-files {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px;
+  background: #fff;
+  border: 1px solid #d0d0d0;
+  border-bottom: none;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+
+.file-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f0f4f8;
+  border: 1px solid #d1d9e6;
+  border-radius: 16px;
+  padding: 2px 8px 2px 12px;
+  max-width: 200px;
+}
+
+.file-chip-name {
+  font-size: 12px;
+  color: #334e68;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-chip-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: #627d98;
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.file-chip-remove:hover {
+  background: rgba(0,0,0,0.1);
+  color: #d93025;
+}
+
 .chat-input-textarea {
   flex: 1; 
   width: 100%;
@@ -77,6 +126,11 @@
   outline: none;
   resize: none; 
   transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.chat-input-staged-files + .chat-input-textarea {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
 }
 
 .chat-input-textarea:focus {
@@ -100,6 +154,7 @@
 }
 
 .chat-input-tool-button {
+  position: relative;
   background: transparent;
   border: none;
   color: #999;
@@ -110,6 +165,28 @@
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
+}
+
+.chat-input-tool-button.has-files {
+  color: #4a90e2;
+}
+
+.file-count-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  background: #d93025;
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 14px;
+  height: 14px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  border: 1.5px solid #fff;
 }
 
 .chat-input-tool-button:hover:not(:disabled) {
