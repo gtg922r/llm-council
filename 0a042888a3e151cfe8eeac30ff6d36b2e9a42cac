@@ -1,0 +1,6 @@
+Task: Render removable file chips for currently staged files within ChatInput
+Summary: Implemented UI for staged files using removable chips. Added a file count badge to the attachment icon.
+Files:
+- frontend/src/components/ChatInput.jsx
+- frontend/src/components/ChatInput.css
+- frontend/src/components/__tests__/ChatInput.test.jsx
