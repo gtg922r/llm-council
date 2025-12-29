@@ -1,13 +1,13 @@
 # Implementation Plan: Refactor Backend File Transmission
 
-## Phase 1: Backend Data Model & Storage
+## Phase 1: Backend Data Model & Storage [checkpoint: bb14683]
 Refactor the backend to support structured file context in the API and storage layer.
 
 - [x] Task: Backend - Update `backend/main.py` Pydantic models to include `FileContext` and `files` list in requests. (5793505)
 - [x] Task: Backend - Update `backend/storage.py` to accept and store `files` in `add_user_message`. (9fc6cfa)
 - [x] Task: Backend - Implement `build_prompt_content` helper in `backend/main.py` (or utility) to concatenate text + files. (2a6799c)
 - [x] Task: Backend - Update `send_message` logic to use `build_prompt_content` and store files correctly. (8e51dfd)
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Backend Data Model & Storage' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 1: Backend Data Model & Storage' (Protocol in workflow.md)
 
 ## Phase 2: Frontend API Integration
 Update the frontend to send structured file objects instead of concatenating strings.
