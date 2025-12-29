@@ -113,20 +113,10 @@ export default function ChatInterface({
   };
 
   const handleSendMessage = useCallback(async (content) => {
-    let finalContent = content;
-    const filesToAttach = [...stagedFiles];
-
-    if (stagedFiles.length > 0) {
-      const fileContents = await Promise.all(
-        stagedFiles.map(async (file) => {
-          const text = await readFileContent(file);
-          return `\n--- FILE: ${file.name} ---\n${text}\n--- END FILE: ${file.name} ---`;
-        })
-      );
-      finalContent = `${content}\n\nRelevant context from attached files:\n${fileContents.join('\n')}`;
-    }
-
-    onSendMessage(finalContent, inputMode === 'chairman' ? 'chairman' : undefined, filesToAttach);
+    // We pass the raw content and the files separately.
+    // The concatenation for the LLM prompt will happen in the API handler.
+    onSendMessage(content, inputMode === 'chairman' ? 'chairman' : undefined, stagedFiles);
+    
     setIsInputManual(false);
     setInputMode('council');
     setStagedFiles([]); // Clear staged files after sending

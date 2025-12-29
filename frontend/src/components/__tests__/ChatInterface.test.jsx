@@ -159,7 +159,7 @@ describe('ChatInterface', () => {
     });
 
     expect(onSendMessage).toHaveBeenCalledWith(
-      expect.stringMatching(/my query[\s\S]*--- FILE: test.txt ---[\s\S]*file content/i),
+      'my query',
       undefined,
       expect.arrayContaining([file])
     );
