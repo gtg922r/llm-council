@@ -1,0 +1,12 @@
+Task: Frontend - Update api.js to accept and transmit files array in sendMessage and sendMessageStream.
+
+Summary:
+- Added files payload support in api.sendMessage and api.sendMessageStream.
+- Added API unit tests to assert files are included in request body.
+
+Files:
+- frontend/src/api.js
+- frontend/src/__tests__/api.test.js
+
+Why:
+- Ensure structured file context is sent to the backend instead of concatenated strings.
