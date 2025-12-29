@@ -87,6 +87,28 @@ class UpdateConversationRequest(BaseModel):
     is_archived: bool | None = None
 
 
+def build_prompt_content(content: str, files: List[FileContext] | None = None) -> str:
+    """
+    Concatenate user message and file contents for LLM context.
+    
+    Args:
+        content: The user's text message.
+        files: Optional list of FileContext objects.
+        
+    Returns:
+        A single string with the user message and all file contents.
+    """
+    if not files:
+        return content
+        
+    parts = [content]
+    
+    for file in files:
+        parts.append(f"\n--- FILE: {file.name} ---\n{file.content}\n--- END FILE: {file.name} ---")
+        
+    return "\n".join(parts)
+
+
 @app.get("/")
 async def root():
     """Health check endpoint."""
