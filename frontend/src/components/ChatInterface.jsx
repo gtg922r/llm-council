@@ -4,10 +4,7 @@ import {
   MoreVertical,
   Copy,
   Archive,
-  Trash2,
-  Send,
-  Maximize2,
-  Minimize2
+  Trash2
 } from 'lucide-react';
 import Stage1 from './Stage1';
 import Stage2 from './Stage2';
@@ -15,6 +12,7 @@ import Stage3 from './Stage3';
 import CollapsibleSection from './CollapsibleSection';
 import EditableTitle from './EditableTitle';
 import FollowUpInput from './FollowUpInput';
+import ChatInput from './ChatInput';
 import './ChatInterface.css';
 
 export default function ChatInterface({
@@ -24,8 +22,6 @@ export default function ChatInterface({
   onUpdateTitle,
   isLoading,
 }) {
-  const [input, setInput] = useState('');
-  const [isExpanded, setIsExpanded] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const messagesEndRef = useRef(null);
   const menuRef = useRef(null);
@@ -47,22 +43,6 @@ export default function ChatInterface({
   useEffect(() => {
     scrollToBottom();
   }, [conversation]);
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (input.trim() && !isLoading) {
-      onSendMessage(input);
-      setInput('');
-    }
-  };
-
-  const handleKeyDown = (e) => {
-    // Submit on Enter (without Shift)
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit(e);
-    }
-  };
 
   const handleMenuAction = (action) => {
     setShowMenu(false);
@@ -207,35 +187,7 @@ export default function ChatInterface({
         <div ref={messagesEndRef} />
       </div>
 
-      <form className={`input-form ${isExpanded ? 'expanded' : ''}`} onSubmit={handleSubmit}>
-        <div className="input-wrapper">
-          <textarea
-            className="message-input"
-            placeholder="Ask your question... (Shift+Enter for new line, Enter to send)"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            disabled={isLoading}
-            rows={3}
-          />
-          <button
-            type="button"
-            className="expand-button"
-            onClick={() => setIsExpanded(!isExpanded)}
-            title={isExpanded ? "Collapse" : "Expand"}
-          >
-            {isExpanded ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
-          </button>
-        </div>
-        <button
-          type="submit"
-          className="send-button"
-          disabled={!input.trim() || isLoading}
-        >
-          <Send size={18} />
-          <span>Send</span>
-        </button>
-      </form>
+      <ChatInput onSendMessage={onSendMessage} isLoading={isLoading} />
     </div>
   );
 }
