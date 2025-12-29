@@ -3,7 +3,7 @@
 ## Phase 1: Backend Data Model & Storage
 Refactor the backend to support structured file context in the API and storage layer.
 
-- [ ] Task: Backend - Update `backend/main.py` Pydantic models to include `FileContext` and `files` list in requests.
+- [x] Task: Backend - Update `backend/main.py` Pydantic models to include `FileContext` and `files` list in requests. (be774ff)
 - [ ] Task: Backend - Update `backend/storage.py` to accept and store `files` in `add_user_message`.
 - [ ] Task: Backend - Implement `build_prompt_content` helper in `backend/main.py` (or utility) to concatenate text + files.
 - [ ] Task: Backend - Update `send_message` logic to use `build_prompt_content` and store files correctly.
