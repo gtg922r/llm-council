@@ -46,10 +46,18 @@ class CreateConversationRequest(BaseModel):
     pass
 
 
+class FileContext(BaseModel):
+    """Text file content for contextual input."""
+    name: str
+    content: str
+    size: int | None = None
+
+
 class SendMessageRequest(BaseModel):
     """Request to send a message in a conversation."""
     content: str
     target_model: str | None = None # e.g., "chairman" for follow-up
+    files: List[FileContext] = []
 
 
 class ConversationMetadata(BaseModel):
@@ -77,6 +85,24 @@ class UpdateConversationRequest(BaseModel):
     title: str | None = None
     is_pinned: bool | None = None
     is_archived: bool | None = None
+
+
+def build_prompt_content(content: str, files: List[FileContext]) -> str:
+    """Combine user text with attached file contents for model prompts."""
+    content_text = content.strip()
+    if not files:
+        return content_text
+
+    file_sections = []
+    for file in files:
+        file_sections.append(
+            f"=== File: {file.name} ===\n{file.content}\n=== End File: {file.name} ==="
+        )
+
+    file_block = "File context:\n" + "\n\n".join(file_sections)
+    if content_text:
+        return f"{content_text}\n\n{file_block}"
+    return file_block
 
 
 @app.get("/")
@@ -157,13 +183,18 @@ async def send_message(conversation_id: str, request: SendMessageRequest):
 
     # Check if this is the first message
     is_first_message = len(conversation["messages"]) == 0
+    stored_files = [{"name": file.name, "size": file.size} for file in request.files]
+    prompt_content = build_prompt_content(request.content, request.files)
 
     # Add user message
-    storage.add_user_message(conversation_id, request.content)
+    storage.add_user_message(conversation_id, request.content, stored_files)
 
     # If this is the first message, generate a title
     if is_first_message:
-        title = await generate_conversation_title(request.content)
+        title_source = request.content.strip()
+        if not title_source and request.files:
+            title_source = "Files: " + ", ".join([file.name for file in request.files])
+        title = await generate_conversation_title(title_source or "New Conversation")
         storage.update_conversation_title(conversation_id, title)
 
     # Check for Follow-up (Target: Chairman)
@@ -209,7 +240,7 @@ async def send_message(conversation_id: str, request: SendMessageRequest):
                 stage1_results=last_assistant_msg.get("stage1", []),
                 stage2_results=last_assistant_msg.get("stage2", []),
                 stage3_response=last_assistant_msg.get("stage3", {}).get("response", ""),
-                followup_query=request.content
+                followup_query=prompt_content
             )
 
             # Store result
@@ -235,7 +266,7 @@ async def send_message(conversation_id: str, request: SendMessageRequest):
 
     # Run the 3-stage council process (Default)
     stage1_results, stage2_results, stage3_result, metadata = await run_full_council(
-        request.content
+        prompt_content
     )
 
     # Add assistant message with all stages
@@ -278,17 +309,23 @@ async def send_message_stream(conversation_id: str, request: SendMessageRequest)
                     print(f"Exception raised while querying model {model}: {e}")
                     return model, None
 
+            stored_files = [{"name": file.name, "size": file.size} for file in request.files]
+            prompt_content = build_prompt_content(request.content, request.files)
+
             # Add user message
-            storage.add_user_message(conversation_id, request.content)
+            storage.add_user_message(conversation_id, request.content, stored_files)
 
             # Start title generation in parallel (don't await yet)
             title_task = None
             if is_first_message:
-                title_task = asyncio.create_task(generate_conversation_title(request.content))
+                title_source = request.content.strip()
+                if not title_source and request.files:
+                    title_source = "Files: " + ", ".join([file.name for file in request.files])
+                title_task = asyncio.create_task(generate_conversation_title(title_source or "New Conversation"))
 
             # Stage 1: Collect responses
             yield f"data: {json.dumps({'type': 'stage1_start', 'total': len(COUNCIL_MODELS)})}\n\n"
-            stage1_messages = [{"role": "user", "content": request.content}]
+            stage1_messages = [{"role": "user", "content": prompt_content}]
             stage1_tasks = [
                 asyncio.create_task(query_with_model(model, stage1_messages))
                 for model in COUNCIL_MODELS
@@ -332,7 +369,7 @@ async def send_message_stream(conversation_id: str, request: SendMessageRequest)
             ])
             ranking_prompt = f"""You are evaluating different responses to the following question:
 
-Question: {request.content}
+Question: {prompt_content}
 
 Here are the responses from different models (anonymized):
 
@@ -397,7 +434,7 @@ Now provide your evaluation and ranking:"""
 
             # Stage 3: Synthesize final answer
             yield f"data: {json.dumps({'type': 'stage3_start'})}\n\n"
-            stage3_result = await stage3_synthesize_final(request.content, stage1_results, stage2_results)
+            stage3_result = await stage3_synthesize_final(prompt_content, stage1_results, stage2_results)
             yield f"data: {json.dumps({'type': 'stage3_complete', 'data': stage3_result})}\n\n"
 
             # Wait for title generation if it was started

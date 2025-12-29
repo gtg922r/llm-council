@@ -49,7 +49,7 @@ export const api = {
   /**
    * Send a message in a conversation.
    */
-  async sendMessage(conversationId, content, targetModel = null) {
+  async sendMessage(conversationId, content, targetModel = null, files = []) {
     const response = await fetch(
       `${API_BASE}/api/conversations/${conversationId}/message`,
       {
@@ -57,7 +57,7 @@ export const api = {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ content, target_model: targetModel }),
+        body: JSON.stringify({ content, target_model: targetModel, files }),
       }
     );
     if (!response.ok) {
@@ -116,7 +116,7 @@ export const api = {
    * @param {function} onEvent - Callback function for each event: (eventType, data) => void
    * @returns {Promise<void>}
    */
-  async sendMessageStream(conversationId, content, onEvent, targetModel = null) {
+  async sendMessageStream(conversationId, content, files, onEvent, targetModel = null) {
     const response = await fetch(
       `${API_BASE}/api/conversations/${conversationId}/message/stream`,
       {
@@ -124,7 +124,7 @@ export const api = {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ content, target_model: targetModel }),
+        body: JSON.stringify({ content, target_model: targetModel, files }),
       }
     );
 

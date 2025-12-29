@@ -145,13 +145,17 @@ function App() {
     }
   };
 
-  const handleSendMessage = async (content, targetModel = null) => {
+  const handleSendMessage = async (content, targetModel = null, files = []) => {
     if (!currentConversationId) return;
 
     setIsLoading(true);
     try {
       // Optimistically add user message to UI
-      const userMessage = { role: 'user', content };
+      const userMessage = {
+        role: 'user',
+        content,
+        files: files.map((file) => ({ name: file.name, size: file.size })),
+      };
       setCurrentConversation((prev) => ({
         ...prev,
         messages: [...prev.messages, userMessage],
@@ -184,7 +188,7 @@ function App() {
       // For follow-ups, we currently use the non-streaming endpoint as simple fallback
       if (targetModel === 'chairman') {
         try {
-          const response = await api.sendMessage(currentConversationId, content, 'chairman');
+          const response = await api.sendMessage(currentConversationId, content, 'chairman', files);
           setCurrentConversation((prev) => {
             const messages = [...prev.messages];
             const lastMsg = messages[messages.length - 1];
@@ -205,7 +209,7 @@ function App() {
       }
 
       // Send message with streaming (Default Council flow)
-      await api.sendMessageStream(currentConversationId, content, (eventType, event) => {
+      await api.sendMessageStream(currentConversationId, content, files, (eventType, event) => {
         switch (eventType) {
           case 'stage1_start':
             setCurrentConversation((prev) => {

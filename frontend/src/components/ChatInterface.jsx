@@ -4,17 +4,14 @@ import {
   MoreVertical,
   Copy,
   Archive,
-  Trash2,
-  Send,
-  Maximize2,
-  Minimize2
+  Trash2
 } from 'lucide-react';
 import Stage1 from './Stage1';
 import Stage2 from './Stage2';
 import Stage3 from './Stage3';
 import CollapsibleSection from './CollapsibleSection';
 import EditableTitle from './EditableTitle';
-import FollowUpInput from './FollowUpInput';
+import ChatInput from './ChatInput';
 import './ChatInterface.css';
 
 export default function ChatInterface({
@@ -24,9 +21,8 @@ export default function ChatInterface({
   onUpdateTitle,
   isLoading,
 }) {
-  const [input, setInput] = useState('');
-  const [isExpanded, setIsExpanded] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [isFollowUpMode, setIsFollowUpMode] = useState(false);
   const messagesEndRef = useRef(null);
   const menuRef = useRef(null);
 
@@ -48,21 +44,9 @@ export default function ChatInterface({
     scrollToBottom();
   }, [conversation]);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (input.trim() && !isLoading) {
-      onSendMessage(input);
-      setInput('');
-    }
-  };
-
-  const handleKeyDown = (e) => {
-    // Submit on Enter (without Shift)
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit(e);
-    }
-  };
+  useEffect(() => {
+    setIsFollowUpMode(false);
+  }, [conversation?.id]);
 
   const handleMenuAction = (action) => {
     setShowMenu(false);
@@ -79,6 +63,15 @@ export default function ChatInterface({
       </div>
     );
   }
+
+  const lastMessage = conversation.messages[conversation.messages.length - 1];
+  const canRequestFollowUp = Boolean(
+    lastMessage &&
+    lastMessage.role === 'assistant' &&
+    lastMessage.stage3 &&
+    !isLoading
+  );
+  const shouldShowInput = !isLoading && (isFollowUpMode || conversation.messages.length === 0);
 
   return (
     <div className="chat-interface">
@@ -124,6 +117,15 @@ export default function ChatInterface({
                 <div className="user-message">
                   <div className="message-label">You</div>
                   <div className="message-content">
+                    {msg.files && msg.files.length > 0 && (
+                      <div className="message-file-chips">
+                        {msg.files.map((file, fileIndex) => (
+                          <span key={`${file.name}-${fileIndex}`} className="message-file-chip">
+                            {file.name}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                     <div className="markdown-content">
                       <ReactMarkdown>{msg.content}</ReactMarkdown>
                     </div>
@@ -184,13 +186,6 @@ export default function ChatInterface({
                   )}
                   {msg.stage3 && <Stage3 finalResponse={msg.stage3} />}
 
-                  {/* Follow-up Trigger */}
-                  {msg.stage3 && index === conversation.messages.length - 1 && !isLoading && (
-                    <FollowUpInput 
-                      onSendFollowUp={(content) => onSendMessage(content, 'chairman')}
-                      isLoading={isLoading}
-                    />
-                  )}
                 </div>
               )}
             </div>
@@ -207,35 +202,35 @@ export default function ChatInterface({
         <div ref={messagesEndRef} />
       </div>
 
-      <form className={`input-form ${isExpanded ? 'expanded' : ''}`} onSubmit={handleSubmit}>
-        <div className="input-wrapper">
-          <textarea
-            className="message-input"
-            placeholder="Ask your question... (Shift+Enter for new line, Enter to send)"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            disabled={isLoading}
-            rows={3}
-          />
+      {canRequestFollowUp && !isFollowUpMode && (
+        <div className="follow-up-trigger">
           <button
-            type="button"
-            className="expand-button"
-            onClick={() => setIsExpanded(!isExpanded)}
-            title={isExpanded ? "Collapse" : "Expand"}
+            className="follow-up-button"
+            onClick={() => setIsFollowUpMode(true)}
+            disabled={isLoading}
           >
-            {isExpanded ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+            Send Message to Chairman
           </button>
         </div>
-        <button
-          type="submit"
-          className="send-button"
-          disabled={!input.trim() || isLoading}
-        >
-          <Send size={18} />
-          <span>Send</span>
-        </button>
-      </form>
+      )}
+
+      {shouldShowInput && (
+        <ChatInput
+          variant="main"
+          layout="inline"
+          placeholder={
+            isFollowUpMode
+              ? "Follow up with the Chairman..."
+              : "Ask your question... (Shift+Enter for new line, Enter to send)"
+          }
+          submitLabel="Send"
+          onSend={(content, files) => {
+            onSendMessage(content, isFollowUpMode ? 'chairman' : null, files);
+            setIsFollowUpMode(false);
+          }}
+          isLoading={isLoading}
+        />
+      )}
     </div>
   );
 }
