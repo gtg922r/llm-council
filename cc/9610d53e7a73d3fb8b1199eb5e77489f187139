@@ -1,0 +1,4 @@
+Task: Frontend - Add logic in App.jsx to call markAsRead when a conversation is selected
+Summary: Updated the handleSelectConversation function in App.jsx to call api.markAsRead and optimistically update the conversations state.
+Files: frontend/src/App.jsx, frontend/src/__tests__/App.test.jsx
+Why: Ensures that unread indicators are dismissed as soon as the user views the relevant conversation.
