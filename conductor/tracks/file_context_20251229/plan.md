@@ -8,7 +8,7 @@
 
 ## Phase 2: Frontend - File Staging & UI [checkpoint: c6e32c4]
 - [x] Task: Implement Drag & Drop logic in `ChatInput` with border highlights and a "Drop files here" overlay. c3fc1bd
-- [ ] Task: Add a file attachment icon (paperclip) to `ChatInput` and integrate with the system file picker.
+- [x] Task: Add a file attachment icon (paperclip) to `ChatInput` and integrate with the system file picker. 0e03724
 - [ ] Task: Implement file validation (size < 1MB, text-based extensions) and staging state management.
 - [ ] Task: Render removable file chips for currently staged files within `ChatInput`.
 - [ ] Task: Conductor - User Manual Verification 'Frontend - File Staging & UI' (Protocol in workflow.md)
