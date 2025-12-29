@@ -46,10 +46,18 @@ class CreateConversationRequest(BaseModel):
     pass
 
 
+class FileContext(BaseModel):
+    """Structured file content for LLM context."""
+    name: str
+    content: str
+    size: int | None = None
+
+
 class SendMessageRequest(BaseModel):
     """Request to send a message in a conversation."""
     content: str
     target_model: str | None = None # e.g., "chairman" for follow-up
+    files: List[FileContext] | None = None
 
 
 class ConversationMetadata(BaseModel):
