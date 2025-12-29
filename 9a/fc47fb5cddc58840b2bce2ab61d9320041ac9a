@@ -1,0 +1,9 @@
+Phase: Frontend - File Staging & UI
+Automated Tests: cd frontend && npm test -- --run (20 tests passed)
+Manual Verification:
+1. Verified drag-and-drop logic with scoped visual indicator.
+2. Verified system file picker integration via paperclip icon.
+3. Verified vertical stacking of tool buttons in ChatInput.
+4. Verified file validation (1MB limit, text-based extensions).
+5. Verified file staging state management and removal via chips.
+User Confirmation: Explicitly approved by user.
