@@ -3,7 +3,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List, Dict, Any
 import uuid
 import json
@@ -46,9 +46,17 @@ class CreateConversationRequest(BaseModel):
     pass
 
 
+class FileContext(BaseModel):
+    """Structured file context sent alongside a message."""
+    name: str
+    content: str
+    size: int | None = None
+
+
 class SendMessageRequest(BaseModel):
     """Request to send a message in a conversation."""
     content: str
+    files: List[FileContext] = Field(default_factory=list)
     target_model: str | None = None # e.g., "chairman" for follow-up
 
 
