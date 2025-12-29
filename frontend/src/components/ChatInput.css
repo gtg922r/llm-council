@@ -1,4 +1,5 @@
 .chat-input-container {
+  position: relative;
   display: flex;
   flex-direction: column;
   background: #fafafa;
@@ -149,6 +150,7 @@
   top: 8px;
   right: 8px;
   display: flex;
+  flex-direction: column;
   gap: 4px;
   z-index: 5;
 }
