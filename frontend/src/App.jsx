@@ -145,13 +145,13 @@ function App() {
     }
   };
 
-  const handleSendMessage = async (content, targetModel = null) => {
+  const handleSendMessage = async (content, targetModel = null, files = []) => {
     if (!currentConversationId) return;
 
     setIsLoading(true);
     try {
       // Optimistically add user message to UI
-      const userMessage = { role: 'user', content };
+      const userMessage = { role: 'user', content, files };
       setCurrentConversation((prev) => ({
         ...prev,
         messages: [...prev.messages, userMessage],
