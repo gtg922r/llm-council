@@ -1,0 +1,13 @@
+Task: Frontend - Update App.jsx to remove string concatenation logic and pass stagedFiles to the API.
+
+Summary:
+- App now reads file contents into structured file payloads and sends them via api.sendMessage/sendMessageStream.
+- Removed client-side prompt concatenation in favor of backend assembly.
+- Added App unit test to verify file contents are passed to the API.
+
+Files:
+- frontend/src/App.jsx
+- frontend/src/__tests__/App.test.jsx
+
+Why:
+- Keep file data structured in requests while preserving user message content as-is.
