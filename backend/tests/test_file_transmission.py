@@ -1,3 +1,5 @@
+import pytest
+import backend.main as main
 from backend.main import SendMessageRequest, FileContext, build_prompt_content
 from backend import storage
 
@@ -54,3 +56,40 @@ def test_build_prompt_content_appends_files():
         "- item\n"
         "--- END FILE: todo.md ---"
     )
+
+
+@pytest.mark.asyncio
+async def test_send_message_uses_prompt_builder(monkeypatch):
+    """send_message should store raw content and send formatted prompt to models."""
+    captured = {}
+
+    def fake_get_conversation(_conversation_id):
+        return {"messages": [{"role": "user", "content": "prior"}]}
+
+    def fake_add_user_message(_conversation_id, content, files=None):
+        captured["content"] = content
+        captured["files"] = files
+
+    def fake_add_assistant_message(_conversation_id, _stage1, _stage2, _stage3):
+        return None
+
+    async def fake_run_full_council(prompt_content):
+        captured["prompt"] = prompt_content
+        return [], [], {"response": "ok"}, {}
+
+    monkeypatch.setattr(main.storage, "get_conversation", fake_get_conversation)
+    monkeypatch.setattr(main.storage, "add_user_message", fake_add_user_message)
+    monkeypatch.setattr(main.storage, "add_assistant_message", fake_add_assistant_message)
+    monkeypatch.setattr(main, "run_full_council", fake_run_full_council)
+
+    request = SendMessageRequest(
+        content="hello",
+        files=[FileContext(name="notes.txt", content="example", size=7)],
+    )
+
+    response = await main.send_message("conv-1", request)
+
+    assert captured["content"] == "hello"
+    assert captured["files"] == [{"name": "notes.txt", "content": "example", "size": 7}]
+    assert captured["prompt"] == build_prompt_content("hello", request.files)
+    assert response["stage3"]["response"] == "ok"
