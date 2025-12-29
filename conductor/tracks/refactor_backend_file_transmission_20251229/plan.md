@@ -13,7 +13,7 @@ Refactor the backend to support structured file context in the API and storage l
 Update the frontend to send structured file objects instead of concatenating strings.
 
 - [x] Task: Frontend - Update `api.js` to accept and transmit `files` array in `sendMessage` and `sendMessageStream`. (ac51460)
-- [ ] Task: Frontend - Update `App.jsx` to remove string concatenation logic and pass `stagedFiles` to the API.
+- [x] Task: Frontend - Update `App.jsx` to remove string concatenation logic and pass `stagedFiles` to the API. (9440617)
 - [ ] Task: Frontend - Verify `ChatInterface.jsx` and `ChatInput.jsx` correctly handle the new flow (mostly cleanup).
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: Frontend API Integration' (Protocol in workflow.md)
 
