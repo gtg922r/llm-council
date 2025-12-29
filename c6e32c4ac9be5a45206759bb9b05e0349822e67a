@@ -1,0 +1,9 @@
+Task: Finalize Unified ChatInput Refactor
+Summary: Fixed styling and animation issues for ChatInput. Re-architected input management in ChatInterface to reuse a single instance of ChatInput for both Council and Chairman follow-ups. Implemented Turn-based visibility (input disappears while loading or waiting for turn).
+Files:
+- frontend/src/components/ChatInput.jsx
+- frontend/src/components/ChatInput.css
+- frontend/src/components/ChatInterface.jsx
+- frontend/src/components/FollowUpInput.jsx
+- frontend/src/components/FollowUpInput.css
+- frontend/src/components/__tests__/*
