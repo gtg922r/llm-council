@@ -161,6 +161,13 @@
   font-style: italic;
 }
 
+.stage-progress {
+  margin-left: auto;
+  font-style: normal;
+  color: #8a8a8a;
+  white-space: nowrap;
+}
+
 .spinner {
   width: 20px;
   height: 20px;

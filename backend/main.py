@@ -11,15 +11,16 @@ import asyncio
 
 from . import storage
 from . import config
+from .config import COUNCIL_MODELS
 from .council import (
     run_full_council,
     generate_conversation_title,
-    stage1_collect_responses,
-    stage2_collect_rankings,
     stage3_synthesize_final,
     calculate_aggregate_rankings,
-    chairman_followup
+    chairman_followup,
+    parse_ranking_from_text
 )
+from .openrouter import query_model
 
 app = FastAPI(title="LLM Council API")
 
@@ -270,6 +271,13 @@ async def send_message_stream(conversation_id: str, request: SendMessageRequest)
 
     async def event_generator():
         try:
+            async def query_with_model(model, messages):
+                try:
+                    return model, await query_model(model, messages)
+                except Exception as e:
+                    print(f"Exception raised while querying model {model}: {e}")
+                    return model, None
+
             # Add user message
             storage.add_user_message(conversation_id, request.content)
 
@@ -279,13 +287,111 @@ async def send_message_stream(conversation_id: str, request: SendMessageRequest)
                 title_task = asyncio.create_task(generate_conversation_title(request.content))
 
             # Stage 1: Collect responses
-            yield f"data: {json.dumps({'type': 'stage1_start'})}\n\n"
-            stage1_results = await stage1_collect_responses(request.content)
+            yield f"data: {json.dumps({'type': 'stage1_start', 'total': len(COUNCIL_MODELS)})}\n\n"
+            stage1_messages = [{"role": "user", "content": request.content}]
+            stage1_tasks = [
+                asyncio.create_task(query_with_model(model, stage1_messages))
+                for model in COUNCIL_MODELS
+            ]
+            stage1_responses = {}
+            stage1_completed = 0
+            for task in asyncio.as_completed(stage1_tasks):
+                model, response = await task
+                stage1_responses[model] = response
+                stage1_completed += 1
+                yield f"data: {json.dumps({'type': 'stage1_progress', 'completed': stage1_completed, 'total': len(COUNCIL_MODELS)})}\n\n"
+
+            stage1_results = []
+            for model in COUNCIL_MODELS:
+                response = stage1_responses.get(model)
+                if response is not None:
+                    stage1_results.append({
+                        "model": model,
+                        "response": response.get('content', ''),
+                        "status": "success"
+                    })
+                else:
+                    stage1_results.append({
+                        "model": model,
+                        "response": "Error: Failed to get response from this model.",
+                        "status": "error"
+                    })
             yield f"data: {json.dumps({'type': 'stage1_complete', 'data': stage1_results})}\n\n"
 
             # Stage 2: Collect rankings
-            yield f"data: {json.dumps({'type': 'stage2_start'})}\n\n"
-            stage2_results, label_to_model = await stage2_collect_rankings(request.content, stage1_results)
+            yield f"data: {json.dumps({'type': 'stage2_start', 'total': len(COUNCIL_MODELS)})}\n\n"
+            successful_results = [r for r in stage1_results if r.get('status') == "success"]
+            labels = [chr(65 + i) for i in range(len(successful_results))]
+            label_to_model = {
+                f"Response {label}": result['model']
+                for label, result in zip(labels, successful_results)
+            }
+            responses_text = "\n\n".join([
+                f"Response {label}:\n{result['response']}"
+                for label, result in zip(labels, successful_results)
+            ])
+            ranking_prompt = f"""You are evaluating different responses to the following question:
+
+Question: {request.content}
+
+Here are the responses from different models (anonymized):
+
+{responses_text}
+
+Your task:
+1. First, evaluate each response individually. For each response, explain what it does well and what it does poorly.
+2. Then, at the very end of your response, provide a final ranking.
+
+IMPORTANT: Your final ranking MUST be formatted EXACTLY as follows:
+- Start with the line "FINAL RANKING:" (all caps, with colon)
+- Then list the responses from best to worst as a numbered list
+- Each line should be: number, period, space, then ONLY the response label (e.g., "1. Response A")
+- Do not add any other text or explanations in the ranking section
+
+Example of the correct format for your ENTIRE response:
+
+Response A provides good detail on X but misses Y...
+Response B is accurate but lacks depth on Z...
+Response C offers the most comprehensive answer...
+
+FINAL RANKING:
+1. Response C
+2. Response A
+3. Response B
+
+Now provide your evaluation and ranking:"""
+            stage2_messages = [{"role": "user", "content": ranking_prompt}]
+            stage2_tasks = [
+                asyncio.create_task(query_with_model(model, stage2_messages))
+                for model in COUNCIL_MODELS
+            ]
+            stage2_responses = {}
+            stage2_completed = 0
+            for task in asyncio.as_completed(stage2_tasks):
+                model, response = await task
+                stage2_responses[model] = response
+                stage2_completed += 1
+                yield f"data: {json.dumps({'type': 'stage2_progress', 'completed': stage2_completed, 'total': len(COUNCIL_MODELS)})}\n\n"
+
+            stage2_results = []
+            for model in COUNCIL_MODELS:
+                response = stage2_responses.get(model)
+                if response is not None:
+                    full_text = response.get('content', '')
+                    parsed = parse_ranking_from_text(full_text)
+                    stage2_results.append({
+                        "model": model,
+                        "ranking": full_text,
+                        "parsed_ranking": parsed,
+                        "status": "success"
+                    })
+                else:
+                    stage2_results.append({
+                        "model": model,
+                        "ranking": "Error: Failed to get ranking from this model.",
+                        "parsed_ranking": [],
+                        "status": "error"
+                    })
             aggregate_rankings = calculate_aggregate_rankings(stage2_results, label_to_model)
             yield f"data: {json.dumps({'type': 'stage2_complete', 'data': stage2_results, 'metadata': {'label_to_model': label_to_model, 'aggregate_rankings': aggregate_rankings}})}\n\n"
 

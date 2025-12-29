@@ -140,6 +140,11 @@ export default function ChatInterface({
                     <div className="stage-loading">
                       <div className="spinner"></div>
                       <span>Running Stage 1: Collecting individual responses...</span>
+                      {msg.progress?.stage1 && (
+                        <span className="stage-progress">
+                          ({msg.progress.stage1.completed} of {msg.progress.stage1.total} completed)
+                        </span>
+                      )}
                     </div>
                   )}
                   {msg.stage1 && msg.stage1.length > 0 && (
@@ -153,6 +158,11 @@ export default function ChatInterface({
                     <div className="stage-loading">
                       <div className="spinner"></div>
                       <span>Running Stage 2: Peer rankings...</span>
+                      {msg.progress?.stage2 && (
+                        <span className="stage-progress">
+                          ({msg.progress.stage2.completed} of {msg.progress.stage2.total} completed)
+                        </span>
+                      )}
                     </div>
                   )}
                   {msg.stage2 && msg.stage2.length > 0 && (
