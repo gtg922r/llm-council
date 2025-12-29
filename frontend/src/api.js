@@ -49,7 +49,7 @@ export const api = {
   /**
    * Send a message in a conversation.
    */
-  async sendMessage(conversationId, content, targetModel = null) {
+  async sendMessage(conversationId, content, targetModel = null, files = null) {
     const response = await fetch(
       `${API_BASE}/api/conversations/${conversationId}/message`,
       {
@@ -57,7 +57,11 @@ export const api = {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ content, target_model: targetModel }),
+        body: JSON.stringify({ 
+          content, 
+          target_model: targetModel,
+          files: files
+        }),
       }
     );
     if (!response.ok) {
@@ -114,9 +118,11 @@ export const api = {
    * @param {string} conversationId - The conversation ID
    * @param {string} content - The message content
    * @param {function} onEvent - Callback function for each event: (eventType, data) => void
+   * @param {string} targetModel - Optional target model (e.g., 'chairman')
+   * @param {Array} files - Optional array of file objects
    * @returns {Promise<void>}
    */
-  async sendMessageStream(conversationId, content, onEvent, targetModel = null) {
+  async sendMessageStream(conversationId, content, onEvent, targetModel = null, files = null) {
     const response = await fetch(
       `${API_BASE}/api/conversations/${conversationId}/message/stream`,
       {
@@ -124,7 +130,11 @@ export const api = {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ content, target_model: targetModel }),
+        body: JSON.stringify({ 
+          content, 
+          target_model: targetModel,
+          files: files
+        }),
       }
     );
 
