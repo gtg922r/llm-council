@@ -1,0 +1,4 @@
+Task: Backend - Update send_message logic to use build_prompt_content and store files correctly.
+Summary: Updated send_message and send_message_stream endpoints in backend/main.py. They now use build_prompt_content to construct the full LLM prompt and pass structured file data to the storage layer. Added integration tests using TestClient.
+Files: backend/main.py, tests/test_api_files.py
+Why: To finalize the backend refactor, ensuring that files are both stored correctly and included in the LLM context for all stages of the council process.
