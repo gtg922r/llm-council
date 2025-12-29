@@ -16,7 +16,7 @@
 ## Phase 3: Transmission & Rendering [checkpoint: 9afc47f]
 - [x] Task: Update the message submission logic to read staged file contents and concatenate them into the payload with clear delimiters. 0eb45e5
 - [x] Task: Update the conversation history rendering to display file chips within the user's message blocks. 43057ee
-- [ ] Task: Ensure that sending a message correctly clears both text and staged files.
+- [x] Task: Ensure that sending a message correctly clears both text and staged files. 1c95fbc
 - [ ] Task: Conductor - User Manual Verification 'Transmission & Rendering' (Protocol in workflow.md)
 
 ## Phase 4: End-to-End Verification
