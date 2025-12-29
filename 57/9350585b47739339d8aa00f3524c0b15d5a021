@@ -1,0 +1,4 @@
+Task: Backend - Update backend/main.py Pydantic models to include FileContext and files list in requests.
+Summary: Added FileContext Pydantic model to represent structured file data. Updated SendMessageRequest to include an optional 'files' field. Added unit tests for these models.
+Files: backend/main.py, backend/tests/test_models.py
+Why: To support transmitting files as structured data in the API payload instead of concatenating them into the user message string.
