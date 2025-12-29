@@ -7,7 +7,7 @@ Refactor the backend to support structured file context in the API and storage l
 - [x] Task: Backend - Update `backend/storage.py` to accept and store `files` in `add_user_message`. (e5ecd78)
 - [x] Task: Backend - Implement `build_prompt_content` helper in `backend/main.py` (or utility) to concatenate text + files. (c22ce8a)
 - [x] Task: Backend - Update `send_message` logic to use `build_prompt_content` and store files correctly. (a7c259e)
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Backend Data Model & Storage' (Protocol in workflow.md)
+- [~] Task: Conductor - User Manual Verification 'Phase 1: Backend Data Model & Storage' (Protocol in workflow.md)
 
 ## Phase 2: Frontend API Integration
 Update the frontend to send structured file objects instead of concatenating strings.
