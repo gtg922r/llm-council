@@ -4,6 +4,7 @@ import './ChatInput.css';
 
 export default function ChatInput({ 
   onSendMessage, 
+  onCancel,
   isLoading, 
   placeholder = "Ask your question... (Shift+Enter for new line, Enter to send)",
   autoFocus = false
@@ -49,14 +50,26 @@ export default function ChatInput({
             {isExpanded ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
           </button>
         </div>
-        <button
-          type="submit"
-          className="chat-input-send-button"
-          disabled={!input.trim() || isLoading}
-        >
-          <Send size={18} />
-          <span>Send</span>
-        </button>
+        <div className="chat-input-actions">
+          {onCancel && (
+            <button
+              type="button"
+              className="chat-input-cancel-button"
+              onClick={onCancel}
+              disabled={isLoading}
+            >
+              Cancel
+            </button>
+          )}
+          <button
+            type="submit"
+            className="chat-input-send-button"
+            disabled={!input.trim() || isLoading}
+          >
+            <Send size={18} />
+            <span>Send</span>
+          </button>
+        </div>
       </form>
     </div>
   );

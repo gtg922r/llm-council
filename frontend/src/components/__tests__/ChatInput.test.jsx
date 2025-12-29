@@ -65,4 +65,13 @@ describe('ChatInput', () => {
     fireEvent.click(expandButton);
     expect(expandButton).toHaveAttribute('title', 'Expand');
   });
+
+  it('calls onCancel when cancel button is clicked', () => {
+    const onCancel = vi.fn();
+    render(<ChatInput onSendMessage={vi.fn()} onCancel={onCancel} />);
+    const cancelButton = screen.getByRole('button', { name: /cancel/i });
+    
+    fireEvent.click(cancelButton);
+    expect(onCancel).toHaveBeenCalled();
+  });
 });
