@@ -1,0 +1,4 @@
+Task: Backend - Update add_assistant_message in storage.py to set has_unread = True
+Summary: Modified the add_assistant_message function to set the has_unread flag to True whenever a new assistant message is successfully added to a conversation.
+Files: backend/storage.py, tests/test_unread_indicator.py
+Why: This enables the 'unread indicator' feature by automatically marking a conversation as having new, unread content when the assistant completes its response.
