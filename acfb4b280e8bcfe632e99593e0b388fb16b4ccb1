@@ -1,0 +1,8 @@
+Task: Integrate ChatInput into FollowUpInput
+Summary: Refactored FollowUpInput to use the shared ChatInput component. Added support for an optional onCancel prop in ChatInput to accommodate the follow-up UI requirements.
+Files:
+- frontend/src/components/ChatInput.jsx
+- frontend/src/components/ChatInput.css
+- frontend/src/components/FollowUpInput.jsx
+- frontend/src/components/FollowUpInput.css
+- frontend/src/components/__tests__/ChatInput.test.jsx
