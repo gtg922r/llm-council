@@ -1,0 +1,4 @@
+Task: Backend - Update storage.py to include has_unread in conversation model and default it to False
+Summary: Added 'has_unread' field with default value False to conversation creation, listing, and duplication logic.
+Files: backend/storage.py, tests/test_unread_indicator.py
+Why: Necessary for tracking and persisting the unread state of conversations across sessions.
