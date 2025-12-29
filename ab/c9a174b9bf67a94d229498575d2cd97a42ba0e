@@ -1,0 +1,7 @@
+Phase Verification Report: Phase 1: Backend Persistence & API
+Automated Tests: uv run pytest tests/test_unread_indicator.py tests/test_api_unread.py tests/test_storage_improvements.py
+Manual Verification:
+1. Created conversation via POST /api/conversations -> has_unread: false (Verified)
+2. Added assistant message via storage -> has_unread: true (Verified via GET)
+3. Cleared has_unread via PATCH /api/conversations/{id} -> has_unread: false (Verified)
+User Confirmation: Yes
