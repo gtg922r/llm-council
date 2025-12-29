@@ -79,7 +79,8 @@ export default function ChatInterface({
   
   const showInput = (isNewConversation || isInputManual) && !isLoading;
 
-  const lastMessageIsAssistantLoading = lastMessage?.role === 'assistant' && (
+  const lastMessageIsAssistant = lastMessage?.role === 'assistant';
+  const lastMessageHasLoadingState = lastMessageIsAssistant && (
     lastMessage.loading?.stage1 || 
     lastMessage.loading?.stage2 || 
     lastMessage.loading?.stage3
@@ -268,7 +269,7 @@ export default function ChatInterface({
           ))
         )}
 
-        {isLoading && !lastMessageIsAssistantLoading && (
+        {isLoading && !lastMessageHasLoadingState && (
           <div className="loading-indicator">
             <div className="spinner"></div>
             <span>Consulting the council...</span>
