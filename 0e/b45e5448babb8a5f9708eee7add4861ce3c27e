@@ -1,0 +1,5 @@
+Task: Update the message submission logic to read staged file contents and concatenate them into the payload
+Summary: Implemented asynchronous file reading using FileReader API in ChatInterface. File contents are now concatenated into the message payload with clear delimiters before transmission.
+Files:
+- frontend/src/components/ChatInterface.jsx
+- frontend/src/components/__tests__/ChatInterface.test.jsx
