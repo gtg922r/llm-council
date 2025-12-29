@@ -72,20 +72,6 @@ export default function ChatInterface({
     setStagedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
-  // Determine if we should show the input
-  const isNewConversation = conversation?.messages.length === 0;
-  const lastMessage = conversation?.messages[conversation.messages.length - 1];
-  const isWaitingForCouncil = lastMessage?.role === 'user' || isLoading;
-  
-  const showInput = (isNewConversation || isInputManual) && !isLoading;
-
-  const lastMessageIsAssistant = lastMessage?.role === 'assistant';
-  const lastMessageHasLoadingState = lastMessageIsAssistant && (
-    lastMessage.loading?.stage1 || 
-    lastMessage.loading?.stage2 || 
-    lastMessage.loading?.stage3
-  );
-
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -103,15 +89,6 @@ export default function ChatInterface({
   useEffect(() => {
     scrollToBottom();
   }, [conversation]);
-
-  const readFileContent = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => resolve(e.target.result);
-      reader.onerror = (e) => reject(e);
-      reader.readAsText(file);
-    });
-  };
 
   const handleSendMessage = useCallback(async (content) => {
     // We pass the raw content and the files separately.
@@ -138,6 +115,19 @@ export default function ChatInterface({
       </div>
     );
   }
+
+  // Determine if we should show the input
+  const messages = conversation.messages ?? [];
+  const isNewConversation = messages.length === 0;
+  const lastMessage = messages[messages.length - 1];
+  const showInput = (isNewConversation || isInputManual) && !isLoading;
+
+  const lastMessageIsAssistant = lastMessage?.role === 'assistant';
+  const lastMessageHasLoadingState = lastMessageIsAssistant && (
+    lastMessage.loading?.stage1 || 
+    lastMessage.loading?.stage2 || 
+    lastMessage.loading?.stage3
+  );
 
   return (
     <div className="chat-interface">
@@ -171,13 +161,13 @@ export default function ChatInterface({
         </div>
       </div>
       <div className="messages-container">
-        {conversation.messages.length === 0 ? (
+        {messages.length === 0 ? (
           <div className="empty-state">
             <h2>Start a conversation</h2>
             <p>Ask a question to consult the LLM Council</p>
           </div>
         ) : (
-          conversation.messages.map((msg, index) => (
+          messages.map((msg, index) => (
             <div key={index} className="message-group">
               {msg.role === 'user' ? (
                 <div className="user-message">
@@ -254,7 +244,7 @@ export default function ChatInterface({
                   {msg.stage3 && <Stage3 finalResponse={msg.stage3} />}
 
                   {/* Follow-up Trigger */}
-                  {msg.stage3 && index === conversation.messages.length - 1 && !isLoading && !isInputManual && (
+                  {msg.stage3 && index === messages.length - 1 && !isLoading && !isInputManual && (
                     <FollowUpInput 
                       onActivate={() => {
                         setInputMode('chairman');

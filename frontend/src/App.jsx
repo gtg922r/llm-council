@@ -8,7 +8,7 @@ function App() {
   const [conversations, setConversations] = useState([]);
   const [currentConversationId, setCurrentConversationId] = useState(null);
   const [currentConversation, setCurrentConversation] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [loadingConversationId, setLoadingConversationId] = useState(null);
 
   const loadConversations = useCallback(async () => {
     try {
@@ -16,15 +16,6 @@ function App() {
       setConversations(convs);
     } catch (error) {
       console.error('Failed to load conversations:', error);
-    }
-  }, []);
-
-  const loadConversation = useCallback(async (id) => {
-    try {
-      const conv = await api.getConversation(id);
-      setCurrentConversation(conv);
-    } catch (error) {
-      console.error('Failed to load conversation:', error);
     }
   }, []);
 
@@ -36,17 +27,39 @@ function App() {
   // Load conversation details when selected
   useEffect(() => {
     if (currentConversationId) {
-      loadConversation(currentConversationId);
+      let isActive = true;
+      api.getConversation(currentConversationId)
+        .then((conv) => {
+          if (isActive) {
+            setCurrentConversation(conv);
+          }
+        })
+        .catch((error) => {
+          if (isActive) {
+            console.error('Failed to load conversation:', error);
+          }
+        });
+      return () => {
+        isActive = false;
+      };
     }
-  }, [currentConversationId, loadConversation]);
+  }, [currentConversationId]);
 
   const handleNewConversation = async () => {
     try {
       const newConv = await api.createConversation();
-      setConversations([
-        { id: newConv.id, created_at: newConv.created_at, message_count: 0 },
-        ...conversations,
-      ]);
+      setConversations((prev) => ([
+        {
+          id: newConv.id,
+          created_at: newConv.created_at,
+          title: newConv.title,
+          is_pinned: newConv.is_pinned,
+          is_archived: newConv.is_archived,
+          message_count: newConv.messages?.length ?? 0,
+        },
+        ...prev,
+      ]));
+      setCurrentConversation(newConv);
       setCurrentConversationId(newConv.id);
     } catch (error) {
       console.error('Failed to create conversation:', error);
@@ -54,6 +67,7 @@ function App() {
   };
 
   const handleSelectConversation = (id) => {
+    setCurrentConversation(null);
     setCurrentConversationId(id);
   };
 
@@ -157,15 +171,16 @@ function App() {
   const handleSendMessage = async (content, targetModel = null, files = []) => {
     if (!currentConversationId) return;
 
-    setIsLoading(true);
+    const conversationId = currentConversationId;
+    setLoadingConversationId(conversationId);
     try {
       // Optimistically add user message to UI (original content + file metadata)
       const fileMetadata = files.map(f => ({ name: f.name, size: f.size }));
       const userMessage = { role: 'user', content, files: fileMetadata };
-      setCurrentConversation((prev) => ({
-        ...prev,
-        messages: [...prev.messages, userMessage],
-      }));
+      setCurrentConversation((prev) => {
+        if (!prev || prev.id !== conversationId) return prev;
+        return { ...prev, messages: [...prev.messages, userMessage] };
+      });
 
       // Create and add a partial assistant message immediately
       const assistantMessage = {
@@ -185,10 +200,10 @@ function App() {
         },
       };
 
-      setCurrentConversation((prev) => ({
-        ...prev,
-        messages: [...prev.messages, assistantMessage],
-      }));
+      setCurrentConversation((prev) => {
+        if (!prev || prev.id !== conversationId) return prev;
+        return { ...prev, messages: [...prev.messages, assistantMessage] };
+      });
 
       // Prepare final content for LLM (including concatenated file contents)
       let finalContentForLLM = content;
@@ -207,6 +222,7 @@ function App() {
         try {
           const response = await api.sendMessage(currentConversationId, finalContentForLLM, 'chairman');
           setCurrentConversation((prev) => {
+            if (!prev || prev.id !== conversationId) return prev;
             const messages = [...prev.messages];
             const lastMsg = messages[messages.length - 1];
             lastMsg.stage1 = response.stage1;
@@ -216,7 +232,7 @@ function App() {
             lastMsg.loading = { stage1: false, stage2: false, stage3: false };
             return { ...prev, messages };
           });
-          setIsLoading(false);
+          setLoadingConversationId((prev) => (prev === conversationId ? null : prev));
           loadConversations();
           return;
         } catch (error) {
@@ -230,6 +246,7 @@ function App() {
         switch (eventType) {
           case 'stage1_start':
             setCurrentConversation((prev) => {
+              if (!prev || prev.id !== conversationId) return prev;
               const messages = [...prev.messages];
               const lastMsgIndex = messages.length - 1;
               messages[lastMsgIndex] = {
@@ -246,6 +263,7 @@ function App() {
 
           case 'stage1_progress':
             setCurrentConversation((prev) => {
+              if (!prev || prev.id !== conversationId) return prev;
               const messages = [...prev.messages];
               const lastMsgIndex = messages.length - 1;
               const current = messages[lastMsgIndex];
@@ -265,6 +283,7 @@ function App() {
 
           case 'stage1_complete':
             setCurrentConversation((prev) => {
+              if (!prev || prev.id !== conversationId) return prev;
               const messages = [...prev.messages];
               const lastMsgIndex = messages.length - 1;
               messages[lastMsgIndex] = {
@@ -279,6 +298,7 @@ function App() {
 
           case 'stage2_start':
             setCurrentConversation((prev) => {
+              if (!prev || prev.id !== conversationId) return prev;
               const messages = [...prev.messages];
               const lastMsgIndex = messages.length - 1;
               messages[lastMsgIndex] = {
@@ -295,6 +315,7 @@ function App() {
 
           case 'stage2_progress':
             setCurrentConversation((prev) => {
+              if (!prev || prev.id !== conversationId) return prev;
               const messages = [...prev.messages];
               const lastMsgIndex = messages.length - 1;
               const current = messages[lastMsgIndex];
@@ -314,6 +335,7 @@ function App() {
 
           case 'stage2_complete':
             setCurrentConversation((prev) => {
+              if (!prev || prev.id !== conversationId) return prev;
               const messages = [...prev.messages];
               const lastMsgIndex = messages.length - 1;
               messages[lastMsgIndex] = {
@@ -329,6 +351,7 @@ function App() {
 
           case 'stage3_start':
             setCurrentConversation((prev) => {
+              if (!prev || prev.id !== conversationId) return prev;
               const messages = [...prev.messages];
               const lastMsgIndex = messages.length - 1;
               messages[lastMsgIndex] = {
@@ -341,6 +364,7 @@ function App() {
 
           case 'stage3_complete':
             setCurrentConversation((prev) => {
+              if (!prev || prev.id !== conversationId) return prev;
               const messages = [...prev.messages];
               const lastMsgIndex = messages.length - 1;
               messages[lastMsgIndex] = {
@@ -360,12 +384,12 @@ function App() {
           case 'complete':
             // Stream complete, reload conversations list
             loadConversations();
-            setIsLoading(false);
+            setLoadingConversationId((prev) => (prev === conversationId ? null : prev));
             break;
 
           case 'error':
             console.error('Stream error:', event.message);
-            setIsLoading(false);
+            setLoadingConversationId((prev) => (prev === conversationId ? null : prev));
             break;
 
           default:
@@ -375,13 +399,15 @@ function App() {
     } catch (error) {
       console.error('Failed to send message:', error);
       // Remove optimistic messages on error
-      setCurrentConversation((prev) => ({
-        ...prev,
-        messages: prev.messages.slice(0, -2),
-      }));
-      setIsLoading(false);
+      setCurrentConversation((prev) => {
+        if (!prev || prev.id !== conversationId) return prev;
+        return { ...prev, messages: prev.messages.slice(0, -2) };
+      });
+      setLoadingConversationId((prev) => (prev === conversationId ? null : prev));
     }
   };
+
+  const isLoading = loadingConversationId === currentConversationId;
 
   return (
     <div className="app">
