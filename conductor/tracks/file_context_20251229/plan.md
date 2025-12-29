@@ -1,12 +1,12 @@
 # Track Plan: Unified Input & File Context
 
-## Phase 1: Refactor - Unified ChatInput Component
+## Phase 1: Refactor - Unified ChatInput Component [checkpoint: c6e32c4]
 - [x] Task: Create a reusable `ChatInput` component with basic messaging functionality (text, expansion, enter-to-send) bc7d836
 - [x] Task: Integrate `ChatInput` into `ChatInterface.jsx` for the main conversation input 797e997
 - [x] Task: Integrate `ChatInput` into the Chairman follow-up flow (replacing or refactoring `FollowUpInput.jsx`) acfb4b2
-- [ ] Task: Conductor - User Manual Verification 'Refactor - Unified ChatInput Component' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Refactor - Unified ChatInput Component' (Protocol in workflow.md) c6e32c4
 
-## Phase 2: Frontend - File Staging & UI
+## Phase 2: Frontend - File Staging & UI [checkpoint: c6e32c4]
 - [ ] Task: Implement Drag & Drop logic in `ChatInput` with border highlights and a "Drop files here" overlay.
 - [ ] Task: Add a file attachment icon (paperclip) to `ChatInput` and integrate with the system file picker.
 - [ ] Task: Implement file validation (size < 1MB, text-based extensions) and staging state management.
