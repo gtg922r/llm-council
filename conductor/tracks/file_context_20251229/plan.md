@@ -19,6 +19,6 @@
 - [x] Task: Ensure that sending a message correctly clears both text and staged files. 1c95fbc
 - [x] Task: Conductor - User Manual Verification 'Transmission & Rendering' (Protocol in workflow.md) e58d372
 
-## Phase 4: End-to-End Verification
-- [~] Task: Perform a full council run with multiple text files to verify correct context injection and Chairman synthesis.
-- [ ] Task: Conductor - User Manual Verification 'End-to-End Verification' (Protocol in workflow.md)
+## Phase 4: End-to-End Verification [checkpoint: 0d1e21b]
+- [x] Task: Perform a full council run with multiple text files to verify correct context injection and Chairman synthesis. ca76f51
+- [x] Task: Conductor - User Manual Verification 'End-to-End Verification' (Protocol in workflow.md) e58d372
