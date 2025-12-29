@@ -1,0 +1,6 @@
+Task: Add a file attachment icon (paperclip) to ChatInput and integrate with the system file picker
+Summary: Integrated a paperclip icon into ChatInput's toolbar. Implemented a hidden file input that is triggered by the icon to allow system file picking.
+Files:
+- frontend/src/components/ChatInput.jsx
+- frontend/src/components/ChatInput.css
+- frontend/src/components/__tests__/ChatInput.test.jsx
