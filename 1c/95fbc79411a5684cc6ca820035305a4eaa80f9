@@ -1,0 +1,4 @@
+Task: Ensure that sending a message correctly clears both text and staged files
+Summary: Verified that ChatInput and ChatInterface correctly reset their state after message submission. Updated App.jsx to include the files array in optimistic updates, ensuring history rendering shows the correct chips.
+Files:
+- frontend/src/App.jsx
