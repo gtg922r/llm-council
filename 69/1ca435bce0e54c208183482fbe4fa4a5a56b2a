@@ -1,0 +1,4 @@
+Task: Backend - Update main.py Pydantic models to include has_unread
+Summary: Added 'has_unread' field to ConversationMetadata, Conversation, and UpdateConversationRequest. Enabled patching 'has_unread' in the update_conversation endpoint.
+Files: backend/main.py, tests/test_api_unread.py
+Why: Necessary for exposing and managing the unread state of conversations through the REST API.
