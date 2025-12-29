@@ -134,23 +134,47 @@ export const api = {
 
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
+    let buffer = '';
 
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
 
-      const chunk = decoder.decode(value);
-      const lines = chunk.split('\n');
+      buffer += decoder.decode(value, { stream: true });
+      const events = buffer.split('\n\n');
+      buffer = events.pop() || '';
 
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          const data = line.slice(6);
-          try {
-            const event = JSON.parse(data);
-            onEvent(event.type, event);
-          } catch (e) {
-            console.error('Failed to parse SSE event:', e);
-          }
+      for (const eventBlock of events) {
+        const lines = eventBlock.split('\n');
+        const dataLines = lines
+          .filter((line) => line.startsWith('data: '))
+          .map((line) => line.slice(6));
+
+        if (dataLines.length === 0) continue;
+
+        const data = dataLines.join('\n');
+        try {
+          const event = JSON.parse(data);
+          onEvent(event.type, event);
+        } catch (e) {
+          console.error('Failed to parse SSE event:', e);
+        }
+      }
+    }
+
+    if (buffer.trim()) {
+      const lines = buffer.split('\n');
+      const dataLines = lines
+        .filter((line) => line.startsWith('data: '))
+        .map((line) => line.slice(6));
+
+      if (dataLines.length > 0) {
+        const data = dataLines.join('\n');
+        try {
+          const event = JSON.parse(data);
+          onEvent(event.type, event);
+        } catch (e) {
+          console.error('Failed to parse SSE event:', e);
         }
       }
     }
