@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Send, Maximize2, Minimize2 } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { Send, Maximize2, Minimize2, Paperclip } from 'lucide-react';
 import './ChatInput.css';
 
 export default function ChatInput({ 
@@ -13,6 +13,7 @@ export default function ChatInput({
   const [input, setInput] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef(null);
 
   const handleSubmit = (e) => {
     if (e) e.preventDefault();
@@ -56,6 +57,19 @@ export default function ChatInput({
     }
   };
 
+  const handleAttachClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length > 0 && onFilesDropped) {
+      onFilesDropped(files);
+    }
+    // Reset value so the same file can be picked again
+    e.target.value = '';
+  };
+
   return (
     <div 
       className={`chat-input-container ${isExpanded ? 'expanded' : ''} ${isDragging ? 'dragging' : ''}`}
@@ -79,14 +93,33 @@ export default function ChatInput({
             disabled={isLoading}
             autoFocus={autoFocus}
           />
-          <button
-            type="button"
-            className="chat-input-expand-button"
-            onClick={() => setIsExpanded(!isExpanded)}
-            title={isExpanded ? "Collapse" : "Expand"}
-          >
-            {isExpanded ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
-          </button>
+          <div className="chat-input-toolbar">
+            <button
+              type="button"
+              className="chat-input-tool-button"
+              onClick={handleAttachClick}
+              title="Attach Files"
+              disabled={isLoading}
+            >
+              <Paperclip size={18} />
+            </button>
+            <button
+              type="button"
+              className="chat-input-tool-button"
+              onClick={() => setIsExpanded(!isExpanded)}
+              title={isExpanded ? "Collapse" : "Expand"}
+              disabled={isLoading}
+            >
+              {isExpanded ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+            </button>
+          </div>
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            multiple
+            style={{ display: 'none' }}
+          />
         </div>
         <div className="chat-input-actions">
           {onCancel && (

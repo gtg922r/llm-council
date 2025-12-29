@@ -103,4 +103,30 @@ describe('ChatInput', () => {
     expect(onFilesDropped).toHaveBeenCalledWith([file]);
     expect(container).not.toHaveClass('dragging');
   });
+
+  it('renders paperclip icon and opens file picker', () => {
+    render(<ChatInput onSendMessage={vi.fn()} />);
+    const paperclipButton = screen.getByTitle(/attach files/i);
+    expect(paperclipButton).toBeInTheDocument();
+    
+    // Check for hidden file input
+    const fileInput = document.querySelector('input[type="file"]');
+    expect(fileInput).toBeInTheDocument();
+    expect(fileInput).toHaveStyle({ display: 'none' });
+    
+    const clickSpy = vi.spyOn(fileInput, 'click');
+    fireEvent.click(paperclipButton);
+    expect(clickSpy).toHaveBeenCalled();
+  });
+
+  it('calls onFilesDropped when files are selected via file picker', () => {
+    const onFilesDropped = vi.fn();
+    render(<ChatInput onSendMessage={vi.fn()} onFilesDropped={onFilesDropped} />);
+    const fileInput = document.querySelector('input[type="file"]');
+    
+    const file = new File(['hello'], 'hello.txt', { type: 'text/plain' });
+    fireEvent.change(fileInput, { target: { files: [file] } });
+    
+    expect(onFilesDropped).toHaveBeenCalledWith([file]);
+  });
 });
