@@ -1,6 +1,6 @@
 # Track Plan: Unified Input & File Context
 
-## Phase 1: Refactor - Unified ChatInput Component [checkpoint: 3bb8f28]
+## Phase 1: Refactor - Unified ChatInput Component [checkpoint: 29bb3fe]
 - [x] Task: Create a reusable `ChatInput` component with basic messaging functionality (text, expansion, enter-to-send) bc7d836
 - [x] Task: Integrate `ChatInput` into `ChatInterface.jsx` for the main conversation input 797e997
 - [x] Task: Integrate `ChatInput` into the Chairman follow-up flow (replacing or refactoring `FollowUpInput.jsx`) acfb4b2
