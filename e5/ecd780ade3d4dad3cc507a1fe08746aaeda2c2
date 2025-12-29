@@ -1,0 +1,12 @@
+Task: Backend - Update backend/storage.py to accept and store files in add_user_message.
+
+Summary:
+- Extended add_user_message to accept optional files and persist them on user messages.
+- Added storage unit test to verify files are saved alongside content.
+
+Files:
+- backend/storage.py
+- backend/tests/test_file_transmission.py
+
+Why:
+- Preserve file context separately from message content for later prompt assembly.
