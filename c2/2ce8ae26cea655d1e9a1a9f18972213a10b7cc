@@ -1,0 +1,12 @@
+Task: Backend - Implement build_prompt_content helper in backend/main.py to concatenate text + files.
+
+Summary:
+- Added build_prompt_content to format user text plus file blocks.
+- Added unit test for multi-file prompt formatting.
+
+Files:
+- backend/main.py
+- backend/tests/test_file_transmission.py
+
+Why:
+- Centralize prompt assembly on the backend while keeping file data structured.
