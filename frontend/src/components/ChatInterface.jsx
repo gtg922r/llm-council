@@ -25,6 +25,7 @@ export default function ChatInterface({
   const [showMenu, setShowMenu] = useState(false);
   const [inputMode, setInputMode] = useState('council'); // 'council' or 'chairman'
   const [isInputManual, setIsInputManual] = useState(false); // Used to show input for follow-up
+  const [stagedFiles, setStagedFiles] = useState([]);
   const messagesEndRef = useRef(null);
   const menuRef = useRef(null);
 
@@ -34,6 +35,41 @@ export default function ChatInterface({
       setIsInputManual(false);
     }
   }, [isLoading]);
+
+  const handleFilesDropped = (files) => {
+    const MAX_SIZE = 1024 * 1024; // 1MB
+    const SUPPORTED_EXTENSIONS = [
+      'txt', 'md', 'py', 'js', 'jsx', 'ts', 'tsx', 'html', 'css', 'json', 'csv', 'c', 'cpp', 'h', 'java', 'go', 'rs', 'php', 'rb', 'sh', 'sql', 'yaml', 'yml'
+    ];
+
+    const validFiles = [];
+    for (const file of files) {
+      const ext = file.name.split('.').pop().toLowerCase();
+      
+      if (file.size > MAX_SIZE) {
+        alert(`File "${file.name}" is too large (> 1MB).`);
+        continue;
+      }
+      
+      if (!SUPPORTED_EXTENSIONS.includes(ext)) {
+        alert(`File "${file.name}" has an unsupported extension. Please provide text-based files.`);
+        continue;
+      }
+
+      // Avoid duplicates
+      if (!stagedFiles.find(f => f.name === file.name && f.size === file.size)) {
+        validFiles.push(file);
+      }
+    }
+
+    if (validFiles.length > 0) {
+      setStagedFiles(prev => [...prev, ...validFiles]);
+    }
+  };
+
+  const handleRemoveFile = (index) => {
+    setStagedFiles(prev => prev.filter((_, i) => i !== index));
+  };
 
   // Determine if we should show the input
   const isNewConversation = conversation?.messages.length === 0;
@@ -70,6 +106,7 @@ export default function ChatInterface({
     onSendMessage(content, inputMode === 'chairman' ? 'chairman' : undefined);
     setIsInputManual(false);
     setInputMode('council');
+    setStagedFiles([]); // Clear staged files after sending
   };
 
   const handleMenuAction = (action) => {
@@ -222,9 +259,13 @@ export default function ChatInterface({
         <ChatInput 
           onSendMessage={handleSendMessage} 
           isLoading={isLoading}
+          onFilesDropped={handleFilesDropped}
+          stagedFiles={stagedFiles}
+          onRemoveFile={handleRemoveFile}
           onCancel={isInputManual ? () => {
             setIsInputManual(false);
             setInputMode('council');
+            setStagedFiles([]);
           } : undefined}
           placeholder={inputMode === 'chairman' ? "Follow up with the Chairman..." : undefined}
           autoFocus={inputMode === 'chairman'}
