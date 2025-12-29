@@ -1,0 +1,5 @@
+Task: Implement file validation (size < 1MB, text-based extensions) and staging state management
+Summary: Added file validation logic to ChatInterface to enforce 1MB size limit and restrict files to text-based extensions. Implemented stagedFiles state to manage files across the unified input.
+Files:
+- frontend/src/components/ChatInterface.jsx
+- frontend/src/components/__tests__/ChatInterface.test.jsx
