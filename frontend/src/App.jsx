@@ -25,6 +25,21 @@ function App() {
     loadConversations();
   }, [loadConversations]);
 
+  // Automatically mark active conversation as read if it becomes unread
+  useEffect(() => {
+    if (currentConversationId && conversations.length > 0) {
+      const activeConv = conversations.find((c) => c.id === currentConversationId);
+      if (activeConv?.has_unread) {
+        setConversations((prev) =>
+          prev.map((c) => (c.id === currentConversationId ? { ...c, has_unread: false } : c))
+        );
+        api.markAsRead(currentConversationId).catch((err) => {
+          console.error('Failed to auto-mark read:', err);
+        });
+      }
+    }
+  }, [conversations, currentConversationId]);
+
   // Load conversation details when selected
   useEffect(() => {
     if (currentConversationId) {

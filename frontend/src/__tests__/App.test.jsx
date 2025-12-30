@@ -29,15 +29,20 @@ vi.mock('../api', () => ({
 }));
 
 vi.mock('../components/Sidebar', () => ({
-  default: ({ onNewConversation, onSelectConversation, conversations = [] }) => (
+  default: ({ onNewConversation, onSelectConversation, onTogglePin, conversations = [] }) => (
     <div>
       <button type="button" onClick={onNewConversation}>
         New Conversation
       </button>
       {conversations.map(c => (
-        <button key={c.id} onClick={() => onSelectConversation(c.id)}>
-          Select {c.title}
-        </button>
+        <div key={c.id}>
+          <button onClick={() => onSelectConversation(c.id)}>
+            Select {c.title}
+          </button>
+          <button onClick={() => onTogglePin(c.id, !c.is_pinned)}>
+            Pin {c.title}
+          </button>
+        </div>
       ))}
     </div>
   ),
@@ -112,6 +117,37 @@ describe('App', () => {
     
     await waitFor(() => {
       expect(api.markAsRead).toHaveBeenCalledWith('unread-1');
+    });
+  });
+
+  it('marks active conversation as read if it becomes unread in background', async () => {
+    // 1. Initial state: Read
+    api.listConversations.mockResolvedValue([
+      { id: 'conv-1', title: 'Conversation', has_unread: false }
+    ]);
+    
+    render(<App />);
+    
+    // 2. Select it
+    await waitFor(() => {
+      expect(screen.getByText('Select Conversation')).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByText('Select Conversation'));
+    
+    // 3. Update mock to return Unread (simulating background update)
+    api.listConversations.mockResolvedValue([
+      { id: 'conv-1', title: 'Conversation', has_unread: true }
+    ]);
+    
+    // Clear previous calls
+    api.markAsRead.mockClear();
+    
+    // 4. Trigger reload (via Pin)
+    fireEvent.click(screen.getByText('Pin Conversation'));
+    
+    // 5. Expect markAsRead to be called
+    await waitFor(() => {
+      expect(api.markAsRead).toHaveBeenCalledWith('conv-1');
     });
   });
 });
