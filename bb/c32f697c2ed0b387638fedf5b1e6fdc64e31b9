@@ -1,0 +1,16 @@
+Task: Implement elevation shading for message bubbles in Stage components.
+
+Summary:
+- Added elevation variables for light and dark themes in index.css.
+- Applied elevation backgrounds to Stage1/Stage2/Stage3 containers.
+- Added regression test to ensure stage styles use elevation variables.
+
+Files:
+- frontend/src/index.css
+- frontend/src/components/Stage1.css
+- frontend/src/components/Stage2.css
+- frontend/src/components/Stage3.css
+- frontend/src/__tests__/ElevationStyles.test.js
+
+Why:
+- Provides visual depth cues for stage message bubbles, especially in dark mode.
