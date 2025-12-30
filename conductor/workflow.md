@@ -87,9 +87,10 @@ All tasks follow a strict lifecycle:
     -   You **must** generate a brief, high-level plan that allows the user to verify the feature naturally (e.g., "Open the app and click the new button").
     -   **Avoid** requesting low-level verification like `curl` commands or inspecting raw JSON, unless specifically relevant to the task (e.g., a CLI tool or API-only feature).
 
-5.  **Solicit Feedback (Non-Blocking):**
+5.  **Await Explicit User Confirmation (Blocking):**
     -   Ask the user if they would like to verify the changes themselves or if they have any feedback.
-    -   You do **not** need to strictly halt if the changes are minor or purely technical, but you should always offer the opportunity for review.
+    -   **CRITICAL:** You **must PAUSE** and wait for the user to explicitly confirm they are satisfied with the phase (e.g., "Yes", "Looks good", "Proceed").
+    -   Do **NOT** proceed to commit or checkpoint until this confirmation is received.
 
 6.  **Create Checkpoint Commit:**
     -   Stage all changes. If no changes occurred in this step, proceed with an empty commit.
@@ -312,11 +313,15 @@ A task is complete when:
 
 When a track is completed, follow these steps to archive or delete it:
 
-1.  **Archive or Delete:**
+1.  **Verify Track Completion (Blocking):**
+    -   **CRITICAL:** Before archiving, you **must** explicitly ask the user: "The track appears to be complete. have you verified the final implementation and are you ready to archive this track?"
+    -   **PAUSE** and await a clear "Yes" or confirmation. Do not archive without this.
+
+2.  **Archive or Delete:**
     -   **Archive:** Move the track folder to `conductor/archive/` and remove the track entry from `conductor/tracks.md`.
     -   **Delete:** Permanently delete the track folder and remove the track entry from `conductor/tracks.md`.
 
-2.  **Clean Up Git:**
+3.  **Clean Up Git:**
     -   **CRITICAL:** After moving or deleting files and updating `tracks.md`, you MUST verify the git status.
     -   Stage all changes related to the cleanup (file moves, deletions, `tracks.md` updates).
     -   Commit these changes immediately with a message like `conductor: Archive track '<track_name>'`.
