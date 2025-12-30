@@ -128,3 +128,21 @@ body {
   border-left: 4px solid var(--color-blockquote-border, var(--color-border, #ddd));
   color: var(--color-blockquote-text, var(--color-muted, #666));
 }
+
+body,
+#root,
+.app,
+.sidebar,
+.chat-interface,
+.chat-header,
+.header-menu,
+.tab,
+.tab-content,
+.stage2 .tab-content,
+.final-response,
+.chat-input-container,
+.chat-input-wrapper,
+.conversation-item,
+.user-message .message-content {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
