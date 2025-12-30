@@ -8,7 +8,7 @@ const filesToCheck = [
   { path: 'src/components/ChatInterface.css', vars: ['--color-surface', '--color-border', '--color-text', '--color-muted'] },
   { path: 'src/components/Stage1.css', vars: ['--color-surface', '--color-text', '--color-border'] },
   { path: 'src/components/Stage2.css', vars: ['--color-surface', '--color-text', '--color-border', '--color-muted'] },
-  { path: 'src/components/Stage3.css', vars: ['--color-surface', '--color-text', '--color-border'] },
+  { path: 'src/components/Stage3.css', vars: ['--color-elevation-1', '--color-text', '--color-border'] },
   { path: 'src/components/ChatInput.css', vars: ['--color-surface', '--color-text', '--color-border', '--color-muted'] },
   { path: 'src/components/EditableTitle.css', vars: ['--color-text', '--color-border'] },
   { path: 'src/components/CollapsibleSection.css', vars: ['--color-surface', '--color-border', '--color-muted'] },
