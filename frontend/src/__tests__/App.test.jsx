@@ -29,7 +29,7 @@ vi.mock('../api', () => ({
 }));
 
 vi.mock('../components/Sidebar', () => ({
-  default: ({ onNewConversation, onSelectConversation, onTogglePin, conversations = [] }) => (
+  default: ({ onNewConversation, onSelectConversation, onTogglePin, conversations = [], pendingConversations = new Set() }) => (
     <div>
       <button type="button" onClick={onNewConversation}>
         New Conversation
@@ -42,6 +42,7 @@ vi.mock('../components/Sidebar', () => ({
           <button onClick={() => onTogglePin(c.id, !c.is_pinned)}>
             Pin {c.title}
           </button>
+          {pendingConversations.has(c.id) && <span>Pending</span>}
         </div>
       ))}
     </div>
@@ -148,6 +149,50 @@ describe('App', () => {
     // 5. Expect markAsRead to be called
     await waitFor(() => {
       expect(api.markAsRead).toHaveBeenCalledWith('conv-1');
+    });
+  });
+
+  it('shows pending indicator while message is processing', async () => {
+    // Mock sendMessageStream to be slow/manual?
+    // We can use a controlled mock for sendMessageStream
+    let finishStream;
+    const streamPromise = new Promise(resolve => { finishStream = resolve; });
+    
+    api.sendMessageStream.mockImplementation(async (id, content, files, onEvent) => {
+      onEvent('stage1_start', { total: 3 });
+      await streamPromise;
+      onEvent('complete', {});
+    });
+
+    api.listConversations.mockResolvedValue([
+      { id: 'conv-1', title: 'Conversation', has_unread: false }
+    ]);
+
+    render(<App />);
+
+    // Select conversation
+    await waitFor(() => {
+      expect(screen.getByText('Select Conversation')).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByText('Select Conversation'));
+
+    // Send message
+    await waitFor(() => {
+      expect(screen.getByText('Send')).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByText('Send'));
+
+    // Expect Pending to appear
+    await waitFor(() => {
+      expect(screen.getByText('Pending')).toBeInTheDocument();
+    });
+
+    // Finish stream
+    finishStream();
+
+    // Expect Pending to disappear
+    await waitFor(() => {
+      expect(screen.queryByText('Pending')).not.toBeInTheDocument();
     });
   });
 });
