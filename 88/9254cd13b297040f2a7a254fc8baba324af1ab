@@ -1,0 +1,4 @@
+Tasks: Frontend - Add pendingConversations state; Update handleSendMessage to add/remove pending IDs
+Summary: Track pending conversation IDs in App state and update them during streaming send flows, with tests for pending lifecycle.
+Files: frontend/src/App.jsx; frontend/src/__tests__/App.test.jsx
+Why: The UI needs local pending state to show processing indicators in the sidebar.
