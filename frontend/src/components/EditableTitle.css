@@ -24,11 +24,11 @@
   font-weight: 600;
   color: var(--color-text, #333);
   padding: 4px 8px;
-  border: 1px solid #4a90e2;
+  border: 1px solid var(--color-accent, #4a90e2);
   border-radius: 4px;
   outline: none;
   width: 100%;
   max-width: 100%;
   font-family: inherit;
-  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.1);
+  box-shadow: 0 0 0 2px var(--color-accent-soft, rgba(74, 144, 226, 0.12));
 }

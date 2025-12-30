@@ -27,5 +27,7 @@ describe('markdown code theme', () => {
     expect(css).toContain('background: var(--color-code-inline-bg');
     expect(css).toContain('color: var(--color-code-inline-text');
     expect(css).toContain('border: 1px solid var(--color-code-inline-border');
+    expect(css).toContain('.markdown-content pre code');
+    expect(css).toContain('border: none');
   });
 });

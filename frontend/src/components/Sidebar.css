@@ -27,8 +27,8 @@
 .new-conversation-btn {
   width: 100%;
   padding: 10px;
-  background: #4a90e2;
-  border: 1px solid #4a90e2;
+  background: var(--color-accent, #4a90e2);
+  border: 1px solid var(--color-accent, #4a90e2);
   border-radius: 6px;
   color: #fff;
   cursor: pointer;
@@ -42,8 +42,8 @@
 }
 
 .new-conversation-btn:hover {
-  background: #357abd;
-  border-color: #357abd;
+  background: var(--color-accent-strong, #357abd);
+  border-color: var(--color-accent-strong, #357abd);
 }
 
 .conversation-list {
@@ -76,8 +76,8 @@
 }
 
 .conversation-item.active {
-  background: #e8f0fe;
-  border: 1px solid #4a90e2;
+  background: var(--color-accent-soft, rgba(74, 144, 226, 0.12));
+  border: 1px solid var(--color-accent, #4a90e2);
 }
 
 .conversation-content {
@@ -129,7 +129,7 @@
 }
 
 .pin-btn[title="Unpin"] {
-  color: #4a90e2;
+  color: var(--color-accent, #4a90e2);
 }
 
 .archive-section {
@@ -179,7 +179,7 @@
 .empty-trash-btn {
   background: none;
   border: none;
-  color: #d93025;
+  color: var(--color-danger, #d93025);
   font-size: 11px;
   cursor: pointer;
   padding: 4px;
@@ -190,5 +190,5 @@
 }
 
 .empty-trash-btn:hover {
-  color: #b31412;
+  color: var(--color-danger, #d93025);
 }

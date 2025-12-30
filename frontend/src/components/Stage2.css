@@ -21,16 +21,16 @@
 }
 
 .aggregate-rankings {
-  background: var(--color-elevation-2, #f0f7ff);
+  background: var(--color-accent-soft, rgba(74, 144, 226, 0.12));
   padding: 16px;
   border-radius: 8px;
   margin-bottom: 20px;
-  border: 2px solid var(--color-border, #d0e7ff);
+  border: 2px solid var(--color-accent, #4a90e2);
 }
 
 .aggregate-rankings h4 {
   margin: 0 0 12px 0;
-  color: #2a7ae2;
+  color: var(--color-accent, #2a7ae2);
   font-size: 15px;
 }
 
@@ -51,7 +51,7 @@
 }
 
 .rank-position {
-  color: #2a7ae2;
+  color: var(--color-accent, #2a7ae2);
   font-weight: 700;
   font-size: 16px;
   min-width: 35px;
@@ -94,13 +94,13 @@
 .stage2 .tab:hover {
   background: var(--color-bg, #f0f0f0);
   color: var(--color-text, #333);
-  border-color: #4a90e2;
+  border-color: var(--color-accent, #4a90e2);
 }
 
 .stage2 .tab.active {
   background: var(--color-surface, #ffffff);
-  color: #4a90e2;
-  border-color: #4a90e2;
+  color: var(--color-accent, #4a90e2);
+  border-color: var(--color-accent, #4a90e2);
   border-bottom-color: var(--color-surface, #ffffff);
   font-weight: 600;
 }
@@ -134,7 +134,7 @@
 }
 
 .parsed-ranking strong {
-  color: #2a7ae2;
+  color: var(--color-accent, #2a7ae2);
   font-size: 13px;
 }
 

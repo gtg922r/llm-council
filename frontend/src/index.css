@@ -142,6 +142,7 @@ body {
 .markdown-content pre code {
   background: none;
   padding: 0;
+  border: none;
 }
 
 .markdown-content blockquote {
