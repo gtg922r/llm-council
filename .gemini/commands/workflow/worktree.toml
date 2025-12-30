@@ -1,0 +1,34 @@
+# ~/.gemini/commands/feature.toml
+
+description = "Creates a new git worktree feature, installs dependencies, and syncs .env"
+
+# We instruct the agent to execute the shell commands.
+# {{args}} passes your input (e.g., "gemini new-ability" or just "new-ability")
+prompt = """
+You are a DevOps automation assistant.
+Your goal is to execute a bash workflow to create a new git worktree based on the user's input: "{{args}}".
+
+### LOGIC:
+1. Parse "{{args}}".
+   - If one word (e.g., "login-page"): It is a **Standard Feature**.
+     - Folder: `../feat-login-page`
+     - Branch: `feat/login-page`
+   - If two words (e.g., "gemini login-page"): It is an **LLM-Specific Feature**.
+     - Folder: `../feat-gemini-login-page`
+     - Branch: `feat/gemini/login-page`
+
+### EXECUTION STEPS:
+Perform the following steps using your shell tool. Stop if any step fails.
+
+1. **Create Worktree:**
+   Run: `git worktree add <Folder> -b <Branch> master`
+
+2. **Configure Environment:**
+   Run: `cp ../llm-council/.env <Folder>/`
+
+3. **Install Dependencies:**
+   Run: `../<Folder>/install.sh`
+
+4. **Report:**
+   Tell the user the worktree is ready and remind them to manually run `cd <Folder>` in their terminal (since you cannot change their terminal's directory).
+"""
