@@ -18,7 +18,7 @@ Implement the visual "unread" indicator in the sidebar and the logic to clear it
 - [x] Task: Frontend - Add logic in `App.jsx` to automatically clear `has_unread` if a message arrives while the conversation is already active [dbe104f]
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: Frontend Unread Indicator (Blue Dot)' (Protocol in workflow.md)
 
-## Phase 3: Frontend Pending Indicator (Pulsing Grey Dot)
+## Phase 3: Frontend Pending Indicator (Pulsing Grey Dot) [checkpoint: 32688cb]
 Implement the visual "pending" indicator to track background processing.
 
 - [x] Task: Frontend - Add `pendingConversations` state (Set/Map) to `App.jsx` [98c8653]
