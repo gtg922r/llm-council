@@ -22,4 +22,4 @@ The LLM Council solves the problem of "single-model bias" for challenging questi
 - **Stage 3: Chairman Synthesis:** A designated Chairman LLM synthesizes all individual outputs and peer reviews into a single, high-quality final response.
 - **Chairman Follow-up:** Direct dialogue with the Chairman model after synthesis, allowing for clarifications or deeper exploration of the final response without re-running the full council.
 - **File Context Support:** Drag and drop or attach text-based files (.txt, .md, code) to provide grounding context for council queries or Chairman follow-ups.
-- **Conversation Management:** Robust sidebar controls for pinning important chats, archiving old ones, and duplicating conversations. Inline title editing allows for easy organization.
+- **Conversation Management:** Robust sidebar controls for pinning important chats, archiving old ones, and duplicating conversations. Inline title editing allows for easy organization. Visual indicators provide real-time status updates, showing pending background tasks (pulsing grey) and unread messages (solid blue).
