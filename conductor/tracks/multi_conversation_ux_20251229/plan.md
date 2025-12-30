@@ -23,7 +23,7 @@ Implement the visual "pending" indicator to track background processing.
 
 - [x] Task: Frontend - Add `pendingConversations` state (Set/Map) to `App.jsx` [98c8653]
 - [x] Task: Frontend - Update `handleSendMessage` to add/remove conversation IDs from `pendingConversations` [98c8653]
-- [ ] Task: Frontend - Update `Sidebar.jsx` to display a pulsing grey dot if a conversation ID is in `pendingConversations`
+- [x] Task: Frontend - Update `Sidebar.jsx` to display a pulsing grey dot if a conversation ID is in `pendingConversations` [9420163]
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: Frontend Pending Indicator (Pulsing Grey Dot)' (Protocol in workflow.md)
 
 ## Phase 4: CSS Styling & Polish
