@@ -1,0 +1,4 @@
+Tasks: Frontend - Style unread/pending dots; Ensure mobile-friendly sizing
+Summary: Added CSS for unread/pending indicators with theme colors and pulse animation, plus responsive sizing and larger touch padding for mobile.
+Files: frontend/src/components/Sidebar.css; frontend/src/__tests__/SidebarTheme.test.js
+Why: Provide clear visual cues for unread/pending states and maintain usable tap targets on small screens.
