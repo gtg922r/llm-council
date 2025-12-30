@@ -50,6 +50,7 @@ export function ThemeProvider({ children }) {
     }
 
     document.documentElement.classList.toggle('dark', resolvedTheme === 'dark');
+    document.documentElement.dataset.theme = resolvedTheme;
   }, [resolvedTheme]);
 
   const value = useMemo(() => ({ theme, resolvedTheme, setTheme }), [theme, resolvedTheme]);
