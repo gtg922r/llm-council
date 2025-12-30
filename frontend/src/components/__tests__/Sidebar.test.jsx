@@ -31,4 +31,40 @@ describe('Sidebar', () => {
 
     expect(screen.getByRole('button', { name: /system mode/i })).toBeInTheDocument();
   });
+
+  it('shows unread indicator for background conversations', () => {
+    const conversations = [
+      {
+        id: 'conv-active',
+        title: 'Active',
+        created_at: '2024-01-01',
+        is_pinned: false,
+        is_archived: false,
+        message_count: 2,
+        has_unread: true,
+      },
+      {
+        id: 'conv-unread',
+        title: 'Unread',
+        created_at: '2024-01-02',
+        is_pinned: false,
+        is_archived: false,
+        message_count: 1,
+        has_unread: true,
+      },
+    ];
+
+    render(
+      <ThemeProvider>
+        <Sidebar
+          {...baseProps}
+          conversations={conversations}
+          currentConversationId="conv-active"
+        />
+      </ThemeProvider>
+    );
+
+    expect(screen.queryByLabelText('Unread conversation')).toBeInTheDocument();
+    expect(screen.getAllByLabelText('Unread conversation')).toHaveLength(1);
+  });
 });

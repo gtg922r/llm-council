@@ -100,6 +100,9 @@ export default function Sidebar({
                 </div>
               </div>
               <div className="item-actions">
+                {conv.has_unread && conv.id !== currentConversationId && (
+                  <span className="conversation-unread-dot" aria-label="Unread conversation" />
+                )}
                 <button
                   className="action-btn pin-btn"
                   onClick={(e) => {
@@ -158,6 +161,9 @@ export default function Sidebar({
                     <div className="conversation-title">{conv.title}</div>
                   </div>
                   <div className="item-actions">
+                    {conv.has_unread && conv.id !== currentConversationId && (
+                      <span className="conversation-unread-dot" aria-label="Unread conversation" />
+                    )}
                     <button
                       className="action-btn restore-btn"
                       onClick={(e) => {
