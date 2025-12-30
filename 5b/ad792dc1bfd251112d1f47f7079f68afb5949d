@@ -1,0 +1,14 @@
+Task: Create ThemeToggle component with Lucide icons.
+
+Summary:
+- Added ThemeToggle with light/dark/system buttons and Lucide icons.
+- Added styling for the toggle control.
+- Added unit test verifying default selection and theme change.
+
+Files:
+- frontend/src/components/ThemeToggle.jsx
+- frontend/src/components/ThemeToggle.css
+- frontend/src/components/__tests__/ThemeToggle.test.jsx
+
+Why:
+- Provides UI control for user theme selection.
