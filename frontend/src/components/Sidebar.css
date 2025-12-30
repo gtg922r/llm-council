@@ -167,6 +167,38 @@
 .item-actions {
   display: flex;
   gap: 4px;
+  align-items: center;
+}
+
+.conversation-unread-dot,
+.conversation-pending-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  display: inline-block;
+  flex: 0 0 10px;
+  box-shadow: 0 0 0 2px var(--color-surface, #f8f8f8);
+}
+
+.conversation-unread-dot {
+  background: var(--color-accent, #4a90e2);
+}
+
+.conversation-pending-dot {
+  background: var(--color-muted, #b0b0b0);
+  animation: pendingPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes pendingPulse {
+  0%,
+  100% {
+    transform: scale(0.85);
+    opacity: 0.55;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
 }
 
 .action-btn {
@@ -256,4 +288,21 @@
 
 .empty-trash-btn:hover {
   color: var(--color-danger, #d93025);
+}
+
+@media (max-width: 720px) {
+  .item-actions {
+    gap: 6px;
+  }
+
+  .conversation-unread-dot,
+  .conversation-pending-dot {
+    width: 12px;
+    height: 12px;
+    flex-basis: 12px;
+  }
+
+  .action-btn {
+    padding: 6px;
+  }
 }
