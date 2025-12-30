@@ -61,4 +61,18 @@ describe('api client', () => {
       files,
     });
   });
+
+  it('markAsRead calls updateConversation with has_unread: false', async () => {
+    fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ has_unread: false }),
+    });
+
+    await api.markAsRead('conv-1');
+
+    const [url, options] = fetch.mock.calls[0];
+    expect(url).toBe('/api/conversations/conv-1');
+    expect(options.method).toBe('PATCH');
+    expect(JSON.parse(options.body)).toEqual({ has_unread: false });
+  });
 });
