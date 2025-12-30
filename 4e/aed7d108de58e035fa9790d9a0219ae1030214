@@ -1,0 +1,5 @@
+Task: Backend - Update add_assistant_message in storage.py to set has_unread = True
+Changes:
+- Modified add_assistant_message in backend/storage.py to set conversation['has_unread'] = True.
+- Added test case test_add_assistant_message_sets_unread in backend/tests/test_unread_status.py.
+Why: To trigger the unread indicator when a new message arrives.
