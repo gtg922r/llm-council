@@ -168,6 +168,8 @@ def add_assistant_message(
         "stage3": stage3
     })
 
+    conversation["has_unread"] = True
+
     save_conversation(conversation)
 
 

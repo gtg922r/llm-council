@@ -62,3 +62,26 @@ def test_duplicate_conversation_has_default_unread_status():
     # Cleanup
     storage.delete_conversation(orig_id)
     storage.delete_conversation(new_id)
+
+def test_add_assistant_message_sets_unread():
+    """Test that adding an assistant message marks conversation as unread."""
+    conv_id = "test_unread_msg"
+    try:
+        storage.delete_conversation(conv_id)
+    except:
+        pass
+        
+    storage.create_conversation(conv_id)
+    
+    # Initially false
+    c = storage.get_conversation(conv_id)
+    assert c["has_unread"] is False
+    
+    # Add assistant message
+    storage.add_assistant_message(conv_id, [], [], {})
+    
+    # Should be true
+    c = storage.get_conversation(conv_id)
+    assert c["has_unread"] is True
+    
+    storage.delete_conversation(conv_id)
