@@ -21,7 +21,7 @@
 }
 
 .follow-up-button:hover:not(:disabled) {
-  background-color: var(--color-bg, #e5e7eb);
+  background-color: var(--color-elevation-2, #e5e7eb);
   border-color: var(--color-border, #d1d5db);
 }
 

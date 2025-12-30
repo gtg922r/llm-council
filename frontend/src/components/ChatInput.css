@@ -191,7 +191,7 @@
 
 .chat-input-tool-button:hover:not(:disabled) {
   color: var(--color-text, #666);
-  background: rgba(0,0,0,0.05);
+  background: var(--color-elevation-2, rgba(0, 0, 0, 0.05));
 }
 
 .chat-input-tool-button:disabled {
@@ -219,7 +219,7 @@
 }
 
 .chat-input-cancel-button:hover:not(:disabled) {
-  background: var(--color-bg, #f5f5f5);
+  background: var(--color-elevation-2, #f5f5f5);
   color: var(--color-text, #333);
 }
 

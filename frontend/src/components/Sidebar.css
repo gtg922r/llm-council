@@ -66,6 +66,15 @@
   z-index: 10;
 }
 
+.sidebar-settings-popover .theme-toggle {
+  width: 100%;
+  justify-content: space-between;
+}
+
+.sidebar-settings-popover .theme-toggle-button {
+  flex: 1;
+}
+
 .sidebar-settings-section {
   display: flex;
   flex-direction: column;
@@ -128,7 +137,7 @@
 }
 
 .conversation-item:hover {
-  background: var(--color-bg, #f0f0f0);
+  background: var(--color-elevation-2, #f0f0f0);
 }
 
 .conversation-item.active {
@@ -205,7 +214,7 @@
 }
 
 .archive-header:hover {
-  background: var(--color-bg, #e8e8e8);
+  background: var(--color-elevation-2, #e8e8e8);
 }
 
 .archive-title {

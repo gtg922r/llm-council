@@ -36,7 +36,7 @@
 }
 
 .menu-toggle:hover {
-  background: var(--color-bg, #f0f0f0);
+  background: var(--color-elevation-2, #f0f0f0);
   color: var(--color-text, #333);
 }
 
@@ -71,7 +71,7 @@
 }
 
 .header-menu button:hover {
-  background: var(--color-bg, #f5f5f5);
+  background: var(--color-elevation-2, #f5f5f5);
 }
 
 .header-menu button.danger {

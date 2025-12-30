@@ -17,4 +17,10 @@ describe('sidebar theme accents', () => {
     expect(css).toContain('border: 1px solid var(--color-accent');
     expect(css).toContain('color: var(--color-danger');
   });
+
+  it('evenly spaces the theme toggle inside the settings popover', () => {
+    expect(css).toContain('.sidebar-settings-popover .theme-toggle');
+    expect(css).toContain('justify-content: space-between');
+    expect(css).toContain('width: 100%');
+  });
 });

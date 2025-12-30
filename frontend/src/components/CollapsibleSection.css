@@ -18,7 +18,7 @@
 }
 
 .collapsible-header:hover {
-  background: var(--color-bg, #f3f4f6);
+  background: var(--color-elevation-2, #f3f4f6);
 }
 
 .collapsible-icon {

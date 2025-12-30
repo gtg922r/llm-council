@@ -92,7 +92,7 @@
 }
 
 .stage2 .tab:hover {
-  background: var(--color-bg, #f0f0f0);
+  background: var(--color-elevation-2, #f0f0f0);
   color: var(--color-text, #333);
   border-color: var(--color-accent, #4a90e2);
 }
