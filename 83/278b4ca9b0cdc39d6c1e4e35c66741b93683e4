@@ -1,0 +1,5 @@
+Task: Frontend - Modify Sidebar.jsx to display a blue dot if conv.has_unread is true
+Changes:
+- Added conditional rendering of .unread-dot in Sidebar.jsx.
+- Added test verification in Sidebar.test.jsx.
+Why: To visualize which conversations have new content.
