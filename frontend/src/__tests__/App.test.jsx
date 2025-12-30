@@ -122,4 +122,24 @@ describe('App', () => {
       expect(api.markAsRead).toHaveBeenCalledWith('conv-1');
     });
   });
+
+  it('clears unread when the active conversation finishes a response', async () => {
+    api.sendMessageStream.mockImplementationOnce(async (_id, _content, _files, onEvent) => {
+      onEvent('complete', { type: 'complete' });
+    });
+
+    render(<App />);
+
+    fireEvent.click(screen.getByText('New Conversation'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Send')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText('Send'));
+
+    await waitFor(() => {
+      expect(api.markAsRead).toHaveBeenCalledWith('conv-1');
+    });
+  });
 });

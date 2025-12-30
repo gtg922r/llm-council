@@ -166,6 +166,17 @@ function App() {
     }
   };
 
+  const refreshConversationUnreadState = useCallback(async (conversationId) => {
+    if (conversationId === currentConversationId) {
+      try {
+        await api.markAsRead(conversationId);
+      } catch (error) {
+        console.error('Failed to clear unread status:', error);
+      }
+    }
+    loadConversations();
+  }, [currentConversationId, loadConversations]);
+
   const readFileContent = (file) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -241,7 +252,7 @@ function App() {
             return { ...prev, messages };
           });
           setLoadingConversationId((prev) => (prev === conversationId ? null : prev));
-          loadConversations();
+          await refreshConversationUnreadState(conversationId);
           return;
         } catch (error) {
           console.error('Follow-up failed:', error);
@@ -391,7 +402,7 @@ function App() {
 
           case 'complete':
             // Stream complete, reload conversations list
-            loadConversations();
+            refreshConversationUnreadState(conversationId);
             setLoadingConversationId((prev) => (prev === conversationId ? null : prev));
             break;
 
