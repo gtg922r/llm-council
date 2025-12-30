@@ -25,6 +25,7 @@
 - [~] Task: Conductor - User Manual Verification 'Phase 3: UI Component Styling & Toggle' (Protocol in workflow.md)
 
 ## Phase 4: Specialized Content & Refinement
+- [x] Task: Refactor file upload UI styling to use theme variables in dark mode [e45a5a2]
 - [ ] Task: Update syntax highlighting styles for `react-markdown` code blocks to use a dark theme
 - [ ] Task: Implement `localStorage` persistence for the theme preference
 - [ ] Task: Add unit tests for `localStorage` persistence and system preference sync
