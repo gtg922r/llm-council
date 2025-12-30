@@ -9,7 +9,7 @@
 ## Phase 2: CSS Infrastructure & Variables
 - [x] Task: Refactor `index.css` to use CSS variables for all core colors (background, text, border, etc.) [1888ff9]
 - [x] Task: Define Light Mode variable values [3d5e262]
-- [ ] Task: Define Dark Mode variable values (Material Gray palette)
+- [x] Task: Define Dark Mode variable values (Material Gray palette) [36b4af7]
 - [ ] Task: Implement a mechanism to apply the `.dark` class (or data-theme attribute) to the document root
 - [ ] Task: Add unit tests to verify CSS variable application based on theme state
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: CSS Infrastructure & Variables' (Protocol in workflow.md)
