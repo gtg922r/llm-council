@@ -1,6 +1,6 @@
 import { useContext } from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
+import { render, screen, fireEvent, act } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ThemeContext, ThemeProvider, useTheme } from '../context/ThemeContext';
 
 function ContextProbe() {
@@ -21,7 +21,37 @@ function HookProbe() {
   return <div data-testid="hook-theme">{theme}</div>;
 }
 
+function mockMatchMedia(matches) {
+  let listener = null;
+  const mql = {
+    matches,
+    media: '(prefers-color-scheme: dark)',
+    addEventListener: vi.fn((_event, cb) => {
+      listener = cb;
+    }),
+    removeEventListener: vi.fn(),
+    addListener: vi.fn((cb) => {
+      listener = cb;
+    }),
+    removeListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  };
+
+  return {
+    mql,
+    setMatches(nextMatches) {
+      mql.matches = nextMatches;
+      if (listener) {
+        listener({ matches: nextMatches });
+      }
+    },
+  };
+}
+
 describe('ThemeContext', () => {
+  beforeEach(() => {
+    delete window.matchMedia;
+  });
   it('defaults to system theme', () => {
     render(
       <ThemeProvider>
@@ -60,5 +90,37 @@ describe('ThemeContext', () => {
     expect(() => render(<HookProbe />)).toThrow(
       'useTheme must be used within a ThemeProvider.'
     );
+  });
+
+  it('uses system preference when theme is set to system', () => {
+    const { mql } = mockMatchMedia(true);
+    window.matchMedia = vi.fn().mockReturnValue(mql);
+
+    render(
+      <ThemeProvider>
+        <ContextProbe />
+      </ThemeProvider>
+    );
+
+    expect(screen.getByTestId('resolved-theme')).toHaveTextContent('dark');
+  });
+
+  it('reacts to system preference changes', () => {
+    const controller = mockMatchMedia(false);
+    window.matchMedia = vi.fn().mockReturnValue(controller.mql);
+
+    render(
+      <ThemeProvider>
+        <ContextProbe />
+      </ThemeProvider>
+    );
+
+    expect(screen.getByTestId('resolved-theme')).toHaveTextContent('light');
+
+    act(() => {
+      controller.setMatches(true);
+    });
+
+    expect(screen.getByTestId('resolved-theme')).toHaveTextContent('dark');
   });
 });
