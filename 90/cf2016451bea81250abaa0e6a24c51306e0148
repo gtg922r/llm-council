@@ -1,0 +1,4 @@
+Phase 1 verification report
+Automated tests: CI=true .venv/bin/pytest tests/test_storage_improvements.py tests/test_api_improvements.py (pass)
+Manual verification plan: 1) Start backend + frontend. 2) Create two conversations. 3) Send a message in convo A while viewing convo B. 4) Reload to confirm unread persists and can be cleared after opening convo A.
+User confirmation: Pending.
