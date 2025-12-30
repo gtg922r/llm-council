@@ -1,0 +1,4 @@
+Phase 3 verification report
+Automated tests: CI=true npm test -- --run src/__tests__/App.test.jsx src/components/__tests__/Sidebar.test.jsx (pass)
+Manual verification plan: 1) Create two conversations. 2) Send a message in conversation A; immediately switch to conversation B. 3) Confirm a subtle pending dot appears on A while processing. 4) After completion, confirm pending dot disappears and unread dot appears. 5) Click A to clear unread.
+User confirmation: Pending.
