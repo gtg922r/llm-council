@@ -1,14 +1,14 @@
 .stage3 {
-  background: #f0fff0;
-  border-color: #c8e6c8;
+  background: var(--color-bg, #f0fff0);
+  border-color: var(--color-border, #c8e6c8);
 }
 
 .final-response {
   position: relative;
-  background: #ffffff;
+  background: var(--color-surface, #ffffff);
   padding: 20px;
   border-radius: 6px;
-  border: 1px solid #c8e6c8;
+  border: 1px solid var(--color-border, #c8e6c8);
 }
 
 .chairman-label {
@@ -20,7 +20,7 @@
 }
 
 .final-text {
-  color: #333;
+  color: var(--color-text, #333);
   line-height: 1.7;
   font-size: 15px;
 }

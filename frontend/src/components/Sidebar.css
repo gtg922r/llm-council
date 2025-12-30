@@ -1,7 +1,7 @@
 .sidebar {
   width: 260px;
-  background: #f8f8f8;
-  border-right: 1px solid #e0e0e0;
+  background: var(--color-surface, #f8f8f8);
+  border-right: 1px solid var(--color-border, #e0e0e0);
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -9,13 +9,13 @@
 
 .sidebar-header {
   padding: 16px;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--color-border, #e0e0e0);
 }
 
 .sidebar-header h1 {
   font-size: 18px;
   margin: 0 0 12px 0;
-  color: #333;
+  color: var(--color-text, #333);
 }
 
 .sidebar-theme-toggle {
@@ -55,7 +55,7 @@
 .no-conversations {
   padding: 16px;
   text-align: center;
-  color: #999;
+  color: var(--color-muted, #999);
   font-size: 14px;
 }
 
@@ -72,7 +72,7 @@
 }
 
 .conversation-item:hover {
-  background: #f0f0f0;
+  background: var(--color-bg, #f0f0f0);
 }
 
 .conversation-item.active {
@@ -86,7 +86,7 @@
 }
 
 .conversation-title {
-  color: #333;
+  color: var(--color-text, #333);
   font-size: 14px;
   margin-bottom: 2px;
   white-space: nowrap;
@@ -95,7 +95,7 @@
 }
 
 .conversation-meta {
-  color: #999;
+  color: var(--color-muted, #999);
   font-size: 11px;
 }
 
@@ -115,7 +115,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #666;
+  color: var(--color-muted, #666);
 }
 
 .conversation-item:hover .action-btn,
@@ -125,7 +125,7 @@
 
 .action-btn:hover {
   transform: scale(1.1);
-  color: #333;
+  color: var(--color-text, #333);
 }
 
 .pin-btn[title="Unpin"] {
@@ -133,8 +133,8 @@
 }
 
 .archive-section {
-  border-top: 1px solid #e0e0e0;
-  background: #f0f0f0;
+  border-top: 1px solid var(--color-border, #e0e0e0);
+  background: var(--color-bg, #f0f0f0);
 }
 
 .archive-header {
@@ -145,11 +145,11 @@
   cursor: pointer;
   font-size: 13px;
   font-weight: 500;
-  color: #666;
+  color: var(--color-muted, #666);
 }
 
 .archive-header:hover {
-  background: #e8e8e8;
+  background: var(--color-bg, #e8e8e8);
 }
 
 .archive-title {
@@ -162,7 +162,7 @@
   max-height: 200px;
   overflow-y: auto;
   padding: 4px 8px;
-  background: #f8f8f8;
+  background: var(--color-surface, #f8f8f8);
 }
 
 .archived-item {
