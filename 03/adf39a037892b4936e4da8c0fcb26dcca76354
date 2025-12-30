@@ -1,0 +1,4 @@
+Task: Frontend - Update api.js with has_unread handling and markAsRead
+Summary: Added markAsRead helper that clears has_unread via PATCH, with API client test coverage.
+Files: frontend/src/api.js; frontend/src/__tests__/api.test.js
+Why: Frontend needs a dedicated helper to clear unread status when a conversation is viewed.
