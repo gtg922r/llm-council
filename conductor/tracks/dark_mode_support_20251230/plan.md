@@ -17,7 +17,7 @@
 ## Phase 3: UI Component Styling & Toggle
 - [x] Task: Create a `ThemeToggle` component with Lucide icons (Sun/Moon/Monitor) [5bad792]
 - [x] Task: Integrate `ThemeToggle` into the `Sidebar` component [35e85b7]
-- [ ] Task: Update `App.css` and component-specific CSS to use the new CSS variables
+- [x] Task: Update `App.css` and component-specific CSS to use the new CSS variables [042d054]
 - [ ] Task: Implement "Elevation" shading for message bubbles in `Stage1`, `Stage2`, and `Stage3` components
 - [ ] Task: Add CSS transitions for smooth theme switching
 - [ ] Task: Write component tests for `ThemeToggle` and Sidebar integration
