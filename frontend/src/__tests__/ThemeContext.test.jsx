@@ -1,7 +1,7 @@
 import { useContext } from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
-import { ThemeContext, ThemeProvider } from '../context/ThemeContext';
+import { ThemeContext, ThemeProvider, useTheme } from '../context/ThemeContext';
 
 function ContextProbe() {
   const { theme, resolvedTheme, setTheme } = useContext(ThemeContext);
@@ -14,6 +14,11 @@ function ContextProbe() {
       </button>
     </div>
   );
+}
+
+function HookProbe() {
+  const { theme } = useTheme();
+  return <div data-testid="hook-theme">{theme}</div>;
 }
 
 describe('ThemeContext', () => {
@@ -39,5 +44,21 @@ describe('ThemeContext', () => {
 
     expect(screen.getByTestId('theme')).toHaveTextContent('dark');
     expect(screen.getByTestId('resolved-theme')).toHaveTextContent('dark');
+  });
+
+  it('exposes theme state via useTheme', () => {
+    render(
+      <ThemeProvider>
+        <HookProbe />
+      </ThemeProvider>
+    );
+
+    expect(screen.getByTestId('hook-theme')).toHaveTextContent('system');
+  });
+
+  it('throws when useTheme is used outside the provider', () => {
+    expect(() => render(<HookProbe />)).toThrow(
+      'useTheme must be used within a ThemeProvider.'
+    );
   });
 });
