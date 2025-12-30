@@ -1,0 +1,1 @@
+Task: Swap accent and accent-strong to make strong brighter\n\nSummary:\n- Inverted accent and accent-strong values for light and dark themes.\n- Updated theme token test expectations to match the new ordering.\n\nFiles:\n- frontend/src/index.css\n- frontend/src/__tests__/FileUploadTheme.test.js\n\nWhy:\n- Make the strong accent tone visually brighter as intended.
