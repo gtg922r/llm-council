@@ -20,7 +20,7 @@ Update the frontend to send structured file objects instead of concatenating str
 ## Phase 3: Verification & Cleanup
 Ensure end-to-end functionality and backward compatibility.
 
-- [ ] Task: Test - Write comprehensive backend tests for `build_prompt_content` and storage logic.
+- [x] Task: Test - Write comprehensive backend tests for `build_prompt_content` and storage logic. (9156b85)
 - [ ] Task: Test - Verify end-to-end flow with a new conversation containing files.
 - [ ] Task: Test - Verify backward compatibility with existing conversations.
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: Verification & Cleanup' (Protocol in workflow.md)
