@@ -1,0 +1,4 @@
+Task: Frontend - Clear unread when active message completes
+Summary: Added refresh logic to clear unread for the active conversation after stream completion or follow-up, with test coverage.
+Files: frontend/src/App.jsx; frontend/src/__tests__/App.test.jsx
+Why: Active conversations should not retain unread indicators after their own responses finish.
