@@ -21,7 +21,7 @@
 }
 
 .aggregate-rankings {
-  background: var(--color-accent-soft, rgba(74, 144, 226, 0.12));
+  background: var(--color-elevation-2, #f0f7ff);
   padding: 16px;
   border-radius: 8px;
   margin-bottom: 20px;
