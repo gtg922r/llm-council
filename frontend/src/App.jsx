@@ -205,22 +205,23 @@ function App() {
         return { ...prev, messages: [...prev.messages, assistantMessage] };
       });
 
-      // Prepare final content for LLM (including concatenated file contents)
-      let finalContentForLLM = content;
-      if (files.length > 0) {
-        const fileContents = await Promise.all(
-          files.map(async (file) => {
-            const text = await readFileContent(file);
-            return `\n--- FILE: ${file.name} ---\n${text}\n--- END FILE: ${file.name} ---`;
-          })
-        );
-        finalContentForLLM = `${content}\n\nRelevant context from attached files:\n${fileContents.join('\n')}`;
-      }
+      const filesForRequest = await Promise.all(
+        files.map(async (file) => ({
+          name: file.name,
+          content: await readFileContent(file),
+          size: file.size,
+        }))
+      );
 
       // For follow-ups, we currently use the non-streaming endpoint as simple fallback
       if (targetModel === 'chairman') {
         try {
-          const response = await api.sendMessage(currentConversationId, finalContentForLLM, 'chairman');
+          const response = await api.sendMessage(
+            currentConversationId,
+            content,
+            filesForRequest,
+            'chairman'
+          );
           setCurrentConversation((prev) => {
             if (!prev || prev.id !== conversationId) return prev;
             const messages = [...prev.messages];
@@ -242,7 +243,7 @@ function App() {
       }
 
       // Send message with streaming (Default Council flow)
-      await api.sendMessageStream(currentConversationId, finalContentForLLM, (eventType, event) => {
+      await api.sendMessageStream(currentConversationId, content, filesForRequest, (eventType, event) => {
         switch (eventType) {
           case 'stage1_start':
             setCurrentConversation((prev) => {

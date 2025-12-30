@@ -114,7 +114,7 @@ describe('ChatInterface', () => {
     alertSpy.mockRestore();
   });
 
-  it('transmits file contents during message submission', async () => {
+  it('transmits staged files during message submission', async () => {
     const onSendMessage = vi.fn();
     render(
       <ChatInterface 
@@ -132,14 +132,6 @@ describe('ChatInterface', () => {
 
     const file = new File(['file content'], 'test.txt', { type: 'text/plain' });
     
-    // Mock FileReader as a class
-    class MockFileReader {
-      readAsText(f) {
-        this.onload({ target: { result: 'file content' } });
-      }
-    }
-    vi.stubGlobal('FileReader', MockFileReader);
-
     // Stage the file
     await act(async () => {
       fireEvent.drop(container, {
@@ -163,8 +155,6 @@ describe('ChatInterface', () => {
       undefined,
       expect.arrayContaining([file])
     );
-
-    vi.unstubAllGlobals();
   });
 
   it('renders file chips in user message history', () => {

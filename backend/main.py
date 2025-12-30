@@ -3,7 +3,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List, Dict, Any
 import uuid
 import json
@@ -46,10 +46,45 @@ class CreateConversationRequest(BaseModel):
     pass
 
 
+class FileContext(BaseModel):
+    """Structured file context sent alongside a message."""
+    name: str
+    content: str
+    size: int | None = None
+
+
 class SendMessageRequest(BaseModel):
     """Request to send a message in a conversation."""
     content: str
+    files: List[FileContext] = Field(default_factory=list)
     target_model: str | None = None # e.g., "chairman" for follow-up
+
+
+def build_prompt_content(
+    content: str,
+    files: List[FileContext] | List[Dict[str, Any]] | None
+) -> str:
+    """Construct the final prompt with user content and file blocks."""
+    if not files:
+        return content
+
+    sections = [content]
+    for file_context in files:
+        if isinstance(file_context, dict):
+            name = file_context.get("name")
+            file_content = file_context.get("content")
+        else:
+            name = file_context.name
+            file_content = file_context.content
+        if name is None or file_content is None:
+            raise ValueError("File context must include name and content.")
+        sections.append(
+            f"--- FILE: {name} ---\n"
+            f"{file_content}\n"
+            f"--- END FILE: {name} ---"
+        )
+
+    return "\n\n".join(sections)
 
 
 class ConversationMetadata(BaseModel):
@@ -159,7 +194,9 @@ async def send_message(conversation_id: str, request: SendMessageRequest):
     is_first_message = len(conversation["messages"]) == 0
 
     # Add user message
-    storage.add_user_message(conversation_id, request.content)
+    files_payload = [file.model_dump() for file in request.files] if request.files else None
+    storage.add_user_message(conversation_id, request.content, files=files_payload)
+    prompt_content = build_prompt_content(request.content, request.files)
 
     # If this is the first message, generate a title
     if is_first_message:
@@ -209,7 +246,7 @@ async def send_message(conversation_id: str, request: SendMessageRequest):
                 stage1_results=last_assistant_msg.get("stage1", []),
                 stage2_results=last_assistant_msg.get("stage2", []),
                 stage3_response=last_assistant_msg.get("stage3", {}).get("response", ""),
-                followup_query=request.content
+                followup_query=prompt_content
             )
 
             # Store result
@@ -235,7 +272,7 @@ async def send_message(conversation_id: str, request: SendMessageRequest):
 
     # Run the 3-stage council process (Default)
     stage1_results, stage2_results, stage3_result, metadata = await run_full_council(
-        request.content
+        prompt_content
     )
 
     # Add assistant message with all stages
@@ -279,7 +316,9 @@ async def send_message_stream(conversation_id: str, request: SendMessageRequest)
                     return model, None
 
             # Add user message
-            storage.add_user_message(conversation_id, request.content)
+            files_payload = [file.model_dump() for file in request.files] if request.files else None
+            storage.add_user_message(conversation_id, request.content, files=files_payload)
+            prompt_content = build_prompt_content(request.content, request.files)
 
             # Start title generation in parallel (don't await yet)
             title_task = None
@@ -288,7 +327,7 @@ async def send_message_stream(conversation_id: str, request: SendMessageRequest)
 
             # Stage 1: Collect responses
             yield f"data: {json.dumps({'type': 'stage1_start', 'total': len(COUNCIL_MODELS)})}\n\n"
-            stage1_messages = [{"role": "user", "content": request.content}]
+            stage1_messages = [{"role": "user", "content": prompt_content}]
             stage1_tasks = [
                 asyncio.create_task(query_with_model(model, stage1_messages))
                 for model in COUNCIL_MODELS
@@ -332,7 +371,7 @@ async def send_message_stream(conversation_id: str, request: SendMessageRequest)
             ])
             ranking_prompt = f"""You are evaluating different responses to the following question:
 
-Question: {request.content}
+Question: {prompt_content}
 
 Here are the responses from different models (anonymized):
 
@@ -397,7 +436,7 @@ Now provide your evaluation and ranking:"""
 
             # Stage 3: Synthesize final answer
             yield f"data: {json.dumps({'type': 'stage3_start'})}\n\n"
-            stage3_result = await stage3_synthesize_final(request.content, stage1_results, stage2_results)
+            stage3_result = await stage3_synthesize_final(prompt_content, stage1_results, stage2_results)
             yield f"data: {json.dumps({'type': 'stage3_complete', 'data': stage3_result})}\n\n"
 
             # Wait for title generation if it was started
