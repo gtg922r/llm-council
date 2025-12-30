@@ -98,6 +98,9 @@ export default function Sidebar({
                 <div className="conversation-meta">
                   {conv.message_count} messages
                 </div>
+                {conv.has_unread && (
+                  <div className="unread-dot" title="Unread" />
+                )}
               </div>
               <div className="item-actions">
                 <button

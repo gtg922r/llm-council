@@ -31,4 +31,28 @@ describe('Sidebar', () => {
 
     expect(screen.getByRole('button', { name: /system mode/i })).toBeInTheDocument();
   });
+
+  it('displays a blue dot for unread conversations', () => {
+    const unreadProps = {
+      ...baseProps,
+      conversations: [
+        {
+          id: '1',
+          title: 'Unread Conversation',
+          message_count: 5,
+          is_pinned: false,
+          is_archived: false,
+          has_unread: true
+        }
+      ]
+    };
+    
+    render(
+      <ThemeProvider>
+        <Sidebar {...unreadProps} />
+      </ThemeProvider>
+    );
+    
+    expect(screen.getByTitle('Unread')).toBeInTheDocument();
+  });
 });
