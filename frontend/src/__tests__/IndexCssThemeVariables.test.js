@@ -24,4 +24,18 @@ describe('index.css theme variables', () => {
       expect(css).toContain(`var(${variable}`);
     }
   });
+
+  it('defines light mode variable values in :root', () => {
+    const css = readFileSync(cssPath, 'utf8');
+
+    expect(css).toContain('--color-bg: #f5f5f5');
+    expect(css).toContain('--color-surface: #ffffff');
+    expect(css).toContain('--color-text: #333');
+    expect(css).toContain('--color-muted: #666');
+    expect(css).toContain('--color-border: #e0e0e0');
+    expect(css).toContain('--color-code-bg: #f5f5f5');
+    expect(css).toContain('--color-code-text: #333');
+    expect(css).toContain('--color-blockquote-border: #ddd');
+    expect(css).toContain('--color-blockquote-text: #666');
+  });
 });
