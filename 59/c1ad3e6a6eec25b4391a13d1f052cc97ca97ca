@@ -1,0 +1,3 @@
+Task: Test - Verify backward compatibility with existing conversations.
+Summary: Added a script to verify that the backend can still load and interact with legacy conversations that don't have the 'files' field. Fixed backend/main.py to respect the PORT environment variable.
+Files: verify_backward_compatibility.py, backend/main.py
