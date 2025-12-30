@@ -88,3 +88,20 @@ def test_duplicate_conversation():
     original = get_conversation(original_id)
     assert original["id"] == original_id
     assert len(original["messages"]) == 1
+
+def test_add_assistant_message_sets_has_unread():
+    """Test that adding assistant message marks conversation as unread."""
+    from backend.storage import add_assistant_message
+
+    conv_id = "test-conv-unread"
+    create_conversation(conv_id)
+
+    add_assistant_message(
+        conv_id,
+        stage1=[{"model": "test", "content": "one"}],
+        stage2=[{"model": "test", "content": "two"}],
+        stage3={"model": "test", "content": "three"},
+    )
+
+    conversation = get_conversation(conv_id)
+    assert conversation["has_unread"] is True
