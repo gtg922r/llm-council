@@ -67,9 +67,23 @@ function App() {
     }
   };
 
-  const handleSelectConversation = (id) => {
+  const handleSelectConversation = async (id) => {
     setCurrentConversation(null);
     setCurrentConversationId(id);
+
+    // Mark as read if needed
+    const conversation = conversations.find((c) => c.id === id);
+    if (conversation?.has_unread) {
+      // Optimistic update
+      setConversations((prev) =>
+        prev.map((c) => (c.id === id ? { ...c, has_unread: false } : c))
+      );
+      try {
+        await api.markAsRead(id);
+      } catch (error) {
+        console.error('Failed to mark as read:', error);
+      }
+    }
   };
 
   const handleTogglePin = async (id, isPinned) => {
