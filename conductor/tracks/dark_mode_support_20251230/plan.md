@@ -36,4 +36,5 @@
 - [x] Task: Update UI tests for settings popover behavior [14222a9]
 - [x] Task: Evenly space theme toggle icons within the settings popover [68a4b68]
 - [x] Task: Refine hover/active contrast to use lighter shades across the UI [68a4b68]
-- [ ] Task: Conductor - User Manual Verification 'Phase 5: Settings Popover & Toggle Placement' (Protocol in workflow.md)
+- [x] Task: Apply accent-tinted hover styling across controls [6944779]
+- [~] Task: Conductor - User Manual Verification 'Phase 5: Settings Popover & Toggle Placement' (Protocol in workflow.md)
