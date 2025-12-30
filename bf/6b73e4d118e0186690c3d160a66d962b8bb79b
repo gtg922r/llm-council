@@ -1,0 +1,4 @@
+Task: Frontend - Mark conversations read on selection
+Summary: App now calls markAsRead when a conversation is selected and refreshes the list; added test coverage for this behavior.
+Files: frontend/src/App.jsx; frontend/src/__tests__/App.test.jsx
+Why: Selecting a conversation should clear unread status immediately.
