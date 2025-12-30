@@ -191,7 +191,7 @@
 
 .chat-input-tool-button:hover:not(:disabled) {
   color: var(--color-text, #666);
-  background: var(--color-elevation-2, rgba(0, 0, 0, 0.05));
+  background: var(--color-accent-soft, rgba(74, 144, 226, 0.12));
 }
 
 .chat-input-tool-button:disabled {
@@ -219,8 +219,8 @@
 }
 
 .chat-input-cancel-button:hover:not(:disabled) {
-  background: var(--color-elevation-2, #f5f5f5);
-  color: var(--color-text, #333);
+  background: var(--color-accent-soft, rgba(74, 144, 226, 0.12));
+  color: var(--color-accent, #4a90e2);
 }
 
 .chat-input-send-button {

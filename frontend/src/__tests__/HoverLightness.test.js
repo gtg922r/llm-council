@@ -14,13 +14,13 @@ const files = [
 ];
 
 describe('hover lightness styling', () => {
-  it('uses elevation-2 backgrounds for hover states', () => {
+  it('uses accent-tinted backgrounds for hover states', () => {
     for (const entry of files) {
       const css = readFileSync(resolve(process.cwd(), entry.path), 'utf8');
       for (const selector of entry.selectors) {
         expect(css).toContain(selector);
       }
-      expect(css).toContain('var(--color-elevation-2');
+      expect(css).toContain('var(--color-accent-soft');
     }
   });
 });
