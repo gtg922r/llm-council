@@ -20,6 +20,11 @@
   --color-elevation-1: #ffffff;
   --color-elevation-2: #f7f7f7;
   --color-elevation-3: #f0f0f0;
+  --color-accent: #4a90e2;
+  --color-accent-strong: #357abd;
+  --color-accent-soft: rgba(74, 144, 226, 0.12);
+  --color-danger: #d93025;
+  --color-danger-soft: rgba(217, 48, 37, 0.12);
 }
 
 :root.dark {
@@ -35,6 +40,11 @@
   --color-elevation-1: #1e1e1e;
   --color-elevation-2: #242424;
   --color-elevation-3: #2a2a2a;
+  --color-accent: #6aa8ff;
+  --color-accent-strong: #4a90e2;
+  --color-accent-soft: rgba(106, 168, 255, 0.2);
+  --color-danger: #ff6b61;
+  --color-danger-soft: rgba(255, 107, 97, 0.18);
 }
 
 * {

@@ -15,8 +15,8 @@
 }
 
 .chat-input-container.dragging {
-  border-top-color: #4a90e2;
-  background: var(--color-bg, #f0f7ff);
+  border-top-color: var(--color-accent, #4a90e2);
+  background: var(--color-accent-soft, rgba(74, 144, 226, 0.12));
 }
 
 .drag-overlay {
@@ -25,8 +25,8 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(74, 144, 226, 0.1);
-  border: 2px dashed #4a90e2;
+  background: var(--color-accent-soft, rgba(74, 144, 226, 0.12));
+  border: 2px dashed var(--color-accent, #4a90e2);
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -38,7 +38,7 @@
 }
 
 .drag-message {
-  background: #4a90e2;
+  background: var(--color-accent, #4a90e2);
   color: white;
   padding: 8px 16px;
   border-radius: 20px;
@@ -68,8 +68,8 @@
 }
 
 .chat-input-wrapper:focus-within {
-  border-color: #4a90e2;
-  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+  border-color: var(--color-accent, #4a90e2);
+  box-shadow: 0 0 0 3px var(--color-accent-soft, rgba(74, 144, 226, 0.12));
 }
 
 .chat-input-staged-files {
@@ -84,7 +84,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  background: var(--color-bg, #f0f4f8);
+  background: var(--color-elevation-2, var(--color-bg, #f0f4f8));
   border: 1px solid var(--color-border, #d1d9e6);
   border-radius: 16px;
   padding: 2px 8px 2px 12px;
@@ -113,8 +113,8 @@
 }
 
 .file-chip-remove:hover {
-  background: rgba(0,0,0,0.1);
-  color: #d93025;
+  background: var(--color-elevation-3, rgba(0, 0, 0, 0.1));
+  color: var(--color-danger, #d93025);
 }
 
 .chat-input-textarea {
@@ -168,14 +168,14 @@
 }
 
 .chat-input-tool-button.has-files {
-  color: #4a90e2;
+  color: var(--color-accent, #4a90e2);
 }
 
 .file-count-badge {
   position: absolute;
   top: -2px;
   right: -2px;
-  background: #d93025;
+  background: var(--color-danger, #d93025);
   color: white;
   font-size: 10px;
   font-weight: 700;
@@ -186,7 +186,7 @@
   align-items: center;
   justify-content: center;
   padding: 0 4px;
-  border: 1.5px solid #fff;
+  border: 1.5px solid var(--color-surface, #ffffff);
 }
 
 .chat-input-tool-button:hover:not(:disabled) {
@@ -225,8 +225,8 @@
 
 .chat-input-send-button {
   padding: 14px 28px;
-  background: #4a90e2;
-  border: 1px solid #4a90e2;
+  background: var(--color-accent, #4a90e2);
+  border: 1px solid var(--color-accent, #4a90e2);
   border-radius: 8px;
   color: #fff;
   font-size: 15px;
@@ -242,8 +242,8 @@
 }
 
 .chat-input-send-button:hover:not(:disabled) {
-  background: #357abd;
-  border-color: #357abd;
+  background: var(--color-accent-strong, #357abd);
+  border-color: var(--color-accent-strong, #357abd);
 }
 
 .chat-input-send-button:disabled {
