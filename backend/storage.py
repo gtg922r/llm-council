@@ -36,6 +36,7 @@ def create_conversation(conversation_id: str) -> Dict[str, Any]:
         "title": "New Conversation",
         "is_pinned": False,
         "is_archived": False,
+        "has_unread": False,
         "messages": []
     }
 
@@ -102,6 +103,7 @@ def list_conversations() -> List[Dict[str, Any]]:
                     "title": data.get("title", "New Conversation"),
                     "is_pinned": data.get("is_pinned", False),
                     "is_archived": data.get("is_archived", False),
+                    "has_unread": data.get("has_unread", False),
                     "message_count": len(data["messages"])
                 })
 
@@ -206,6 +208,7 @@ def duplicate_conversation(original_id: str, new_id: str) -> Dict[str, Any]:
         "title": f"{original.get('title', 'New Conversation')} (Copy)",
         "is_pinned": False,
         "is_archived": False,
+        "has_unread": False,
         "messages": original["messages"].copy()
     }
 
