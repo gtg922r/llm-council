@@ -19,7 +19,7 @@
 - [x] Task: Integrate `ThemeToggle` into the `Sidebar` component [35e85b7]
 - [x] Task: Update `App.css` and component-specific CSS to use the new CSS variables [042d054]
 - [x] Task: Implement "Elevation" shading for message bubbles in `Stage1`, `Stage2`, and `Stage3` components [bbc32f6]
-- [ ] Task: Add CSS transitions for smooth theme switching
+- [x] Task: Add CSS transitions for smooth theme switching [cb4c27b]
 - [ ] Task: Write component tests for `ThemeToggle` and Sidebar integration
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: UI Component Styling & Toggle' (Protocol in workflow.md)
 
