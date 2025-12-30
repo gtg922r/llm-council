@@ -94,6 +94,7 @@ class ConversationMetadata(BaseModel):
     title: str
     is_pinned: bool = False
     is_archived: bool = False
+    has_unread: bool = False
     message_count: int
 
 
@@ -104,6 +105,7 @@ class Conversation(BaseModel):
     title: str
     is_pinned: bool = False
     is_archived: bool = False
+    has_unread: bool = False
     messages: List[Dict[str, Any]]
 
 
