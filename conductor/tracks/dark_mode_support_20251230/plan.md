@@ -1,7 +1,7 @@
 # Plan: Dark Mode Support
 
 ## Phase 1: Foundation & Theme Management
-- [ ] Task: Create `ThemeContext` to manage `theme` state ('light', 'dark', 'system')
+- [x] Task: Create `ThemeContext` to manage `theme` state ('light', 'dark', 'system') [55f38a8]
 - [ ] Task: Implement `useTheme` hook for easy access to theme state and toggle
 - [ ] Task: Add unit tests for `ThemeContext` logic (system detection, state transitions)
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Foundation & Theme Management' (Protocol in workflow.md)
