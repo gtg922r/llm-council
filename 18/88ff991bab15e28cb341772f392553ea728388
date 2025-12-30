@@ -1,0 +1,12 @@
+Task: Refactor index.css to use CSS variables for core colors.
+
+Summary:
+- Swapped hardcoded colors in global styles to CSS variable references with fallbacks.
+- Added tests to ensure core theme variables are used in index.css.
+
+Files:
+- frontend/src/index.css
+- frontend/src/__tests__/IndexCssThemeVariables.test.js
+
+Why:
+- Establishes variable-based theming needed for light/dark mode switching.
