@@ -114,6 +114,7 @@ class UpdateConversationRequest(BaseModel):
     title: str | None = None
     is_pinned: bool | None = None
     is_archived: bool | None = None
+    has_unread: bool | None = None
 
 
 @app.get("/")
@@ -158,6 +159,8 @@ async def update_conversation(conversation_id: str, request: UpdateConversationR
         conversation["is_pinned"] = request.is_pinned
     if request.is_archived is not None:
         conversation["is_archived"] = request.is_archived
+    if request.has_unread is not None:
+        conversation["has_unread"] = request.has_unread
         
     storage.save_conversation(conversation)
     return conversation
