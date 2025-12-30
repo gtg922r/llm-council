@@ -1,0 +1,4 @@
+Task: Test - Verify backward compatibility with existing conversations.
+Summary: Added a test that loads a legacy conversation without files, verifies GET works, and posts a new message without errors.
+Files: backend/tests/test_backward_compatibility.py.
+Why: Ensure older stored conversations remain compatible after file context refactor.
