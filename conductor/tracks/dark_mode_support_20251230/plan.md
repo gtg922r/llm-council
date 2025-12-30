@@ -24,12 +24,12 @@
 - [x] Task: Write component tests for `ThemeToggle` and Sidebar integration [608ac7c]
 - [x] Task: Conductor - User Manual Verification 'Phase 3: UI Component Styling & Toggle' (Protocol in workflow.md) [3edc3cb]
 
-## Phase 4: Specialized Content & Refinement
+## Phase 4: Specialized Content & Refinement [checkpoint: a3c7fab]
 - [x] Task: Refactor file upload UI styling to use theme variables in dark mode [e45a5a2]
 - [x] Task: Update syntax highlighting styles for `react-markdown` code blocks to use a dark theme [c2d38b2]
 - [x] Task: Implement `localStorage` persistence for the theme preference [1441f8f]
 - [x] Task: Add unit tests for `localStorage` persistence and system preference sync [1441f8f]
-- [~] Task: Conductor - User Manual Verification 'Phase 4: Specialized Content & Refinement' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 4: Specialized Content & Refinement' (Protocol in workflow.md) [a3c7fab]
 
 ## Phase 5: Settings Popover & Toggle Placement
 - [x] Task: Move theme toggle into a sidebar settings popover triggered by a gear button [14222a9]
