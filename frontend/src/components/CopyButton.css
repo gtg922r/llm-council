@@ -8,30 +8,29 @@
   width: 32px;
   height: 32px;
   padding: 6px;
-  background: rgba(255, 255, 255, 0.8);
-  border: 1px solid #e0e0e0;
+  background: var(--color-surface, rgba(255, 255, 255, 0.8));
+  border: 1px solid var(--color-border, #e0e0e0);
   border-radius: 6px;
   cursor: pointer;
-  color: #666;
+  color: var(--color-text, #333);
   transition: all 0.2s ease;
   z-index: 10;
   backdrop-filter: blur(2px);
 }
 
 .copy-button:hover {
-  background: #f0f0f0;
-  color: #333;
-  border-color: #d0d0d0;
+  background: var(--color-accent-soft, rgba(74, 144, 226, 0.12));
+  color: var(--color-accent, #4a90e2);
+  border-color: var(--color-border, #d0d0d0);
 }
 
 .copy-button.copied {
-  background: #e6ffe6;
+  background: var(--color-surface, #e6ffe6);
   color: #2d8a2d;
-  border-color: #c8e6c8;
+  border-color: var(--color-border, #c8e6c8);
 }
 
 .copy-button svg {
   width: 16px;
   height: 16px;
 }
-

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { 
   Plus, 
   Pin, 
@@ -6,8 +6,10 @@ import {
   Trash2, 
   RefreshCw, 
   ChevronDown, 
-  ChevronRight
+  ChevronRight,
+  Settings
 } from 'lucide-react';
+import ThemeToggle from './ThemeToggle';
 import './Sidebar.css';
 
 export default function Sidebar({
@@ -21,6 +23,20 @@ export default function Sidebar({
   onBulkDelete,
 }) {
   const [isArchiveExpanded, setIsArchiveExpanded] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const settingsRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!settingsRef.current || settingsRef.current.contains(event.target)) {
+        return;
+      }
+      setIsSettingsOpen(false);
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Sort conversations: pinned first, then by date (date sorting is already handled by backend)
   const sortedConversations = [...conversations].sort((a, b) => {
@@ -35,7 +51,29 @@ export default function Sidebar({
   return (
     <div className="sidebar">
       <div className="sidebar-header">
-        <h1>LLM Council</h1>
+        <div className="sidebar-header-top">
+          <h1>LLM Council</h1>
+          <div className="sidebar-settings" ref={settingsRef}>
+            <button
+              type="button"
+              className="sidebar-settings-button"
+              onClick={() => setIsSettingsOpen((prev) => !prev)}
+              aria-label="Open settings"
+              aria-expanded={isSettingsOpen}
+              title="Settings"
+            >
+              <Settings size={16} />
+            </button>
+            {isSettingsOpen && (
+              <div className="sidebar-settings-popover" role="dialog" aria-label="Settings">
+                <div className="sidebar-settings-section">
+                  <div className="sidebar-settings-label">Theme</div>
+                  <ThemeToggle />
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
         <button className="new-conversation-btn" onClick={onNewConversation}>
           <Plus size={16} /> New Conversation
         </button>

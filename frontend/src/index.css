@@ -7,6 +7,54 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  --color-bg: #f5f5f5;
+  --color-surface: #ffffff;
+  --color-text: #333;
+  --color-muted: #666;
+  --color-border: #e0e0e0;
+  --color-code-bg: #f5f5f5;
+  --color-code-text: #333;
+  --color-code-block-bg: #f2f5f9;
+  --color-code-block-border: #d7e0ea;
+  --color-code-inline-bg: #eef2f7;
+  --color-code-inline-text: #1b2a41;
+  --color-code-inline-border: #d7e0ea;
+  --color-blockquote-border: #ddd;
+  --color-blockquote-text: #666;
+  --color-elevation-1: #ffffff;
+  --color-elevation-2: #f7f7f7;
+  --color-elevation-3: #f0f0f0;
+  --color-accent: #357abd;
+  --color-accent-strong: #4a90e2;
+  --color-accent-soft: rgba(74, 144, 226, 0.12);
+  --color-danger: #d93025;
+  --color-danger-soft: rgba(217, 48, 37, 0.12);
+}
+
+:root.dark {
+  --color-bg: #121212;
+  --color-surface: #1e1e1e;
+  --color-text: #e0e0e0;
+  --color-muted: #a0a0a0;
+  --color-border: #2c2c2c;
+  --color-code-bg: #1b1b1b;
+  --color-code-text: #e6e6e6;
+  --color-code-block-bg: #161b22;
+  --color-code-block-border: #2a3441;
+  --color-code-inline-bg: #202734;
+  --color-code-inline-text: #e6edf3;
+  --color-code-inline-border: #2a3441;
+  --color-blockquote-border: #3a3a3a;
+  --color-blockquote-text: #b0b0b0;
+  --color-elevation-1: #1e1e1e;
+  --color-elevation-2: #242424;
+  --color-elevation-3: #2a2a2a;
+  --color-accent: #4a90e2;
+  --color-accent-strong: #6aa8ff;
+  --color-accent-soft: rgba(106, 168, 255, 0.2);
+  --color-danger: #ff6b61;
+  --color-danger-soft: rgba(255, 107, 97, 0.18);
 }
 
 * {
@@ -19,18 +67,21 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background: #f5f5f5;
+  background: var(--color-bg, #f5f5f5);
+  color: var(--color-text, #333);
 }
 
 #root {
   height: 100vh;
   width: 100vw;
   overflow: hidden;
+  background: var(--color-surface, #ffffff);
 }
 
 /* Global markdown styling */
 .markdown-content {
   padding: 12px;
+  color: var(--color-text, #333);
 }
 
 .markdown-content p {
@@ -70,7 +121,8 @@ body {
 }
 
 .markdown-content pre {
-  background: #f5f5f5;
+  background: var(--color-code-block-bg, var(--color-code-bg, #f5f5f5));
+  border: 1px solid var(--color-code-block-border, var(--color-border, #ddd));
   padding: 12px;
   border-radius: 4px;
   overflow-x: auto;
@@ -78,21 +130,42 @@ body {
 }
 
 .markdown-content code {
-  background: #f5f5f5;
+  background: var(--color-code-inline-bg, var(--color-code-bg, #f5f5f5));
   padding: 2px 6px;
   border-radius: 3px;
+  border: 1px solid var(--color-code-inline-border, transparent);
   font-family: monospace;
   font-size: 0.9em;
+  color: var(--color-code-inline-text, var(--color-code-text, var(--color-text, #333)));
 }
 
 .markdown-content pre code {
   background: none;
   padding: 0;
+  border: none;
 }
 
 .markdown-content blockquote {
   margin: 0 0 12px 0;
   padding-left: 16px;
-  border-left: 4px solid #ddd;
-  color: #666;
+  border-left: 4px solid var(--color-blockquote-border, var(--color-border, #ddd));
+  color: var(--color-blockquote-text, var(--color-muted, #666));
+}
+
+body,
+#root,
+.app,
+.sidebar,
+.chat-interface,
+.chat-header,
+.header-menu,
+.tab,
+.tab-content,
+.stage2 .tab-content,
+.final-response,
+.chat-input-container,
+.chat-input-wrapper,
+.conversation-item,
+.user-message .message-content {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
