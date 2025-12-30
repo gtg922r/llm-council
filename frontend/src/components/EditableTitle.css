@@ -1,7 +1,7 @@
 .editable-title-display {
   margin: 0;
   font-size: 18px;
-  color: #333;
+  color: var(--color-text);
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
@@ -15,20 +15,20 @@
 }
 
 .editable-title-display:hover {
-  background: #f5f5f5;
-  border-color: #e0e0e0;
+  background: var(--color-surface-subtle);
+  border-color: var(--color-border);
 }
 
 .editable-title-input {
   font-size: 18px;
   font-weight: 600;
-  color: #333;
+  color: var(--color-text);
   padding: 4px 8px;
-  border: 1px solid #4a90e2;
+  border: 1px solid var(--color-primary);
   border-radius: 4px;
   outline: none;
   width: 100%;
   max-width: 100%;
   font-family: inherit;
-  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.1);
+  box-shadow: 0 0 0 2px var(--color-overlay);
 }

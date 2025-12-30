@@ -8,7 +8,7 @@
 
 .stage-title {
   margin: 0 0 16px 0;
-  color: #333;
+  color: var(--color-text);
   font-size: 16px;
   font-weight: 600;
 }
@@ -24,49 +24,49 @@
 
 .tab {
   padding: 8px 16px;
-  background: #ffffff;
-  border: 1px solid #d0d0d0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
   border-radius: 6px 6px 0 0;
-  color: #666;
+  color: var(--color-text-muted);
   cursor: pointer;
   font-size: 14px;
   transition: all 0.2s;
 }
 
 .tab:hover {
-  background: #f0f0f0;
-  color: #333;
-  border-color: #4a90e2;
+  background: var(--color-surface-muted);
+  color: var(--color-text);
+  border-color: var(--color-primary);
 }
 
 .tab.active {
-  background: #ffffff;
-  color: #4a90e2;
-  border-color: #4a90e2;
-  border-bottom-color: #ffffff;
+  background: var(--color-surface);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  border-bottom-color: var(--color-surface);
   font-weight: 600;
 }
 
 .tab.error {
-  border-color: #ffcccc;
-  color: #cc0000;
+  border-color: var(--color-danger-border);
+  color: var(--color-error);
 }
 
 .tab.error:hover {
-  background: #fff5f5;
-  border-color: #ff0000;
+  background: var(--color-error-soft);
+  border-color: var(--color-error);
 }
 
 .tab.error.active {
-  border-color: #cc0000;
-  border-bottom-color: #ffffff;
+  border-color: var(--color-error);
+  border-bottom-color: var(--color-surface);
 }
 
 .error-dot {
   display: inline-block;
   margin-left: 6px;
-  background: #cc0000;
-  color: white;
+  background: var(--color-error);
+  color: #fff;
   width: 14px;
   height: 14px;
   border-radius: 50%;
@@ -78,26 +78,26 @@
 
 .tab-content {
   position: relative;
-  background: #ffffff;
+  background: var(--color-surface);
   padding: 16px;
   border-radius: 6px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--color-border);
 }
 
 .tab-content.content-error {
-  border-color: #ffcccc;
-  background-color: #fffafa;
+  border-color: var(--color-danger-border);
+  background-color: var(--color-error-soft);
 }
 
 
 .model-name {
-  color: #888;
+  color: var(--color-text-subtle);
   font-size: 12px;
   margin-bottom: 12px;
   font-family: monospace;
 }
 
 .response-text {
-  color: #333;
+  color: var(--color-text);
   line-height: 1.6;
 }

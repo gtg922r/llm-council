@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { 
   Plus, 
   Pin, 
@@ -6,7 +6,8 @@ import {
   Trash2, 
   RefreshCw, 
   ChevronDown, 
-  ChevronRight
+  ChevronRight,
+  Settings
 } from 'lucide-react';
 import './Sidebar.css';
 
@@ -19,8 +20,23 @@ export default function Sidebar({
   onToggleArchive,
   onDeleteConversation,
   onBulkDelete,
+  theme,
+  onToggleTheme,
 }) {
   const [isArchiveExpanded, setIsArchiveExpanded] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const settingsRef = useRef(null);
+
+  useEffect(() => {
+    if (!isSettingsOpen) return;
+    const handleClickOutside = (event) => {
+      if (settingsRef.current && !settingsRef.current.contains(event.target)) {
+        setIsSettingsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isSettingsOpen]);
 
   // Sort conversations: pinned first, then by date (date sorting is already handled by backend)
   const sortedConversations = [...conversations].sort((a, b) => {
@@ -35,7 +51,36 @@ export default function Sidebar({
   return (
     <div className="sidebar">
       <div className="sidebar-header">
-        <h1>LLM Council</h1>
+        <div className="sidebar-top">
+          <h1>LLM Council</h1>
+          <div className="settings-wrapper" ref={settingsRef}>
+            <button
+              className={`sidebar-settings-btn ${isSettingsOpen ? 'active' : ''}`}
+              onClick={() => setIsSettingsOpen((prev) => !prev)}
+              aria-haspopup="true"
+              aria-expanded={isSettingsOpen}
+              aria-label="Open settings"
+            >
+              <Settings size={16} />
+            </button>
+            {isSettingsOpen && (
+              <div className="settings-popover">
+                <div className="settings-row">
+                  <span className="settings-label">Dark mode</span>
+                  <button
+                    className={`theme-toggle ${theme === 'dark' ? 'is-dark' : ''}`}
+                    onClick={onToggleTheme}
+                    aria-pressed={theme === 'dark'}
+                    aria-label="Toggle dark mode"
+                  >
+                    <span className="toggle-thumb" />
+                  </button>
+                </div>
+                <div className="settings-hint">Uses system theme until toggled.</div>
+              </div>
+            )}
+          </div>
+        </div>
         <button className="new-conversation-btn" onClick={onNewConversation}>
           <Plus size={16} /> New Conversation
         </button>

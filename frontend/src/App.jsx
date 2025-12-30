@@ -9,6 +9,40 @@ function App() {
   const [currentConversationId, setCurrentConversationId] = useState(null);
   const [currentConversation, setCurrentConversation] = useState(null);
   const [loadingConversationId, setLoadingConversationId] = useState(null);
+  const getSystemTheme = () =>
+    window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+      ? 'dark'
+      : 'light';
+  const [themePreference, setThemePreference] = useState(() => {
+    const stored = window.localStorage.getItem('theme');
+    return stored === 'light' || stored === 'dark' ? stored : null;
+  });
+  const [systemTheme, setSystemTheme] = useState(() => getSystemTheme());
+  const resolvedTheme = themePreference ?? systemTheme;
+
+  useEffect(() => {
+    const media = window.matchMedia?.('(prefers-color-scheme: dark)');
+    if (!media) return undefined;
+    const handleChange = (event) => {
+      setSystemTheme(event.matches ? 'dark' : 'light');
+    };
+    if (media.addEventListener) {
+      media.addEventListener('change', handleChange);
+    } else {
+      media.addListener(handleChange);
+    }
+    return () => {
+      if (media.removeEventListener) {
+        media.removeEventListener('change', handleChange);
+      } else {
+        media.removeListener(handleChange);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = resolvedTheme;
+  }, [resolvedTheme]);
 
   const loadConversations = useCallback(async () => {
     try {
@@ -158,6 +192,12 @@ function App() {
       console.error('Failed to update title:', error);
     }
   };
+
+  const handleToggleTheme = useCallback(() => {
+    const nextTheme = resolvedTheme === 'dark' ? 'light' : 'dark';
+    setThemePreference(nextTheme);
+    window.localStorage.setItem('theme', nextTheme);
+  }, [resolvedTheme]);
 
   const readFileContent = (file) => {
     return new Promise((resolve, reject) => {
@@ -421,6 +461,8 @@ function App() {
         onToggleArchive={handleToggleArchive}
         onDeleteConversation={handleDeleteConversation}
         onBulkDelete={handleBulkDelete}
+        theme={resolvedTheme}
+        onToggleTheme={handleToggleTheme}
       />
       <ChatInterface
         conversation={currentConversation}
