@@ -1,6 +1,6 @@
 # Implementation Plan: Multi-Conversation UX Improvements
 
-## Phase 1: Backend Persistence & API
+## Phase 1: Backend Persistence & API [checkpoint: bc1181a]
 Introduce the `has_unread` field to the data model and expose it via the API.
 
 - [x] Task: Backend - Update `storage.py` to include `has_unread` in conversation model and default it to `False` [88d77fd]
