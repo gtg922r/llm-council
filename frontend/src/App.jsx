@@ -10,6 +10,7 @@ function App() {
   const [currentConversationId, setCurrentConversationId] = useState(null);
   const [currentConversation, setCurrentConversation] = useState(null);
   const [loadingConversationId, setLoadingConversationId] = useState(null);
+  const [pendingConversationIds, setPendingConversationIds] = useState(() => new Set());
 
   const loadConversations = useCallback(async () => {
     try {
@@ -190,6 +191,11 @@ function App() {
     if (!currentConversationId) return;
 
     const conversationId = currentConversationId;
+    setPendingConversationIds((prev) => {
+      const next = new Set(prev);
+      next.add(conversationId);
+      return next;
+    });
     setLoadingConversationId(conversationId);
     try {
       // Optimistically add user message to UI (original content + file metadata)
@@ -253,6 +259,11 @@ function App() {
           });
           setLoadingConversationId((prev) => (prev === conversationId ? null : prev));
           await refreshConversationUnreadState(conversationId);
+          setPendingConversationIds((prev) => {
+            const next = new Set(prev);
+            next.delete(conversationId);
+            return next;
+          });
           return;
         } catch (error) {
           console.error('Follow-up failed:', error);
@@ -404,11 +415,21 @@ function App() {
             // Stream complete, reload conversations list
             refreshConversationUnreadState(conversationId);
             setLoadingConversationId((prev) => (prev === conversationId ? null : prev));
+            setPendingConversationIds((prev) => {
+              const next = new Set(prev);
+              next.delete(conversationId);
+              return next;
+            });
             break;
 
           case 'error':
             console.error('Stream error:', event.message);
             setLoadingConversationId((prev) => (prev === conversationId ? null : prev));
+            setPendingConversationIds((prev) => {
+              const next = new Set(prev);
+              next.delete(conversationId);
+              return next;
+            });
             break;
 
           default:
@@ -423,6 +444,11 @@ function App() {
         return { ...prev, messages: prev.messages.slice(0, -2) };
       });
       setLoadingConversationId((prev) => (prev === conversationId ? null : prev));
+      setPendingConversationIds((prev) => {
+        const next = new Set(prev);
+        next.delete(conversationId);
+        return next;
+      });
     }
   };
 
@@ -434,6 +460,7 @@ function App() {
         <Sidebar
           conversations={conversations}
           currentConversationId={currentConversationId}
+          pendingConversationIds={pendingConversationIds}
           onSelectConversation={handleSelectConversation}
           onNewConversation={handleNewConversation}
           onTogglePin={handleTogglePin}

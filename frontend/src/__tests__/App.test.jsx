@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 let fileToSend = null;
@@ -29,7 +29,12 @@ vi.mock('../api', () => ({
 }));
 
 vi.mock('../components/Sidebar', () => ({
-  default: ({ onNewConversation, onSelectConversation, conversations }) => (
+  default: ({
+    onNewConversation,
+    onSelectConversation,
+    conversations,
+    pendingConversationIds,
+  }) => (
     <>
       <button type="button" onClick={onNewConversation}>
         New Conversation
@@ -39,6 +44,9 @@ vi.mock('../components/Sidebar', () => ({
           Select Conversation
         </button>
       )}
+      <div data-testid="pending-count">
+        {pendingConversationIds ? pendingConversationIds.size : 0}
+      </div>
     </>
   ),
 }));
@@ -140,6 +148,35 @@ describe('App', () => {
 
     await waitFor(() => {
       expect(api.markAsRead).toHaveBeenCalledWith('conv-1');
+    });
+  });
+
+  it('tracks pending conversations during streaming', async () => {
+    let triggerComplete;
+    api.sendMessageStream.mockImplementationOnce(async (_id, _content, _files, onEvent) => {
+      triggerComplete = () => onEvent('complete', { type: 'complete' });
+    });
+
+    render(<App />);
+
+    fireEvent.click(screen.getByText('New Conversation'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Send')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText('Send'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('pending-count').textContent).toBe('1');
+    });
+
+    await act(async () => {
+      triggerComplete();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('pending-count').textContent).toBe('0');
     });
   });
 });
