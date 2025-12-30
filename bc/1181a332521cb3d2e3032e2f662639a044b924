@@ -1,0 +1,5 @@
+Phase 1: Backend Persistence & API Complete
+Verification:
+- Automated Tests: uv run pytest backend/tests/ (Passed)
+- Manual Verification Plan Proposed: curl commands for API validation.
+- Checkpoint: Backend models and API endpoints updated for has_unread.
