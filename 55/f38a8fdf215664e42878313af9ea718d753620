@@ -1,0 +1,12 @@
+Task: Create ThemeContext to manage theme state.
+
+Summary:
+- Added ThemeContext and ThemeProvider to supply theme state/resolved theme.
+- Added unit tests covering default and updated theme states.
+
+Files:
+- frontend/src/context/ThemeContext.jsx
+- frontend/src/__tests__/ThemeContext.test.jsx
+
+Why:
+- Establishes foundational theme state management for upcoming dark mode support.
