@@ -1,0 +1,4 @@
+Task: Backend - Update add_assistant_message to set has_unread
+Summary: Mark conversations as unread whenever an assistant message is appended, with storage test coverage.
+Files: backend/storage.py; tests/test_storage_improvements.py
+Why: Backend should persist unread state when new assistant output arrives.
