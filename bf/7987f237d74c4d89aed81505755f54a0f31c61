@@ -1,0 +1,6 @@
+Task: Backend - Create/Update PATCH /api/conversations/{id} logic to allow clearing has_unread
+Changes:
+- Updated UpdateConversationRequest in backend/main.py to include has_unread field.
+- Updated PATCH endpoint to handle has_unread updates.
+- Created backend/tests/test_api_unread.py to verify API behavior.
+Why: To allow the frontend to clear the unread indicator when a user views a conversation.
