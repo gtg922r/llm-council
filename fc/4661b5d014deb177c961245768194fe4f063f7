@@ -1,0 +1,1 @@
+Task: Align Stage 2 aggregate card with elevation variables\n\nSummary:\n- Switched aggregate rankings background to use elevation-2 to satisfy elevation style contract.\n\nFiles:\n- frontend/src/components/Stage2.css\n\nWhy:\n- Keep elevation styling consistent across stages and pass elevation style tests.
