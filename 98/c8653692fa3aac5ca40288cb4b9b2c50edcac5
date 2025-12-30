@@ -1,0 +1,8 @@
+Task: Frontend - Add pendingConversations state (Set/Map) to App.jsx
+Task: Frontend - Update handleSendMessage to add/remove conversation IDs from pendingConversations
+Changes:
+- Added pendingConversations state to App.jsx.
+- Updated handleSendMessage to update this state.
+- Passed pendingConversations to Sidebar.
+- Added tests to App.test.jsx.
+Why: To track which conversations are currently processing messages for the sidebar indicator.
