@@ -3,7 +3,7 @@
 ## Phase 1: Foundation & Theme Management
 - [x] Task: Create `ThemeContext` to manage `theme` state ('light', 'dark', 'system') [55f38a8]
 - [x] Task: Implement `useTheme` hook for easy access to theme state and toggle [435f048]
-- [ ] Task: Add unit tests for `ThemeContext` logic (system detection, state transitions)
+- [x] Task: Add unit tests for `ThemeContext` logic (system detection, state transitions) [05ff946]
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Foundation & Theme Management' (Protocol in workflow.md)
 
 ## Phase 2: CSS Infrastructure & Variables
