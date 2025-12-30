@@ -29,4 +29,9 @@
 - [x] Task: Update syntax highlighting styles for `react-markdown` code blocks to use a dark theme [c2d38b2]
 - [x] Task: Implement `localStorage` persistence for the theme preference [1441f8f]
 - [x] Task: Add unit tests for `localStorage` persistence and system preference sync [1441f8f]
-- [ ] Task: Conductor - User Manual Verification 'Phase 4: Specialized Content & Refinement' (Protocol in workflow.md)
+- [~] Task: Conductor - User Manual Verification 'Phase 4: Specialized Content & Refinement' (Protocol in workflow.md)
+
+## Phase 5: Settings Popover & Toggle Placement
+- [x] Task: Move theme toggle into a sidebar settings popover triggered by a gear button [14222a9]
+- [x] Task: Update UI tests for settings popover behavior [14222a9]
+- [ ] Task: Conductor - User Manual Verification 'Phase 5: Settings Popover & Toggle Placement' (Protocol in workflow.md)
