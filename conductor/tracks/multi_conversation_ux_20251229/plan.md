@@ -9,7 +9,7 @@ Introduce the `has_unread` field to the data model and expose it via the API.
 - [x] Task: Backend - Create/Update `PATCH /api/conversations/{id}` logic to allow clearing `has_unread` [bf7987f]
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Backend Persistence & API' (Protocol in workflow.md)
 
-## Phase 2: Frontend Unread Indicator (Blue Dot)
+## Phase 2: Frontend Unread Indicator (Blue Dot) [checkpoint: 864570d]
 Implement the visual "unread" indicator in the sidebar and the logic to clear it.
 
 - [x] Task: Frontend - Update `api.js` to handle the new `has_unread` field and provide a `markAsRead` function [9cb8f66]
