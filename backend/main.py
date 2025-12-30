@@ -60,17 +60,28 @@ class SendMessageRequest(BaseModel):
     target_model: str | None = None # e.g., "chairman" for follow-up
 
 
-def build_prompt_content(content: str, files: List[FileContext]) -> str:
+def build_prompt_content(
+    content: str,
+    files: List[FileContext] | List[Dict[str, Any]] | None
+) -> str:
     """Construct the final prompt with user content and file blocks."""
     if not files:
         return content
 
     sections = [content]
     for file_context in files:
+        if isinstance(file_context, dict):
+            name = file_context.get("name")
+            file_content = file_context.get("content")
+        else:
+            name = file_context.name
+            file_content = file_context.content
+        if name is None or file_content is None:
+            raise ValueError("File context must include name and content.")
         sections.append(
-            f"--- FILE: {file_context.name} ---\n"
-            f"{file_context.content}\n"
-            f"--- END FILE: {file_context.name} ---"
+            f"--- FILE: {name} ---\n"
+            f"{file_content}\n"
+            f"--- END FILE: {name} ---"
         )
 
     return "\n\n".join(sections)
