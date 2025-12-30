@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Sidebar from './components/Sidebar';
 import ChatInterface from './components/ChatInterface';
 import { api } from './api';
@@ -11,6 +11,7 @@ function App() {
   const [currentConversation, setCurrentConversation] = useState(null);
   const [loadingConversationId, setLoadingConversationId] = useState(null);
   const [pendingConversationIds, setPendingConversationIds] = useState(() => new Set());
+  const currentConversationIdRef = useRef(null);
 
   const loadConversations = useCallback(async () => {
     try {
@@ -28,6 +29,7 @@ function App() {
 
   // Load conversation details when selected
   useEffect(() => {
+    currentConversationIdRef.current = currentConversationId;
     if (currentConversationId) {
       let isActive = true;
       api.getConversation(currentConversationId)
@@ -168,7 +170,7 @@ function App() {
   };
 
   const refreshConversationUnreadState = useCallback(async (conversationId) => {
-    if (conversationId === currentConversationId) {
+    if (conversationId === currentConversationIdRef.current) {
       try {
         await api.markAsRead(conversationId);
       } catch (error) {
@@ -176,7 +178,7 @@ function App() {
       }
     }
     loadConversations();
-  }, [currentConversationId, loadConversations]);
+  }, [loadConversations]);
 
   const readFileContent = (file) => {
     return new Promise((resolve, reject) => {

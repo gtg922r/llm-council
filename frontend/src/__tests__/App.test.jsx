@@ -44,6 +44,11 @@ vi.mock('../components/Sidebar', () => ({
           Select Conversation
         </button>
       )}
+      {conversations?.[1] && (
+        <button type="button" onClick={() => onSelectConversation(conversations[1].id)}>
+          Select Conversation 2
+        </button>
+      )}
       <div data-testid="pending-count">
         {pendingConversationIds ? pendingConversationIds.size : 0}
       </div>
@@ -178,5 +183,62 @@ describe('App', () => {
     await waitFor(() => {
       expect(screen.getByTestId('pending-count').textContent).toBe('0');
     });
+  });
+
+  it('does not clear unread if the user switches conversations before completion', async () => {
+    api.listConversations.mockResolvedValue([
+      {
+        id: 'conv-1',
+        created_at: 'now',
+        title: 'First',
+        is_pinned: false,
+        is_archived: false,
+        message_count: 1,
+        has_unread: false,
+      },
+      {
+        id: 'conv-2',
+        created_at: 'later',
+        title: 'Second',
+        is_pinned: false,
+        is_archived: false,
+        message_count: 1,
+        has_unread: false,
+      },
+    ]);
+
+    let triggerComplete;
+    api.sendMessageStream.mockImplementationOnce(async (_id, _content, _files, onEvent) => {
+      triggerComplete = () => onEvent('complete', { type: 'complete' });
+    });
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Select Conversation')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText('Select Conversation'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Send')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText('Send'));
+
+    await waitFor(() => {
+      expect(api.sendMessageStream).toHaveBeenCalled();
+    });
+
+    fireEvent.click(screen.getByText('Select Conversation 2'));
+    const callsBeforeComplete = api.markAsRead.mock.calls.length;
+
+    await act(async () => {
+      triggerComplete();
+    });
+
+    const markAsReadCalls = api.markAsRead.mock.calls.map(([id]) => id);
+    expect(markAsReadCalls).toContain('conv-2');
+    expect(api.markAsRead).toHaveBeenCalledTimes(callsBeforeComplete);
   });
 });
