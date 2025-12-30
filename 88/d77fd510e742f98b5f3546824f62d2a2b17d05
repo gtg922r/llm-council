@@ -1,0 +1,6 @@
+Task: Backend - Update storage.py to include has_unread in conversation model and default it to False
+Changes:
+- Modified backend/storage.py to include has_unread in create_conversation and duplicate_conversation.
+- Exposed has_unread in list_conversations metadata.
+- Created backend/tests/test_unread_status.py for verification.
+Why: Foundational data model change for unread conversation indicators.
