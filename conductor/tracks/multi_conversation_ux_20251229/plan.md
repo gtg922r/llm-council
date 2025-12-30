@@ -9,14 +9,14 @@ Introduce the `has_unread` field to the data model and expose it via the API.
 - [x] Task: Backend - Create/Update `PATCH /api/conversations/{id}` logic to allow clearing `has_unread` [c6d7b4b]
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Backend Persistence & API' (Protocol in workflow.md) [90cf201]
 
-## Phase 2: Frontend Unread Indicator (Blue Dot)
+## Phase 2: Frontend Unread Indicator (Blue Dot) [checkpoint: d93fd12]
 Implement the visual "unread" indicator in the sidebar and the logic to clear it.
 
 - [x] Task: Frontend - Update `api.js` to handle the new `has_unread` field and provide a `markAsRead` function [03adf39]
 - [x] Task: Frontend - Modify `Sidebar.jsx` to display a blue dot if `conv.has_unread` is true [2f0464a]
 - [x] Task: Frontend - Add logic in `App.jsx` to call `markAsRead` when a conversation is selected [bf6b73e]
 - [x] Task: Frontend - Add logic in `App.jsx` to automatically clear `has_unread` if a message arrives while the conversation is already active [a8f9e94]
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Frontend Unread Indicator (Blue Dot)' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Frontend Unread Indicator (Blue Dot)' (Protocol in workflow.md) [d93fd12]
 
 ## Phase 3: Frontend Pending Indicator (Pulsing Grey Dot)
 Implement the visual "pending" indicator to track background processing.
