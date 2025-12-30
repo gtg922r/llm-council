@@ -1,0 +1,4 @@
+Fix: Prevent unread clearing when user switches away mid-stream
+Summary: Track current conversation via ref so completion only clears unread when still active; added test to cover switching before completion.
+Files: frontend/src/App.jsx; frontend/src/__tests__/App.test.jsx
+Why: Avoid erroneously clearing unread indicators for background conversations.
