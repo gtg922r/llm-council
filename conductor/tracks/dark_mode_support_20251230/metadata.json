@@ -1,0 +1,8 @@
+{
+  "track_id": "dark_mode_support_20251230",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2025-12-30T10:30:00Z",
+  "updated_at": "2025-12-30T10:30:00Z",
+  "description": "add support for dark mode. make sure it looks good, is consistent with existing UX but in dark mode, and elegant."
+}
