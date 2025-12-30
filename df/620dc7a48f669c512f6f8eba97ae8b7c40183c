@@ -1,0 +1,4 @@
+Task: Test - Write comprehensive backend tests for build_prompt_content and storage logic.
+Summary: Added tests for dict-based file contexts, missing file fields, storage omission of files, and streaming SSE flow; improved prompt builder to accept stored file dicts with validation.
+Files: backend/main.py, backend/tests/test_file_transmission.py, backend/tests/test_message_stream.py.
+Why: Expand backend test coverage and ensure prompt building handles stored file payloads.
