@@ -26,7 +26,7 @@
 
 ## Phase 4: Specialized Content & Refinement
 - [x] Task: Refactor file upload UI styling to use theme variables in dark mode [e45a5a2]
-- [ ] Task: Update syntax highlighting styles for `react-markdown` code blocks to use a dark theme
+- [x] Task: Update syntax highlighting styles for `react-markdown` code blocks to use a dark theme [c2d38b2]
 - [ ] Task: Implement `localStorage` persistence for the theme preference
 - [ ] Task: Add unit tests for `localStorage` persistence and system preference sync
 - [ ] Task: Conductor - User Manual Verification 'Phase 4: Specialized Content & Refinement' (Protocol in workflow.md)
