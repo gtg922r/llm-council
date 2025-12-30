@@ -1,0 +1,14 @@
+Task: Integrate ThemeToggle into Sidebar.
+
+Summary:
+- Rendered ThemeToggle in the sidebar header.
+- Added layout styles for the toggle.
+- Added Sidebar test asserting toggle presence.
+
+Files:
+- frontend/src/components/Sidebar.jsx
+- frontend/src/components/Sidebar.css
+- frontend/src/components/__tests__/Sidebar.test.jsx
+
+Why:
+- Exposes theme controls in the primary navigation area.
