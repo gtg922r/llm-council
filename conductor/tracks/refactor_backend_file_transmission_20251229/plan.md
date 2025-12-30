@@ -17,7 +17,7 @@ Update the frontend to send structured file objects instead of concatenating str
 - [x] Task: Frontend - Verify `ChatInterface.jsx` and `ChatInput.jsx` correctly handle the new flow (mostly cleanup). (1fb8179)
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Frontend API Integration' (Protocol in workflow.md) (cfcc6cc)
 
-## Phase 3: Verification & Cleanup
+## Phase 3: Verification & Cleanup [checkpoint: 4865e47]
 Ensure end-to-end functionality and backward compatibility.
 
 - [x] Task: Test - Write comprehensive backend tests for `build_prompt_content` and storage logic. (df620dc)
