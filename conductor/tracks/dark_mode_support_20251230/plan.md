@@ -15,7 +15,7 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 2: CSS Infrastructure & Variables' (Protocol in workflow.md) [815af5d]
 
 ## Phase 3: UI Component Styling & Toggle
-- [ ] Task: Create a `ThemeToggle` component with Lucide icons (Sun/Moon/Monitor)
+- [x] Task: Create a `ThemeToggle` component with Lucide icons (Sun/Moon/Monitor) [5bad792]
 - [ ] Task: Integrate `ThemeToggle` into the `Sidebar` component
 - [ ] Task: Update `App.css` and component-specific CSS to use the new CSS variables
 - [ ] Task: Implement "Elevation" shading for message bubbles in `Stage1`, `Stage2`, and `Stage3` components
