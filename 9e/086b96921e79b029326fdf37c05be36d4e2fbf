@@ -1,0 +1,4 @@
+Task: Frontend - Show pending indicator in sidebar
+Summary: Sidebar now renders a pending dot when a conversation is in the pending set and suppresses unread in that state; added tests.
+Files: frontend/src/components/Sidebar.jsx; frontend/src/components/__tests__/Sidebar.test.jsx
+Why: Users need a visual indicator while background processing is underway.
