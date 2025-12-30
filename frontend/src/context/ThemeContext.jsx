@@ -1,6 +1,8 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 
 const DEFAULT_THEME = 'system';
+const THEME_STORAGE_KEY = 'llm-council-theme';
+const VALID_THEMES = new Set(['light', 'dark', 'system']);
 
 export const ThemeContext = createContext(null);
 
@@ -15,7 +17,15 @@ export function ThemeProvider({ children }) {
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   };
 
-  const [theme, setTheme] = useState(DEFAULT_THEME);
+  const getStoredTheme = () => {
+    if (typeof window === 'undefined' || !window.localStorage) {
+      return DEFAULT_THEME;
+    }
+    const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
+    return VALID_THEMES.has(stored) ? stored : DEFAULT_THEME;
+  };
+
+  const [theme, setTheme] = useState(getStoredTheme);
   const [systemTheme, setSystemTheme] = useState(getSystemTheme);
   const resolvedTheme = theme === 'system' ? systemTheme : theme;
 
@@ -52,6 +62,13 @@ export function ThemeProvider({ children }) {
     document.documentElement.classList.toggle('dark', resolvedTheme === 'dark');
     document.documentElement.dataset.theme = resolvedTheme;
   }, [resolvedTheme]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.localStorage) {
+      return;
+    }
+    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+  }, [theme]);
 
   const value = useMemo(() => ({ theme, resolvedTheme, setTheme }), [theme, resolvedTheme]);
 

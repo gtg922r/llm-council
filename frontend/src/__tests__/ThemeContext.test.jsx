@@ -12,6 +12,9 @@ function ContextProbe() {
       <button type="button" onClick={() => setTheme('dark')}>
         Set Dark
       </button>
+      <button type="button" onClick={() => setTheme('system')}>
+        Set System
+      </button>
     </div>
   );
 }
@@ -52,6 +55,7 @@ describe('ThemeContext', () => {
   beforeEach(() => {
     delete window.matchMedia;
     document.documentElement.classList.remove('dark');
+    window.localStorage.clear();
   });
   it('defaults to system theme', () => {
     render(
@@ -135,6 +139,46 @@ describe('ThemeContext', () => {
       controller.setMatches(true);
     });
 
+    expect(screen.getByTestId('resolved-theme')).toHaveTextContent('dark');
+  });
+
+  it('loads theme preference from localStorage', () => {
+    window.localStorage.setItem('llm-council-theme', 'dark');
+
+    render(
+      <ThemeProvider>
+        <ContextProbe />
+      </ThemeProvider>
+    );
+
+    expect(screen.getByTestId('theme')).toHaveTextContent('dark');
+    expect(screen.getByTestId('resolved-theme')).toHaveTextContent('dark');
+  });
+
+  it('persists theme changes to localStorage', () => {
+    render(
+      <ThemeProvider>
+        <ContextProbe />
+      </ThemeProvider>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Set Dark' }));
+
+    expect(window.localStorage.getItem('llm-council-theme')).toBe('dark');
+  });
+
+  it('resolves system theme when localStorage is set to system', () => {
+    const { mql } = mockMatchMedia(true);
+    window.matchMedia = vi.fn().mockReturnValue(mql);
+    window.localStorage.setItem('llm-council-theme', 'system');
+
+    render(
+      <ThemeProvider>
+        <ContextProbe />
+      </ThemeProvider>
+    );
+
+    expect(screen.getByTestId('theme')).toHaveTextContent('system');
     expect(screen.getByTestId('resolved-theme')).toHaveTextContent('dark');
   });
 });
