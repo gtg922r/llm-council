@@ -1,0 +1,12 @@
+Task: Define Dark Mode variable values (Material Gray palette).
+
+Summary:
+- Added :root.dark variable overrides for background, surfaces, text, borders, and code blocks.
+- Updated tests to verify dark theme variable values.
+
+Files:
+- frontend/src/index.css
+- frontend/src/__tests__/IndexCssThemeVariables.test.js
+
+Why:
+- Establishes a Material-inspired dark palette ready for theme toggling.
