@@ -1,0 +1,12 @@
+Task: Add CSS transitions for smooth theme switching.
+
+Summary:
+- Added global transition rule for background, color, and border-color changes.
+- Added regression test to verify transition declarations.
+
+Files:
+- frontend/src/index.css
+- frontend/src/__tests__/ThemeTransitions.test.js
+
+Why:
+- Smooths theme switching to match product polish requirements.
