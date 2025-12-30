@@ -138,7 +138,8 @@ export default function ChatInterface({
             onSave={(newTitle) => onUpdateTitle(conversation.id, newTitle)} 
           />
         </div>
-        <div className="header-actions" ref={menuRef}>          <button 
+        <div className="header-actions" ref={menuRef}>
+          <button 
             className="menu-toggle"
             onClick={() => setShowMenu(!showMenu)}
             title="Conversation Options"
