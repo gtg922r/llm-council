@@ -67,4 +67,31 @@ describe('Sidebar', () => {
     expect(screen.queryByLabelText('Unread conversation')).toBeInTheDocument();
     expect(screen.getAllByLabelText('Unread conversation')).toHaveLength(1);
   });
+
+  it('shows pending indicator and suppresses unread', () => {
+    const conversations = [
+      {
+        id: 'conv-pending',
+        title: 'Pending',
+        created_at: '2024-01-03',
+        is_pinned: false,
+        is_archived: false,
+        message_count: 1,
+        has_unread: true,
+      },
+    ];
+
+    render(
+      <ThemeProvider>
+        <Sidebar
+          {...baseProps}
+          conversations={conversations}
+          pendingConversationIds={new Set(['conv-pending'])}
+        />
+      </ThemeProvider>
+    );
+
+    expect(screen.getByLabelText('Pending conversation')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Unread conversation')).toBeNull();
+  });
 });
