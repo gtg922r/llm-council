@@ -1,0 +1,22 @@
+Task: Update App.css and component-specific CSS to use theme variables.
+
+Summary:
+- Replaced hardcoded colors across core component styles with CSS variables.
+- Added a regression test to ensure component styles reference theme variables.
+
+Files:
+- frontend/src/App.css
+- frontend/src/components/Sidebar.css
+- frontend/src/components/ChatInterface.css
+- frontend/src/components/Stage1.css
+- frontend/src/components/Stage2.css
+- frontend/src/components/Stage3.css
+- frontend/src/components/ChatInput.css
+- frontend/src/components/EditableTitle.css
+- frontend/src/components/CollapsibleSection.css
+- frontend/src/components/CopyButton.css
+- frontend/src/components/FollowUpInput.css
+- frontend/src/__tests__/ComponentCssVariables.test.js
+
+Why:
+- Prepares UI surfaces to react consistently to light/dark theme variables.
