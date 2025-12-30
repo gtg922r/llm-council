@@ -14,7 +14,7 @@ Implement the visual "unread" indicator in the sidebar and the logic to clear it
 
 - [x] Task: Frontend - Update `api.js` to handle the new `has_unread` field and provide a `markAsRead` function [9cb8f66]
 - [x] Task: Frontend - Modify `Sidebar.jsx` to display a blue dot if `conv.has_unread` is true [83278b4]
-- [ ] Task: Frontend - Add logic in `App.jsx` to call `markAsRead` when a conversation is selected
+- [x] Task: Frontend - Add logic in `App.jsx` to call `markAsRead` when a conversation is selected [f19df96]
 - [ ] Task: Frontend - Add logic in `App.jsx` to automatically clear `has_unread` if a message arrives while the conversation is already active
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: Frontend Unread Indicator (Blue Dot)' (Protocol in workflow.md)
 
