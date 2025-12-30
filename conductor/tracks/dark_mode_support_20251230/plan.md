@@ -28,5 +28,5 @@
 - [x] Task: Refactor file upload UI styling to use theme variables in dark mode [e45a5a2]
 - [x] Task: Update syntax highlighting styles for `react-markdown` code blocks to use a dark theme [c2d38b2]
 - [x] Task: Implement `localStorage` persistence for the theme preference [1441f8f]
-- [ ] Task: Add unit tests for `localStorage` persistence and system preference sync
+- [x] Task: Add unit tests for `localStorage` persistence and system preference sync [1441f8f]
 - [ ] Task: Conductor - User Manual Verification 'Phase 4: Specialized Content & Refinement' (Protocol in workflow.md)
