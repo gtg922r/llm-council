@@ -1,0 +1,4 @@
+Task: Backend - Add PATCH logic to clear has_unread
+Summary: Allowed PATCH requests to set has_unread, with API test for clearing unread state.
+Files: backend/main.py; tests/test_api_improvements.py
+Why: Frontend needs an explicit endpoint to mark conversations as read.
