@@ -1,0 +1,12 @@
+Task: Add unit tests for ThemeContext logic.
+
+Summary:
+- Implemented system preference detection and change handling in ThemeProvider.
+- Added tests for system-theme resolution and preference updates.
+
+Files:
+- frontend/src/context/ThemeContext.jsx
+- frontend/src/__tests__/ThemeContext.test.jsx
+
+Why:
+- Ensures theme state aligns with system preferences and reacts to changes.
