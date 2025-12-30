@@ -1,0 +1,4 @@
+Task: Backend - Update storage.py to include has_unread and default false
+Summary: Added has_unread to conversation records and metadata, plus tests validating defaults in storage/listing flows.
+Files: backend/storage.py; tests/test_storage_improvements.py
+Why: Persist unread status across sessions as groundwork for multi-conversation UX indicators.
