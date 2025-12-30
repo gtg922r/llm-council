@@ -8,6 +8,7 @@ import {
   ChevronDown, 
   ChevronRight
 } from 'lucide-react';
+import ThemeToggle from './ThemeToggle';
 import './Sidebar.css';
 
 export default function Sidebar({
@@ -39,6 +40,9 @@ export default function Sidebar({
         <button className="new-conversation-btn" onClick={onNewConversation}>
           <Plus size={16} /> New Conversation
         </button>
+        <div className="sidebar-theme-toggle">
+          <ThemeToggle />
+        </div>
       </div>
 
       <div className="conversation-list">

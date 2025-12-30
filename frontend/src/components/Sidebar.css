@@ -18,6 +18,12 @@
   color: #333;
 }
 
+.sidebar-theme-toggle {
+  margin-top: 12px;
+  display: flex;
+  justify-content: flex-start;
+}
+
 .new-conversation-btn {
   width: 100%;
   padding: 10px;
