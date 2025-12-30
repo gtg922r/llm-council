@@ -29,6 +29,6 @@ Implement the visual "pending" indicator to track background processing.
 ## Phase 4: CSS Styling & Polish
 Finalize the animations and visual styles for both indicators.
 
-- [ ] Task: Frontend - Define CSS for the blue dot and the pulsing grey dot in `Sidebar.css`
+- [ ] Task: Frontend - Define CSS for the indicators in `Sidebar.css` using `var(--color-muted)` and `var(--color-accent-strong)`
 - [ ] Task: Frontend - Ensure responsive design and mobile-friendly touch targets for the indicators
 - [ ] Task: Conductor - User Manual Verification 'Phase 4: CSS Styling & Polish' (Protocol in workflow.md)

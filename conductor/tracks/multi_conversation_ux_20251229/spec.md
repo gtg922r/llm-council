@@ -22,15 +22,15 @@ This track focuses on improving the user experience when managing multiple concu
 ### 2.3 Frontend UI - Sidebar
 -   **Pending Indicator:**
     -   **Trigger:** Display when a request has been sent to a conversation but processing is not yet complete.
-    -   **Visual:** A subtle pulsing grey dot (similar size/location to the "new" dot).
-    -   **Logic:** The frontend must track "pending" states for conversations based on its own network activity (since it initiates the requests).
+    -   **Visual:** A subtle pulsing dot using `var(--color-muted)` (similar size/location to the "new" dot).
+    -   **Logic:** The frontend must track "pending" states for multiple conversations simultaneously (using a Set of IDs).
 
 -   **Unread Indicator:**
     -   **Trigger:** Display when a conversation has `has_unread: true`.
-    -   **Visual:** A solid blue dot.
+    -   **Visual:** A solid dot using `var(--color-accent-strong)`.
     -   **Logic:**
-        -   If the conversation is currently active (open and focused), the blue dot should *not* appear (or be immediately dismissed).
-        -   If the conversation is in the background, the blue dot appears upon completion.
+        -   If the conversation is currently active (open and focused), the unread indicator should *not* appear (or be immediately dismissed).
+        -   If the conversation is in the background, the unread indicator appears upon completion.
 
 ### 2.4 Frontend Logic - State Management
 -   **Pending State:** Managed locally in React state (e.g., a `pendingConversations` set/map).
@@ -41,8 +41,9 @@ This track focuses on improving the user experience when managing multiple concu
 
 ## 3. Non-Functional Requirements
 -   **Persistence:** The "unread" state must persist across browser refreshes (ensured by backend storage).
--   **Subtlety:** Indicators should be distinct but not distracting (pulsing grey for pending, solid blue for unread).
+-   **Subtlety:** Indicators should be distinct but not distracting (pulsing `var(--color-muted)` for pending, solid `var(--color-accent-strong)` for unread).
 -   **Performance:** Polling or state updates for the indicators should not degrade sidebar rendering performance.
+-   **Theming:** All new UI elements must use the global CSS variables defined in `index.css` to support both Light and Dark modes automatically.
 
 ## 4. Acceptance Criteria
 -   [ ] **Pending:** Sending a message in Conversation A shows a pulsing grey dot in the sidebar for Conversation A.
