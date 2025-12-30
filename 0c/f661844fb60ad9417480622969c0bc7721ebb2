@@ -1,0 +1,5 @@
+Task: Backend - Update main.py Pydantic models (ConversationMetadata, Conversation) to include has_unread
+Changes:
+- Updated ConversationMetadata and Conversation models in backend/main.py to include has_unread: bool = False.
+- Created backend/tests/test_api_models.py to verify model validation.
+Why: To expose the unread status to the frontend via the API.
