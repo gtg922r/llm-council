@@ -10,6 +10,7 @@ function App() {
   const [currentConversationId, setCurrentConversationId] = useState(null);
   const [currentConversation, setCurrentConversation] = useState(null);
   const [loadingConversationId, setLoadingConversationId] = useState(null);
+  const [pendingConversations, setPendingConversations] = useState(new Set());
 
   const loadConversations = useCallback(async () => {
     try {
@@ -67,9 +68,23 @@ function App() {
     }
   };
 
-  const handleSelectConversation = (id) => {
+  const handleSelectConversation = async (id) => {
     setCurrentConversation(null);
     setCurrentConversationId(id);
+
+    // Mark conversation as read when selected
+    const conv = conversations.find((c) => c.id === id);
+    if (conv && conv.has_unread) {
+      try {
+        await api.markAsRead(id);
+        // Update local state immediately
+        setConversations((prev) =>
+          prev.map((c) => (c.id === id ? { ...c, has_unread: false } : c))
+        );
+      } catch (error) {
+        console.error('Failed to mark as read:', error);
+      }
+    }
   };
 
   const handleTogglePin = async (id, isPinned) => {
@@ -174,6 +189,10 @@ function App() {
 
     const conversationId = currentConversationId;
     setLoadingConversationId(conversationId);
+    
+    // Add to pending conversations
+    setPendingConversations((prev) => new Set(prev).add(conversationId));
+    
     try {
       // Optimistically add user message to UI (original content + file metadata)
       const fileMetadata = files.map(f => ({ name: f.name, size: f.size }));
@@ -235,6 +254,15 @@ function App() {
             return { ...prev, messages };
           });
           setLoadingConversationId((prev) => (prev === conversationId ? null : prev));
+          setPendingConversations((prev) => {
+            const next = new Set(prev);
+            next.delete(conversationId);
+            return next;
+          });
+          // Auto-clear unread if user is still viewing this conversation
+          if (currentConversationId === conversationId) {
+            api.markAsRead(conversationId).catch(() => {});
+          }
           loadConversations();
           return;
         } catch (error) {
@@ -387,11 +415,25 @@ function App() {
             // Stream complete, reload conversations list
             loadConversations();
             setLoadingConversationId((prev) => (prev === conversationId ? null : prev));
+            setPendingConversations((prev) => {
+              const next = new Set(prev);
+              next.delete(conversationId);
+              return next;
+            });
+            // Auto-clear unread if user is still viewing this conversation
+            if (currentConversationId === conversationId) {
+              api.markAsRead(conversationId).catch(() => {});
+            }
             break;
 
           case 'error':
             console.error('Stream error:', event.message);
             setLoadingConversationId((prev) => (prev === conversationId ? null : prev));
+            setPendingConversations((prev) => {
+              const next = new Set(prev);
+              next.delete(conversationId);
+              return next;
+            });
             break;
 
           default:
@@ -406,6 +448,11 @@ function App() {
         return { ...prev, messages: prev.messages.slice(0, -2) };
       });
       setLoadingConversationId((prev) => (prev === conversationId ? null : prev));
+      setPendingConversations((prev) => {
+        const next = new Set(prev);
+        next.delete(conversationId);
+        return next;
+      });
     }
   };
 
@@ -417,6 +464,7 @@ function App() {
         <Sidebar
           conversations={conversations}
           currentConversationId={currentConversationId}
+          pendingConversations={pendingConversations}
           onSelectConversation={handleSelectConversation}
           onNewConversation={handleNewConversation}
           onTogglePin={handleTogglePin}

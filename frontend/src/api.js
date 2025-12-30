@@ -110,6 +110,13 @@ export const api = {
   },
 
   /**
+   * Mark a conversation as read (clear has_unread flag).
+   */
+  async markAsRead(conversationId) {
+    return this.updateConversation(conversationId, { has_unread: false });
+  },
+
+  /**
    * Send a message and receive streaming updates.
    * @param {string} conversationId - The conversation ID
    * @param {string} content - The message content
