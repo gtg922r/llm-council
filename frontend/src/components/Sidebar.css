@@ -148,6 +148,8 @@
 .conversation-content {
   flex: 1;
   min-width: 0;
+  position: relative;
+  padding-right: 14px; /* Space for indicator */
 }
 
 .conversation-title {
@@ -256,4 +258,31 @@
 
 .empty-trash-btn:hover {
   color: var(--color-danger, #d93025);
+}
+
+/* Indicators */
+.unread-dot,
+.pending-dot {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.unread-dot {
+  background-color: var(--color-accent, #4a90e2);
+}
+
+.pending-dot {
+  background-color: var(--color-muted, #999);
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.4; transform: translateY(-50%) scale(0.8); }
+  50% { opacity: 1; transform: translateY(-50%) scale(1.1); }
+  100% { opacity: 0.4; transform: translateY(-50%) scale(0.8); }
 }
