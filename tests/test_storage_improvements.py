@@ -43,6 +43,26 @@ def test_list_conversations_includes_new_fields():
     assert "is_archived" in meta
     assert meta["is_archived"] is False
 
+def test_create_conversation_defaults_has_unread():
+    """Test that new conversations default has_unread to False."""
+    conv_id = "test-conv-3"
+    conv = create_conversation(conv_id)
+
+    assert "has_unread" in conv
+    assert conv["has_unread"] is False
+
+def test_list_conversations_includes_has_unread():
+    """Test that conversation metadata includes has_unread."""
+    conv_id = "test-conv-4"
+    create_conversation(conv_id)
+
+    conversations = list_conversations()
+    assert len(conversations) == 1
+
+    meta = conversations[0]
+    assert "has_unread" in meta
+    assert meta["has_unread"] is False
+
 def test_duplicate_conversation():
     """Test duplicating an existing conversation."""
     from backend.storage import duplicate_conversation
