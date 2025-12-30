@@ -51,6 +51,7 @@ function mockMatchMedia(matches) {
 describe('ThemeContext', () => {
   beforeEach(() => {
     delete window.matchMedia;
+    document.documentElement.classList.remove('dark');
   });
   it('defaults to system theme', () => {
     render(
@@ -74,6 +75,18 @@ describe('ThemeContext', () => {
 
     expect(screen.getByTestId('theme')).toHaveTextContent('dark');
     expect(screen.getByTestId('resolved-theme')).toHaveTextContent('dark');
+  });
+
+  it('applies the dark class when the theme is set to dark', () => {
+    render(
+      <ThemeProvider>
+        <ContextProbe />
+      </ThemeProvider>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Set Dark' }));
+
+    expect(document.documentElement.classList.contains('dark')).toBe(true);
   });
 
   it('exposes theme state via useTheme', () => {
@@ -103,6 +116,7 @@ describe('ThemeContext', () => {
     );
 
     expect(screen.getByTestId('resolved-theme')).toHaveTextContent('dark');
+    expect(document.documentElement.classList.contains('dark')).toBe(true);
   });
 
   it('reacts to system preference changes', () => {
