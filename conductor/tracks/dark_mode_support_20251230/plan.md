@@ -7,7 +7,7 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Foundation & Theme Management' (Protocol in workflow.md) [2a1c312]
 
 ## Phase 2: CSS Infrastructure & Variables
-- [ ] Task: Refactor `index.css` to use CSS variables for all core colors (background, text, border, etc.)
+- [x] Task: Refactor `index.css` to use CSS variables for all core colors (background, text, border, etc.) [1888ff9]
 - [ ] Task: Define Light Mode variable values
 - [ ] Task: Define Dark Mode variable values (Material Gray palette)
 - [ ] Task: Implement a mechanism to apply the `.dark` class (or data-theme attribute) to the document root
