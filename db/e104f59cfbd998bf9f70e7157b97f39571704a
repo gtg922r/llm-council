@@ -1,0 +1,5 @@
+Task: Frontend - Add logic in App.jsx to automatically clear has_unread if a message arrives while the conversation is already active
+Changes:
+- Added useEffect in App.jsx to monitor active conversation unread status.
+- Added test in App.test.jsx to verify auto-clearing.
+Why: To prevent the unread indicator from persisting when the user is already viewing the new content.
