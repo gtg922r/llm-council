@@ -31,10 +31,10 @@
 - [x] Task: Add unit tests for `localStorage` persistence and system preference sync [1441f8f]
 - [x] Task: Conductor - User Manual Verification 'Phase 4: Specialized Content & Refinement' (Protocol in workflow.md) [a3c7fab]
 
-## Phase 5: Settings Popover & Toggle Placement
+## Phase 5: Settings Popover & Toggle Placement [checkpoint: 771f8a9]
 - [x] Task: Move theme toggle into a sidebar settings popover triggered by a gear button [14222a9]
 - [x] Task: Update UI tests for settings popover behavior [14222a9]
 - [x] Task: Evenly space theme toggle icons within the settings popover [68a4b68]
 - [x] Task: Refine hover/active contrast to use lighter shades across the UI [68a4b68]
 - [x] Task: Apply accent-tinted hover styling across controls [6944779]
-- [~] Task: Conductor - User Manual Verification 'Phase 5: Settings Popover & Toggle Placement' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 5: Settings Popover & Toggle Placement' (Protocol in workflow.md) [771f8a9]
