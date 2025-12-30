@@ -15,6 +15,7 @@ import './Sidebar.css';
 export default function Sidebar({
   conversations,
   currentConversationId,
+  pendingConversationIds,
   onSelectConversation,
   onNewConversation,
   onTogglePin,
@@ -83,46 +84,59 @@ export default function Sidebar({
         {activeConversations.length === 0 ? (
           <div className="no-conversations">No active conversations</div>
         ) : (
-          activeConversations.map((conv) => (
-            <div
-              key={conv.id}
-              className={`conversation-item ${
-                conv.id === currentConversationId ? 'active' : ''
-              } ${conv.is_pinned ? 'pinned' : ''}`}
-              onClick={() => onSelectConversation(conv.id)}
-            >
-              <div className="conversation-content">
-                <div className="conversation-title">
-                  {conv.title || 'New Conversation'}
+          activeConversations.map((conv) => {
+            const isActive = conv.id === currentConversationId;
+            const isPending = Boolean(pendingConversationIds?.has?.(conv.id));
+            const showUnread = Boolean(conv.has_unread) && !isActive && !isPending;
+
+            return (
+              <div
+                key={conv.id}
+                className={`conversation-item ${
+                  conv.id === currentConversationId ? 'active' : ''
+                } ${conv.is_pinned ? 'pinned' : ''}`}
+                onClick={() => onSelectConversation(conv.id)}
+              >
+                <div className="conversation-content">
+                  <div className="conversation-title">
+                    {conv.title || 'New Conversation'}
+                  </div>
+                  <div className="conversation-meta">
+                    {conv.message_count} messages
+                  </div>
                 </div>
-                <div className="conversation-meta">
-                  {conv.message_count} messages
+                <div className="conversation-trailing">
+                  {isPending ? (
+                    <span className="conversation-dot pending" aria-label="Processing" />
+                  ) : showUnread ? (
+                    <span className="conversation-dot unread" aria-label="New messages" />
+                  ) : null}
+                  <div className="item-actions">
+                    <button
+                      className="action-btn pin-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onTogglePin(conv.id, !conv.is_pinned);
+                      }}
+                      title={conv.is_pinned ? 'Unpin' : 'Pin'}
+                    >
+                      <Pin size={14} fill={conv.is_pinned ? "currentColor" : "none"} />
+                    </button>
+                    <button
+                      className="action-btn archive-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onToggleArchive(conv.id, true);
+                      }}
+                      title="Archive"
+                    >
+                      <Archive size={14} />
+                    </button>
+                  </div>
                 </div>
               </div>
-              <div className="item-actions">
-                <button
-                  className="action-btn pin-btn"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onTogglePin(conv.id, !conv.is_pinned);
-                  }}
-                  title={conv.is_pinned ? 'Unpin' : 'Pin'}
-                >
-                  <Pin size={14} fill={conv.is_pinned ? "currentColor" : "none"} />
-                </button>
-                <button
-                  className="action-btn archive-btn"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onToggleArchive(conv.id, true);
-                  }}
-                  title="Archive"
-                >
-                  <Archive size={14} />
-                </button>
-              </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
 
@@ -146,41 +160,54 @@ export default function Sidebar({
                   <Trash2 size={12} /> Empty Trash
                 </button>
               </div>
-              {archivedConversations.map((conv) => (
-                <div
-                  key={conv.id}
-                  className={`conversation-item archived-item ${
-                    conv.id === currentConversationId ? 'active' : ''
-                  }`}
-                  onClick={() => onSelectConversation(conv.id)}
-                >
-                  <div className="conversation-content">
-                    <div className="conversation-title">{conv.title}</div>
+              {archivedConversations.map((conv) => {
+                const isActive = conv.id === currentConversationId;
+                const isPending = Boolean(pendingConversationIds?.has?.(conv.id));
+                const showUnread = Boolean(conv.has_unread) && !isActive && !isPending;
+
+                return (
+                  <div
+                    key={conv.id}
+                    className={`conversation-item archived-item ${
+                      conv.id === currentConversationId ? 'active' : ''
+                    }`}
+                    onClick={() => onSelectConversation(conv.id)}
+                  >
+                    <div className="conversation-content">
+                      <div className="conversation-title">{conv.title}</div>
+                    </div>
+                    <div className="conversation-trailing">
+                      {isPending ? (
+                        <span className="conversation-dot pending" aria-label="Processing" />
+                      ) : showUnread ? (
+                        <span className="conversation-dot unread" aria-label="New messages" />
+                      ) : null}
+                      <div className="item-actions">
+                        <button
+                          className="action-btn restore-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onToggleArchive(conv.id, false);
+                          }}
+                          title="Restore"
+                        >
+                          <RefreshCw size={14} />
+                        </button>
+                        <button
+                          className="action-btn delete-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDeleteConversation(conv.id);
+                          }}
+                          title="Delete Forever"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                  <div className="item-actions">
-                    <button
-                      className="action-btn restore-btn"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onToggleArchive(conv.id, false);
-                      }}
-                      title="Restore"
-                    >
-                      <RefreshCw size={14} />
-                    </button>
-                    <button
-                      className="action-btn delete-btn"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDeleteConversation(conv.id);
-                      }}
-                      title="Delete Forever"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

@@ -84,6 +84,13 @@ export const api = {
   },
 
   /**
+   * Mark a conversation as read (clears unread indicator).
+   */
+  async markConversationAsRead(conversationId) {
+    return api.updateConversation(conversationId, { has_unread: false });
+  },
+
+  /**
    * Permanently delete a conversation.
    */
   async deleteConversation(conversationId) {

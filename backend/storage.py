@@ -36,6 +36,7 @@ def create_conversation(conversation_id: str) -> Dict[str, Any]:
         "title": "New Conversation",
         "is_pinned": False,
         "is_archived": False,
+        "has_unread": False,
         "messages": []
     }
 
@@ -63,7 +64,10 @@ def get_conversation(conversation_id: str) -> Optional[Dict[str, Any]]:
         return None
 
     with open(path, 'r') as f:
-        return json.load(f)
+        conversation = json.load(f)
+        # Backward-compatibility: older conversation files won't have this field.
+        conversation.setdefault("has_unread", False)
+        return conversation
 
 
 def save_conversation(conversation: Dict[str, Any]):
@@ -102,6 +106,7 @@ def list_conversations() -> List[Dict[str, Any]]:
                     "title": data.get("title", "New Conversation"),
                     "is_pinned": data.get("is_pinned", False),
                     "is_archived": data.get("is_archived", False),
+                    "has_unread": data.get("has_unread", False),
                     "message_count": len(data["messages"])
                 })
 
@@ -166,6 +171,8 @@ def add_assistant_message(
         "stage3": stage3
     })
 
+    # New assistant content means the conversation is "unread" until cleared.
+    conversation["has_unread"] = True
     save_conversation(conversation)
 
 
@@ -206,6 +213,7 @@ def duplicate_conversation(original_id: str, new_id: str) -> Dict[str, Any]:
         "title": f"{original.get('title', 'New Conversation')} (Copy)",
         "is_pinned": False,
         "is_archived": False,
+        "has_unread": False,
         "messages": original["messages"].copy()
     }
 

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Sidebar from './components/Sidebar';
 import ChatInterface from './components/ChatInterface';
 import { api } from './api';
@@ -10,15 +10,47 @@ function App() {
   const [currentConversationId, setCurrentConversationId] = useState(null);
   const [currentConversation, setCurrentConversation] = useState(null);
   const [loadingConversationId, setLoadingConversationId] = useState(null);
+  const [pendingConversationIds, setPendingConversationIds] = useState(() => new Set());
+
+  const currentConversationIdRef = useRef(currentConversationId);
+  useEffect(() => {
+    currentConversationIdRef.current = currentConversationId;
+  }, [currentConversationId]);
+
+  const markConversationAsRead = useCallback(async (conversationId) => {
+    // Optimistically clear locally for responsive UI.
+    setConversations((prev) =>
+      prev.map((conv) => (conv.id === conversationId ? { ...conv, has_unread: false } : conv))
+    );
+    setCurrentConversation((prev) => {
+      if (!prev || prev.id !== conversationId) return prev;
+      return { ...prev, has_unread: false };
+    });
+
+    try {
+      await api.markConversationAsRead(conversationId);
+    } catch (error) {
+      console.error('Failed to mark conversation as read:', error);
+    }
+  }, []);
 
   const loadConversations = useCallback(async () => {
     try {
       const convs = await api.listConversations();
       setConversations(convs);
+
+      // If the active conversation is unread, clear it immediately so the "new" dot doesn't persist.
+      const activeId = currentConversationIdRef.current;
+      if (activeId) {
+        const activeMeta = convs.find((c) => c.id === activeId);
+        if (activeMeta?.has_unread) {
+          void markConversationAsRead(activeId);
+        }
+      }
     } catch (error) {
       console.error('Failed to load conversations:', error);
     }
-  }, []);
+  }, [markConversationAsRead]);
 
   // Load conversations on mount
   useEffect(() => {
@@ -56,6 +88,7 @@ function App() {
           title: newConv.title,
           is_pinned: newConv.is_pinned,
           is_archived: newConv.is_archived,
+          has_unread: newConv.has_unread ?? false,
           message_count: newConv.messages?.length ?? 0,
         },
         ...prev,
@@ -70,6 +103,7 @@ function App() {
   const handleSelectConversation = (id) => {
     setCurrentConversation(null);
     setCurrentConversationId(id);
+    void markConversationAsRead(id);
   };
 
   const handleTogglePin = async (id, isPinned) => {
@@ -174,6 +208,11 @@ function App() {
 
     const conversationId = currentConversationId;
     setLoadingConversationId(conversationId);
+    setPendingConversationIds((prev) => {
+      const next = new Set(prev);
+      next.add(conversationId);
+      return next;
+    });
     try {
       // Optimistically add user message to UI (original content + file metadata)
       const fileMetadata = files.map(f => ({ name: f.name, size: f.size }));
@@ -235,7 +274,15 @@ function App() {
             return { ...prev, messages };
           });
           setLoadingConversationId((prev) => (prev === conversationId ? null : prev));
+          setPendingConversationIds((prev) => {
+            const next = new Set(prev);
+            next.delete(conversationId);
+            return next;
+          });
           loadConversations();
+          if (currentConversationIdRef.current === conversationId) {
+            void markConversationAsRead(conversationId);
+          }
           return;
         } catch (error) {
           console.error('Follow-up failed:', error);
@@ -387,16 +434,37 @@ function App() {
             // Stream complete, reload conversations list
             loadConversations();
             setLoadingConversationId((prev) => (prev === conversationId ? null : prev));
+            setPendingConversationIds((prev) => {
+              const next = new Set(prev);
+              next.delete(conversationId);
+              return next;
+            });
+            if (currentConversationIdRef.current === conversationId) {
+              void markConversationAsRead(conversationId);
+            }
             break;
 
           case 'error':
             console.error('Stream error:', event.message);
             setLoadingConversationId((prev) => (prev === conversationId ? null : prev));
+            setPendingConversationIds((prev) => {
+              const next = new Set(prev);
+              next.delete(conversationId);
+              return next;
+            });
             break;
 
           default:
             console.log('Unknown event type:', eventType);
         }
+      });
+
+      // Safety: if the stream ends without emitting a terminal event, don't leave the UI stuck in pending.
+      setLoadingConversationId((prev) => (prev === conversationId ? null : prev));
+      setPendingConversationIds((prev) => {
+        const next = new Set(prev);
+        next.delete(conversationId);
+        return next;
       });
     } catch (error) {
       console.error('Failed to send message:', error);
@@ -406,6 +474,11 @@ function App() {
         return { ...prev, messages: prev.messages.slice(0, -2) };
       });
       setLoadingConversationId((prev) => (prev === conversationId ? null : prev));
+      setPendingConversationIds((prev) => {
+        const next = new Set(prev);
+        next.delete(conversationId);
+        return next;
+      });
     }
   };
 
@@ -417,6 +490,7 @@ function App() {
         <Sidebar
           conversations={conversations}
           currentConversationId={currentConversationId}
+          pendingConversationIds={pendingConversationIds}
           onSelectConversation={handleSelectConversation}
           onNewConversation={handleNewConversation}
           onTogglePin={handleTogglePin}
