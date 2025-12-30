@@ -1,0 +1,5 @@
+Task: Frontend - Update Sidebar.jsx to display a pulsing grey dot if a conversation ID is in pendingConversations
+Changes:
+- Added conditional rendering of .pending-dot in Sidebar.jsx.
+- Added test case in Sidebar.test.jsx.
+Why: To provide visual feedback that a background conversation is processing.
