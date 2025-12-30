@@ -1,0 +1,4 @@
+Task: Frontend - Show blue dot for unread conversations
+Summary: Added unread indicator element in the sidebar, suppressed for the active conversation, with test coverage.
+Files: frontend/src/components/Sidebar.jsx; frontend/src/components/__tests__/Sidebar.test.jsx
+Why: Users need a visible cue that a background conversation received new output.
