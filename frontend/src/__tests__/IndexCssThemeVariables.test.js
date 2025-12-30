@@ -38,4 +38,19 @@ describe('index.css theme variables', () => {
     expect(css).toContain('--color-blockquote-border: #ddd');
     expect(css).toContain('--color-blockquote-text: #666');
   });
+
+  it('defines dark mode variable values on :root.dark', () => {
+    const css = readFileSync(cssPath, 'utf8');
+
+    expect(css).toContain(':root.dark');
+    expect(css).toContain('--color-bg: #121212');
+    expect(css).toContain('--color-surface: #1e1e1e');
+    expect(css).toContain('--color-text: #e0e0e0');
+    expect(css).toContain('--color-muted: #a0a0a0');
+    expect(css).toContain('--color-border: #2c2c2c');
+    expect(css).toContain('--color-code-bg: #1b1b1b');
+    expect(css).toContain('--color-code-text: #e6e6e6');
+    expect(css).toContain('--color-blockquote-border: #3a3a3a');
+    expect(css).toContain('--color-blockquote-text: #b0b0b0');
+  });
 });
