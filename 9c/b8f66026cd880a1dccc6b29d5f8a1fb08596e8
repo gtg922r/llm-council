@@ -1,0 +1,5 @@
+Task: Frontend - Update api.js to handle the new has_unread field and provide a markAsRead function
+Changes:
+- Added markAsRead(conversationId) to api.js.
+- Added test case in __tests__/api.test.js.
+Why: To facilitate marking conversations as read from the UI.
