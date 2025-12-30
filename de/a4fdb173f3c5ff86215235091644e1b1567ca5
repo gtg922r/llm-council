@@ -1,0 +1,7 @@
+Task: Frontend - Define CSS for the blue dot and the pulsing grey dot in Sidebar.css
+Task: Frontend - Ensure responsive design and mobile-friendly touch targets for the indicators
+Changes:
+- Added styles for .unread-dot and .pending-dot.
+- Added pulse animation.
+- Adjusted conversation-content layout.
+Why: To provide the final visual implementation of the indicators.
