@@ -1,0 +1,4 @@
+Phase 2 verification report
+Automated tests: CI=true npm test -- --run src/__tests__/api.test.js src/__tests__/App.test.jsx src/components/__tests__/Sidebar.test.jsx (pass)
+Manual verification plan: 1) Open the app and create two conversations. 2) In conversation A, send a message and switch to conversation B while it runs. 3) After completion, confirm a blue dot appears on A. 4) Click A to ensure the dot clears.
+User confirmation: Pending.
