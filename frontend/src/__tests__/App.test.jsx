@@ -22,16 +22,24 @@ vi.mock('../api', () => ({
     sendMessageStream: vi.fn().mockResolvedValue(undefined),
     sendMessage: vi.fn().mockResolvedValue({ stage1: [], stage2: [], stage3: {}, metadata: {} }),
     updateConversation: vi.fn().mockResolvedValue({}),
+    markAsRead: vi.fn().mockResolvedValue({}),
     deleteConversation: vi.fn().mockResolvedValue({}),
     duplicateConversation: vi.fn().mockResolvedValue({}),
   },
 }));
 
 vi.mock('../components/Sidebar', () => ({
-  default: ({ onNewConversation }) => (
-    <button type="button" onClick={onNewConversation}>
-      New Conversation
-    </button>
+  default: ({ onNewConversation, onSelectConversation, conversations }) => (
+    <>
+      <button type="button" onClick={onNewConversation}>
+        New Conversation
+      </button>
+      {conversations?.[0] && (
+        <button type="button" onClick={() => onSelectConversation(conversations[0].id)}>
+          Select Conversation
+        </button>
+      )}
+    </>
   ),
 }));
 
@@ -87,5 +95,31 @@ describe('App', () => {
     expect(files).toEqual([
       { name: 'test.txt', content: 'file content', size: fileToSend.size },
     ]);
+  });
+
+  it('marks a conversation as read when selected', async () => {
+    api.listConversations.mockResolvedValueOnce([
+      {
+        id: 'conv-1',
+        created_at: 'now',
+        title: 'Unread',
+        is_pinned: false,
+        is_archived: false,
+        message_count: 1,
+        has_unread: true,
+      },
+    ]);
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Select Conversation')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText('Select Conversation'));
+
+    await waitFor(() => {
+      expect(api.markAsRead).toHaveBeenCalledWith('conv-1');
+    });
   });
 });

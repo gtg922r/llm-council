@@ -67,9 +67,15 @@ function App() {
     }
   };
 
-  const handleSelectConversation = (id) => {
+  const handleSelectConversation = async (id) => {
     setCurrentConversation(null);
     setCurrentConversationId(id);
+    try {
+      await api.markAsRead(id);
+      loadConversations();
+    } catch (error) {
+      console.error('Failed to mark conversation as read:', error);
+    }
   };
 
   const handleTogglePin = async (id, isPinned) => {
