@@ -1,0 +1,4 @@
+Task: Backend - Update main.py Pydantic models to include has_unread
+Summary: Added has_unread to ConversationMetadata and Conversation response models with API coverage tests.
+Files: backend/main.py; tests/test_api_improvements.py
+Why: Expose unread status to clients for sidebar indicators.
