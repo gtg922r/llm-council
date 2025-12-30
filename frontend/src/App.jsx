@@ -67,9 +67,23 @@ function App() {
     }
   };
 
-  const handleSelectConversation = (id) => {
+  const handleSelectConversation = async (id) => {
     setCurrentConversation(null);
     setCurrentConversationId(id);
+    
+    // Mark conversation as read if it has unread messages
+    const conv = conversations.find((c) => c.id === id);
+    if (conv && conv.has_unread) {
+      try {
+        await api.updateConversation(id, { has_unread: false });
+        // Update local state immediately
+        setConversations((prev) =>
+          prev.map((c) => (c.id === id ? { ...c, has_unread: false } : c))
+        );
+      } catch (error) {
+        console.error('Failed to mark conversation as read:', error);
+      }
+    }
   };
 
   const handleTogglePin = async (id, isPinned) => {
@@ -236,6 +250,12 @@ function App() {
           });
           setLoadingConversationId((prev) => (prev === conversationId ? null : prev));
           loadConversations();
+          // If user is still viewing this conversation, mark as read immediately
+          if (conversationId === currentConversationId) {
+            api.updateConversation(conversationId, { has_unread: false }).catch((err) =>
+              console.error('Failed to mark as read:', err)
+            );
+          }
           return;
         } catch (error) {
           console.error('Follow-up failed:', error);
@@ -387,6 +407,12 @@ function App() {
             // Stream complete, reload conversations list
             loadConversations();
             setLoadingConversationId((prev) => (prev === conversationId ? null : prev));
+            // If user is still viewing this conversation, mark as read immediately
+            if (conversationId === currentConversationId) {
+              api.updateConversation(conversationId, { has_unread: false }).catch((err) =>
+                console.error('Failed to mark as read:', err)
+              );
+            }
             break;
 
           case 'error':
@@ -417,6 +443,7 @@ function App() {
         <Sidebar
           conversations={conversations}
           currentConversationId={currentConversationId}
+          loadingConversationId={loadingConversationId}
           onSelectConversation={handleSelectConversation}
           onNewConversation={handleNewConversation}
           onTogglePin={handleTogglePin}

@@ -15,6 +15,7 @@ import './Sidebar.css';
 export default function Sidebar({
   conversations,
   currentConversationId,
+  loadingConversationId,
   onSelectConversation,
   onNewConversation,
   onTogglePin,
@@ -83,7 +84,10 @@ export default function Sidebar({
         {activeConversations.length === 0 ? (
           <div className="no-conversations">No active conversations</div>
         ) : (
-          activeConversations.map((conv) => (
+          activeConversations.map((conv) => {
+            const isPending = conv.id === loadingConversationId;
+            const isUnread = conv.has_unread && conv.id !== currentConversationId;
+            return (
             <div
               key={conv.id}
               className={`conversation-item ${
@@ -91,6 +95,10 @@ export default function Sidebar({
               } ${conv.is_pinned ? 'pinned' : ''}`}
               onClick={() => onSelectConversation(conv.id)}
             >
+              <div className="conversation-indicators">
+                {isPending && <span className="indicator-pending" title="Processing..." />}
+                {!isPending && isUnread && <span className="indicator-unread" title="New message" />}
+              </div>
               <div className="conversation-content">
                 <div className="conversation-title">
                   {conv.title || 'New Conversation'}
@@ -122,7 +130,8 @@ export default function Sidebar({
                 </button>
               </div>
             </div>
-          ))
+            );
+          })
         )}
       </div>
 
