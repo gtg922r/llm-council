@@ -1,24 +1,105 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import Sidebar from './components/Sidebar';
 import ChatInterface from './components/ChatInterface';
 import { api } from './api';
 import { ThemeProvider } from './context/ThemeContext';
 import './App.css';
 
+const CONVERSATION_UI_STORAGE_KEY = 'llm-council-conversation-ui-v1';
+
+function readConversationUiState() {
+  if (typeof window === 'undefined' || !window.localStorage) {
+    return {};
+  }
+
+  try {
+    const raw = window.localStorage.getItem(CONVERSATION_UI_STORAGE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return {};
+    return parsed;
+  } catch (error) {
+    console.warn('Failed to read conversation UI state:', error);
+    return {};
+  }
+}
+
 function App() {
-  const [conversations, setConversations] = useState([]);
+  const [serverConversations, setServerConversations] = useState([]);
+  const [hasLoadedConversations, setHasLoadedConversations] = useState(false);
   const [currentConversationId, setCurrentConversationId] = useState(null);
   const [currentConversation, setCurrentConversation] = useState(null);
-  const [loadingConversationId, setLoadingConversationId] = useState(null);
+  const [pendingById, setPendingById] = useState({});
+  const [conversationUiById, setConversationUiById] = useState(readConversationUiState);
+
+  const currentConversationIdRef = useRef(currentConversationId);
+  useEffect(() => {
+    currentConversationIdRef.current = currentConversationId;
+  }, [currentConversationId]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.localStorage) {
+      return;
+    }
+    try {
+      window.localStorage.setItem(CONVERSATION_UI_STORAGE_KEY, JSON.stringify(conversationUiById));
+    } catch (error) {
+      console.warn('Failed to persist conversation UI state:', error);
+    }
+  }, [conversationUiById]);
+
+  const setConversationHasNew = useCallback((conversationId, hasNew) => {
+    setConversationUiById((prev) => ({
+      ...prev,
+      [conversationId]: { ...(prev[conversationId] ?? {}), has_new: hasNew },
+    }));
+  }, []);
+
+  const setConversationPending = useCallback((conversationId, isPending) => {
+    setPendingById((prev) => {
+      const next = { ...prev, [conversationId]: isPending };
+      if (!isPending) {
+        delete next[conversationId];
+      }
+      return next;
+    });
+  }, []);
+
+  const conversations = useMemo(() => (
+    serverConversations.map((conv) => ({
+      ...conv,
+      is_pending: Boolean(pendingById[conv.id]),
+      has_new: Boolean(conversationUiById[conv.id]?.has_new),
+    }))
+  ), [serverConversations, pendingById, conversationUiById]);
 
   const loadConversations = useCallback(async () => {
     try {
       const convs = await api.listConversations();
-      setConversations(convs);
+      setServerConversations(convs);
+      setHasLoadedConversations(true);
     } catch (error) {
       console.error('Failed to load conversations:', error);
     }
   }, []);
+
+  // Prune persisted UI state for conversations that no longer exist
+  useEffect(() => {
+    if (!hasLoadedConversations) return;
+    const ids = new Set(serverConversations.map((c) => c.id));
+    setConversationUiById((prev) => {
+      let changed = false;
+      const next = {};
+      for (const [id, state] of Object.entries(prev)) {
+        if (ids.has(id)) {
+          next[id] = state;
+        } else {
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [serverConversations]);
 
   // Load conversations on mount
   useEffect(() => {
@@ -49,7 +130,7 @@ function App() {
   const handleNewConversation = async () => {
     try {
       const newConv = await api.createConversation();
-      setConversations((prev) => ([
+      setServerConversations((prev) => ([
         {
           id: newConv.id,
           created_at: newConv.created_at,
@@ -60,6 +141,7 @@ function App() {
         },
         ...prev,
       ]));
+      setConversationHasNew(newConv.id, false);
       setCurrentConversation(newConv);
       setCurrentConversationId(newConv.id);
     } catch (error) {
@@ -68,6 +150,7 @@ function App() {
   };
 
   const handleSelectConversation = (id) => {
+    setConversationHasNew(id, false);
     setCurrentConversation(null);
     setCurrentConversationId(id);
   };
@@ -98,6 +181,12 @@ function App() {
     if (!window.confirm('Are you sure you want to delete this conversation forever?')) return;
     try {
       await api.deleteConversation(id);
+      setConversationUiById((prev) => {
+        if (!prev[id]) return prev;
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
       loadConversations();
       if (currentConversationId === id) {
         setCurrentConversationId(null);
@@ -115,6 +204,17 @@ function App() {
     
     try {
       await Promise.all(archived.map(c => api.deleteConversation(c.id)));
+      setConversationUiById((prev) => {
+        let changed = false;
+        const next = { ...prev };
+        for (const conv of archived) {
+          if (next[conv.id]) {
+            delete next[conv.id];
+            changed = true;
+          }
+        }
+        return changed ? next : prev;
+      });
       loadConversations();
     } catch (error) {
       console.error('Failed bulk delete:', error);
@@ -173,7 +273,7 @@ function App() {
     if (!currentConversationId) return;
 
     const conversationId = currentConversationId;
-    setLoadingConversationId(conversationId);
+    setConversationPending(conversationId, true);
     try {
       // Optimistically add user message to UI (original content + file metadata)
       const fileMetadata = files.map(f => ({ name: f.name, size: f.size }));
@@ -234,7 +334,10 @@ function App() {
             lastMsg.loading = { stage1: false, stage2: false, stage3: false };
             return { ...prev, messages };
           });
-          setLoadingConversationId((prev) => (prev === conversationId ? null : prev));
+          setConversationPending(conversationId, false);
+          if (currentConversationIdRef.current !== conversationId) {
+            setConversationHasNew(conversationId, true);
+          }
           loadConversations();
           return;
         } catch (error) {
@@ -386,12 +489,15 @@ function App() {
           case 'complete':
             // Stream complete, reload conversations list
             loadConversations();
-            setLoadingConversationId((prev) => (prev === conversationId ? null : prev));
+            setConversationPending(conversationId, false);
+            if (currentConversationIdRef.current !== conversationId) {
+              setConversationHasNew(conversationId, true);
+            }
             break;
 
           case 'error':
             console.error('Stream error:', event.message);
-            setLoadingConversationId((prev) => (prev === conversationId ? null : prev));
+            setConversationPending(conversationId, false);
             break;
 
           default:
@@ -405,11 +511,11 @@ function App() {
         if (!prev || prev.id !== conversationId) return prev;
         return { ...prev, messages: prev.messages.slice(0, -2) };
       });
-      setLoadingConversationId((prev) => (prev === conversationId ? null : prev));
+      setConversationPending(conversationId, false);
     }
   };
 
-  const isLoading = loadingConversationId === currentConversationId;
+  const isLoading = Boolean(currentConversationId && pendingById[currentConversationId]);
 
   return (
     <ThemeProvider>

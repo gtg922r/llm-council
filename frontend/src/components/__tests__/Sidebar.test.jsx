@@ -31,4 +31,63 @@ describe('Sidebar', () => {
 
     expect(screen.getByRole('button', { name: /system mode/i })).toBeInTheDocument();
   });
+
+  it('shows a new-message blue dot until the conversation is opened', () => {
+    render(
+      <ThemeProvider>
+        <Sidebar
+          {...baseProps}
+          currentConversationId="conv-1"
+          conversations={[
+            {
+              id: 'conv-1',
+              title: 'Opened',
+              is_pinned: false,
+              is_archived: false,
+              message_count: 1,
+              has_new: true,
+              is_pending: false,
+            },
+            {
+              id: 'conv-2',
+              title: 'Unread',
+              is_pinned: false,
+              is_archived: false,
+              message_count: 2,
+              has_new: true,
+              is_pending: false,
+            },
+          ]}
+        />
+      </ThemeProvider>
+    );
+
+    // Active conversations should not show a "new" dot.
+    expect(screen.getAllByLabelText(/new messages/i)).toHaveLength(1);
+    expect(screen.getByText('Unread')).toBeInTheDocument();
+  });
+
+  it('shows a pending indicator while processing (and hides new dot)', () => {
+    render(
+      <ThemeProvider>
+        <Sidebar
+          {...baseProps}
+          conversations={[
+            {
+              id: 'conv-3',
+              title: 'Running',
+              is_pinned: false,
+              is_archived: false,
+              message_count: 3,
+              has_new: true,
+              is_pending: true,
+            },
+          ]}
+        />
+      </ThemeProvider>
+    );
+
+    expect(screen.getByLabelText(/conversation running/i)).toBeInTheDocument();
+    expect(screen.queryByLabelText(/new messages/i)).toBeNull();
+  });
 });

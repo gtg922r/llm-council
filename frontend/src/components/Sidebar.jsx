@@ -12,6 +12,28 @@ import {
 import ThemeToggle from './ThemeToggle';
 import './Sidebar.css';
 
+function ConversationIndicators({ isPending, hasNew, isActive }) {
+  if (isPending) {
+    return (
+      <span className="conversation-indicator" aria-label="Conversation running" title="Processing">
+        <RefreshCw size={12} className="conversation-pending-icon" />
+      </span>
+    );
+  }
+
+  if (hasNew && !isActive) {
+    return (
+      <span
+        className="conversation-indicator conversation-new-dot"
+        aria-label="New messages"
+        title="New message"
+      />
+    );
+  }
+
+  return null;
+}
+
 export default function Sidebar({
   conversations,
   currentConversationId,
@@ -93,7 +115,14 @@ export default function Sidebar({
             >
               <div className="conversation-content">
                 <div className="conversation-title">
-                  {conv.title || 'New Conversation'}
+                  <span className="conversation-title-text">
+                    {conv.title || 'New Conversation'}
+                  </span>
+                  <ConversationIndicators
+                    isPending={Boolean(conv.is_pending)}
+                    hasNew={Boolean(conv.has_new)}
+                    isActive={conv.id === currentConversationId}
+                  />
                 </div>
                 <div className="conversation-meta">
                   {conv.message_count} messages
@@ -155,7 +184,14 @@ export default function Sidebar({
                   onClick={() => onSelectConversation(conv.id)}
                 >
                   <div className="conversation-content">
-                    <div className="conversation-title">{conv.title}</div>
+                    <div className="conversation-title">
+                      <span className="conversation-title-text">{conv.title}</span>
+                      <ConversationIndicators
+                        isPending={Boolean(conv.is_pending)}
+                        hasNew={Boolean(conv.has_new)}
+                        isActive={conv.id === currentConversationId}
+                      />
+                    </div>
                   </div>
                   <div className="item-actions">
                     <button
