@@ -9,13 +9,13 @@ Refactor the backend to support structured file context in the API and storage l
 - [x] Task: Backend - Update `send_message` logic to use `build_prompt_content` and store files correctly. (8e51dfd)
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Backend Data Model & Storage' (Protocol in workflow.md)
 
-## Phase 2: Frontend API Integration
+## Phase 2: Frontend API Integration [checkpoint: b3b7c95]
 Update the frontend to send structured file objects instead of concatenating strings.
 
 - [x] Task: Frontend - Update `api.js` to accept and transmit `files` array in `sendMessage` and `sendMessageStream`. (2aefbb9)
 - [x] Task: Frontend - Update `App.jsx` to remove string concatenation logic and pass `stagedFiles` to the API. (39a7f97)
 - [x] Task: Frontend - Verify `ChatInterface.jsx` and `ChatInput.jsx` correctly handle the new flow (mostly cleanup). (8d83a83)
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Frontend API Integration' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Frontend API Integration' (Protocol in workflow.md)
 
 ## Phase 3: Verification & Cleanup
 Ensure end-to-end functionality and backward compatibility.
