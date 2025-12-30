@@ -1,0 +1,4 @@
+Task: Test - Verify end-to-end flow with a new conversation containing files.
+Summary: Added an integration test that posts a message with files via the API, asserts stored file context, and validates prompt formatting with a stubbed council.
+Files: backend/tests/test_message_end_to_end.py.
+Why: Ensure the end-to-end message flow preserves structured file data and prompt construction.
