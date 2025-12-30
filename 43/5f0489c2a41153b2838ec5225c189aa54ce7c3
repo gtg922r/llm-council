@@ -1,0 +1,12 @@
+Task: Implement useTheme hook for easy access to theme state.
+
+Summary:
+- Added useTheme hook with provider enforcement.
+- Extended ThemeContext tests to cover hook usage and error guard.
+
+Files:
+- frontend/src/context/ThemeContext.jsx
+- frontend/src/__tests__/ThemeContext.test.jsx
+
+Why:
+- Simplifies theme access throughout the UI while preventing improper usage.
