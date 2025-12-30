@@ -15,6 +15,11 @@
   --color-border: #e0e0e0;
   --color-code-bg: #f5f5f5;
   --color-code-text: #333;
+  --color-code-block-bg: #f2f5f9;
+  --color-code-block-border: #d7e0ea;
+  --color-code-inline-bg: #eef2f7;
+  --color-code-inline-text: #1b2a41;
+  --color-code-inline-border: #d7e0ea;
   --color-blockquote-border: #ddd;
   --color-blockquote-text: #666;
   --color-elevation-1: #ffffff;
@@ -35,6 +40,11 @@
   --color-border: #2c2c2c;
   --color-code-bg: #1b1b1b;
   --color-code-text: #e6e6e6;
+  --color-code-block-bg: #161b22;
+  --color-code-block-border: #2a3441;
+  --color-code-inline-bg: #202734;
+  --color-code-inline-text: #e6edf3;
+  --color-code-inline-border: #2a3441;
   --color-blockquote-border: #3a3a3a;
   --color-blockquote-text: #b0b0b0;
   --color-elevation-1: #1e1e1e;
@@ -111,7 +121,8 @@ body {
 }
 
 .markdown-content pre {
-  background: var(--color-code-bg, #f5f5f5);
+  background: var(--color-code-block-bg, var(--color-code-bg, #f5f5f5));
+  border: 1px solid var(--color-code-block-border, var(--color-border, #ddd));
   padding: 12px;
   border-radius: 4px;
   overflow-x: auto;
@@ -119,12 +130,13 @@ body {
 }
 
 .markdown-content code {
-  background: var(--color-code-bg, #f5f5f5);
+  background: var(--color-code-inline-bg, var(--color-code-bg, #f5f5f5));
   padding: 2px 6px;
   border-radius: 3px;
+  border: 1px solid var(--color-code-inline-border, transparent);
   font-family: monospace;
   font-size: 0.9em;
-  color: var(--color-code-text, var(--color-text, #333));
+  color: var(--color-code-inline-text, var(--color-code-text, var(--color-text, #333)));
 }
 
 .markdown-content pre code {
