@@ -10,15 +10,15 @@ const chatInputCss = readFileSync(chatInputCssPath, 'utf8');
 
 describe('file upload theming', () => {
   it('defines accent and danger variables for light and dark modes', () => {
-    expect(indexCss).toContain('--color-accent: #4a90e2');
-    expect(indexCss).toContain('--color-accent-strong: #357abd');
+    expect(indexCss).toContain('--color-accent: #357abd');
+    expect(indexCss).toContain('--color-accent-strong: #4a90e2');
     expect(indexCss).toContain('--color-accent-soft: rgba(74, 144, 226, 0.12)');
     expect(indexCss).toContain('--color-danger: #d93025');
     expect(indexCss).toContain('--color-danger-soft: rgba(217, 48, 37, 0.12)');
 
     expect(indexCss).toContain(':root.dark');
-    expect(indexCss).toContain('--color-accent: #6aa8ff');
-    expect(indexCss).toContain('--color-accent-strong: #4a90e2');
+    expect(indexCss).toContain('--color-accent: #4a90e2');
+    expect(indexCss).toContain('--color-accent-strong: #6aa8ff');
     expect(indexCss).toContain('--color-accent-soft: rgba(106, 168, 255, 0.2)');
     expect(indexCss).toContain('--color-danger: #ff6b61');
     expect(indexCss).toContain('--color-danger-soft: rgba(255, 107, 97, 0.18)');
