@@ -55,4 +55,29 @@ describe('Sidebar', () => {
     
     expect(screen.getByTitle('Unread')).toBeInTheDocument();
   });
+
+  it('displays a pending dot for pending conversations', () => {
+    const pendingProps = {
+      ...baseProps,
+      conversations: [
+        {
+          id: '1',
+          title: 'Pending Conversation',
+          message_count: 5,
+          is_pinned: false,
+          is_archived: false,
+          has_unread: false
+        }
+      ],
+      pendingConversations: new Set(['1'])
+    };
+    
+    render(
+      <ThemeProvider>
+        <Sidebar {...pendingProps} />
+      </ThemeProvider>
+    );
+    
+    expect(screen.getByTitle('Pending')).toBeInTheDocument();
+  });
 });

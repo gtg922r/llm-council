@@ -21,6 +21,7 @@ export default function Sidebar({
   onToggleArchive,
   onDeleteConversation,
   onBulkDelete,
+  pendingConversations = new Set(),
 }) {
   const [isArchiveExpanded, setIsArchiveExpanded] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -100,6 +101,9 @@ export default function Sidebar({
                 </div>
                 {conv.has_unread && (
                   <div className="unread-dot" title="Unread" />
+                )}
+                {pendingConversations.has(conv.id) && (
+                  <div className="pending-dot" title="Pending" />
                 )}
               </div>
               <div className="item-actions">
