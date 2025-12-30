@@ -1,0 +1,11 @@
+Task: Write component tests for ThemeToggle and Sidebar integration.
+
+Summary:
+- Expanded ThemeToggle tests to cover all three theme controls.
+- Sidebar integration test already in place from prior task.
+
+Files:
+- frontend/src/components/__tests__/ThemeToggle.test.jsx
+
+Why:
+- Ensures theme control rendering remains stable alongside sidebar integration.
