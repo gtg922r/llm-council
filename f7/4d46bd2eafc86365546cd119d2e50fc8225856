@@ -1,0 +1,12 @@
+Task: Apply dark class to the document root based on resolved theme.
+
+Summary:
+- Added effect to toggle .dark on documentElement when resolvedTheme changes.
+- Added tests verifying class application for manual and system-driven dark mode.
+
+Files:
+- frontend/src/context/ThemeContext.jsx
+- frontend/src/__tests__/ThemeContext.test.jsx
+
+Why:
+- Enables CSS theme switching by tying resolved theme state to the root element.
