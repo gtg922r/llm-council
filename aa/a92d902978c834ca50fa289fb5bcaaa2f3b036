@@ -1,0 +1,4 @@
+Phase 4 verification report
+Automated tests: CI=true npm test -- --run src/__tests__/SidebarTheme.test.js (pass)
+Manual verification plan: 1) Open the app on desktop and mobile widths. 2) Trigger pending and unread states and confirm dots are visible and distinct. 3) Verify dots remain legible on small screens and action buttons feel tappable.
+User confirmation: Pending.
