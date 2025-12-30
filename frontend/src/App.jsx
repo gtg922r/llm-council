@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Sidebar from './components/Sidebar';
 import ChatInterface from './components/ChatInterface';
 import { api } from './api';
+import { ThemeProvider } from './context/ThemeContext';
 import './App.css';
 
 function App() {
@@ -411,25 +412,27 @@ function App() {
   const isLoading = loadingConversationId === currentConversationId;
 
   return (
-    <div className="app">
-      <Sidebar
-        conversations={conversations}
-        currentConversationId={currentConversationId}
-        onSelectConversation={handleSelectConversation}
-        onNewConversation={handleNewConversation}
-        onTogglePin={handleTogglePin}
-        onToggleArchive={handleToggleArchive}
-        onDeleteConversation={handleDeleteConversation}
-        onBulkDelete={handleBulkDelete}
-      />
-      <ChatInterface
-        conversation={currentConversation}
-        onSendMessage={handleSendMessage}
-        onHeaderAction={handleHeaderAction}
-        onUpdateTitle={handleUpdateTitle}
-        isLoading={isLoading}
-      />
-    </div>
+    <ThemeProvider>
+      <div className="app">
+        <Sidebar
+          conversations={conversations}
+          currentConversationId={currentConversationId}
+          onSelectConversation={handleSelectConversation}
+          onNewConversation={handleNewConversation}
+          onTogglePin={handleTogglePin}
+          onToggleArchive={handleToggleArchive}
+          onDeleteConversation={handleDeleteConversation}
+          onBulkDelete={handleBulkDelete}
+        />
+        <ChatInterface
+          conversation={currentConversation}
+          onSendMessage={handleSendMessage}
+          onHeaderAction={handleHeaderAction}
+          onUpdateTitle={handleUpdateTitle}
+          isLoading={isLoading}
+        />
+      </div>
+    </ThemeProvider>
   );
 }
 
