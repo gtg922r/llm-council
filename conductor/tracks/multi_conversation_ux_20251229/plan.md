@@ -26,9 +26,9 @@ Implement the visual "pending" indicator to track background processing.
 - [x] Task: Frontend - Update `Sidebar.jsx` to display a pulsing grey dot if a conversation ID is in `pendingConversations` [9e086b9]
 - [x] Task: Conductor - User Manual Verification 'Phase 3: Frontend Pending Indicator (Pulsing Grey Dot)' (Protocol in workflow.md) [be35220]
 
-## Phase 4: CSS Styling & Polish
+## Phase 4: CSS Styling & Polish [checkpoint: aaa92d9]
 Finalize the animations and visual styles for both indicators.
 
 - [x] Task: Frontend - Define CSS for the blue dot and the pulsing grey dot in `Sidebar.css` [29810f4]
 - [x] Task: Frontend - Ensure responsive design and mobile-friendly touch targets for the indicators [29810f4]
-- [ ] Task: Conductor - User Manual Verification 'Phase 4: CSS Styling & Polish' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 4: CSS Styling & Polish' (Protocol in workflow.md) [aaa92d9]
