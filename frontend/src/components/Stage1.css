@@ -78,7 +78,7 @@
 
 .tab-content {
   position: relative;
-  background: var(--color-surface, #ffffff);
+  background: var(--color-elevation-1, #ffffff);
   padding: 16px;
   border-radius: 6px;
   border: 1px solid var(--color-border, #e0e0e0);
@@ -86,7 +86,7 @@
 
 .tab-content.content-error {
   border-color: #ffcccc;
-  background-color: #fffafa;
+  background-color: var(--color-elevation-2, #fffafa);
 }
 
 

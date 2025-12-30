@@ -17,6 +17,9 @@
   --color-code-text: #333;
   --color-blockquote-border: #ddd;
   --color-blockquote-text: #666;
+  --color-elevation-1: #ffffff;
+  --color-elevation-2: #f7f7f7;
+  --color-elevation-3: #f0f0f0;
 }
 
 :root.dark {
@@ -29,6 +32,9 @@
   --color-code-text: #e6e6e6;
   --color-blockquote-border: #3a3a3a;
   --color-blockquote-text: #b0b0b0;
+  --color-elevation-1: #1e1e1e;
+  --color-elevation-2: #242424;
+  --color-elevation-3: #2a2a2a;
 }
 
 * {
