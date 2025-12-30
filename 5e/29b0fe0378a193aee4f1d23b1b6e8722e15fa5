@@ -1,0 +1,12 @@
+Task: Add unit tests to verify CSS variable application based on theme state.
+
+Summary:
+- Added tests asserting data-theme updates for manual and system-driven theme changes.
+- Set data-theme on documentElement alongside the dark class.
+
+Files:
+- frontend/src/context/ThemeContext.jsx
+- frontend/src/__tests__/ThemeCssApplication.test.jsx
+
+Why:
+- Provides explicit verification that theme state updates are reflected on the document root for CSS consumption.
