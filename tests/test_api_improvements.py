@@ -55,6 +55,23 @@ def test_update_conversation_flags():
     assert patch_resp.status_code == 200
     assert patch_resp.json()["is_archived"] is True
 
+def test_patch_clears_has_unread():
+    """Test PATCH /api/conversations/{id} clears has_unread."""
+    create_resp = client.post("/api/conversations", json={})
+    conv_id = create_resp.json()["id"]
+
+    from backend.storage import add_assistant_message
+    add_assistant_message(
+        conv_id,
+        stage1=[{"model": "test", "content": "one"}],
+        stage2=[{"model": "test", "content": "two"}],
+        stage3={"model": "test", "content": "three"},
+    )
+
+    patch_resp = client.patch(f"/api/conversations/{conv_id}", json={"has_unread": False})
+    assert patch_resp.status_code == 200
+    assert patch_resp.json()["has_unread"] is False
+
 def test_duplicate_conversation_api():
     """Test POST /api/conversations/{id}/duplicate."""
     # Create original
