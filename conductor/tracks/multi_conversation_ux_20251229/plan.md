@@ -3,7 +3,7 @@
 ## Phase 1: Backend Persistence & API
 Introduce the `has_unread` field to the data model and expose it via the API.
 
-- [ ] Task: Backend - Update `storage.py` to include `has_unread` in conversation model and default it to `False`
+- [x] Task: Backend - Update `storage.py` to include `has_unread` in conversation model and default it to `False` [52836b4]
 - [ ] Task: Backend - Update `main.py` Pydantic models (`ConversationMetadata`, `Conversation`) to include `has_unread`
 - [ ] Task: Backend - Update `add_assistant_message` in `storage.py` to set `has_unread = True`
 - [ ] Task: Backend - Create/Update `PATCH /api/conversations/{id}` logic to allow clearing `has_unread`
