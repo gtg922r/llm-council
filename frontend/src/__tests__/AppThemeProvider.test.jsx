@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi } from 'vitest';
 import App from '../App';
 
@@ -32,7 +33,11 @@ vi.mock('../components/ChatInterface', () => ({
 
 describe('App theme provider', () => {
   it('renders the theme toggle without provider errors', async () => {
+    const user = userEvent.setup();
     render(<App />);
+
+    const settingsButton = await screen.findByRole('button', { name: /open settings/i });
+    await user.click(settingsButton);
 
     expect(await screen.findByRole('button', { name: /system mode/i })).toBeInTheDocument();
   });
