@@ -6,7 +6,7 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 
 
-## [ ] Track: Multi-Conversation UX Improvements
+## [~] Track: Multi-Conversation UX Improvements
 
 *Link: [./conductor/tracks/multi_conversation_ux_20251229/](./conductor/tracks/multi_conversation_ux_20251229/)*
 
