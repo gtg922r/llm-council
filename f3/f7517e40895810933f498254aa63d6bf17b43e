@@ -1,0 +1,12 @@
+Fix: Wrap App with ThemeProvider to prevent ThemeToggle context errors.
+
+Summary:
+- Wrapped App UI tree with ThemeProvider so ThemeToggle always has context.
+- Added AppThemeProvider test to assert theme toggle renders without provider errors.
+
+Files:
+- frontend/src/App.jsx
+- frontend/src/__tests__/AppThemeProvider.test.jsx
+
+Why:
+- Prevents runtime crash when ThemeToggle renders in Sidebar.
