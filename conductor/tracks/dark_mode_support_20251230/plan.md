@@ -6,13 +6,13 @@
 - [x] Task: Add unit tests for `ThemeContext` logic (system detection, state transitions) [05ff946]
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Foundation & Theme Management' (Protocol in workflow.md) [2a1c312]
 
-## Phase 2: CSS Infrastructure & Variables
+## Phase 2: CSS Infrastructure & Variables [checkpoint: 815af5d]
 - [x] Task: Refactor `index.css` to use CSS variables for all core colors (background, text, border, etc.) [1888ff9]
 - [x] Task: Define Light Mode variable values [3d5e262]
 - [x] Task: Define Dark Mode variable values (Material Gray palette) [36b4af7]
 - [x] Task: Implement a mechanism to apply the `.dark` class (or data-theme attribute) to the document root [f74d46b]
 - [x] Task: Add unit tests to verify CSS variable application based on theme state [5e29b0f]
-- [~] Task: Conductor - User Manual Verification 'Phase 2: CSS Infrastructure & Variables' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 2: CSS Infrastructure & Variables' (Protocol in workflow.md) [815af5d]
 
 ## Phase 3: UI Component Styling & Toggle
 - [ ] Task: Create a `ThemeToggle` component with Lucide icons (Sun/Moon/Monitor)
