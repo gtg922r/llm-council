@@ -1,0 +1,12 @@
+Task: Define Light Mode variable values.
+
+Summary:
+- Added light theme color variables in :root for backgrounds, text, borders, and code blocks.
+- Extended index.css tests to verify light variable definitions.
+
+Files:
+- frontend/src/index.css
+- frontend/src/__tests__/IndexCssThemeVariables.test.js
+
+Why:
+- Establishes baseline palette for light mode before adding dark values.
