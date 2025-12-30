@@ -9,6 +9,18 @@ function ThemeProbe() {
 }
 
 describe('ThemeToggle', () => {
+  it('renders light, dark, and system controls', () => {
+    render(
+      <ThemeProvider>
+        <ThemeToggle />
+      </ThemeProvider>
+    );
+
+    expect(screen.getByRole('button', { name: /light mode/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /dark mode/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /system mode/i })).toBeInTheDocument();
+  });
+
   it('defaults to system and toggles to dark', () => {
     render(
       <ThemeProvider>
