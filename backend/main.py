@@ -23,6 +23,8 @@ from .council import (
     Stage1Result,
     Stage2Result
 )
+from .infrastructure.blob_store import BlobStore
+from .domain.models import Attachment
 from .openrouter import query_model
 
 app = FastAPI(title="LLM Council API")
@@ -65,22 +67,35 @@ class SendMessageRequest(BaseModel):
 
 def build_prompt_content(
     content: str,
-    files: List[FileContext] | List[Dict[str, Any]] | None
+    files: List[FileContext] | List[Dict[str, Any]] | List[Attachment] | None
 ) -> str:
     """Construct the final prompt with user content and file blocks."""
     if not files:
         return content
 
+    blob_store = BlobStore()
     sections = [content]
-    for file_context in files:
-        if isinstance(file_context, dict):
-            name = file_context.get("name")
-            file_content = file_context.get("content")
+    for f in files:
+        if isinstance(f, dict):
+            name = f.get("name") or f.get("filename")
+            file_content = f.get("content")
+        elif isinstance(f, Attachment):
+            name = f.filename
+            if f.file_reference_id:
+                try:
+                    file_content = blob_store.get_text(f.file_reference_id)
+                except FileNotFoundError:
+                    file_content = f.content or "[Error: Content not found in blob store]"
+            else:
+                file_content = f.content
         else:
-            name = file_context.name
-            file_content = file_context.content
+            name = f.name
+            file_content = f.content
+            
         if name is None or file_content is None:
-            raise ValueError("File context must include name and content.")
+            # Skip invalid files or handle error
+            continue
+            
         sections.append(
             f"--- FILE: {name} ---\n"
             f"{file_content}\n"
