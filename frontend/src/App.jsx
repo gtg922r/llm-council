@@ -348,86 +348,91 @@ function App() {
         };
 
         switch (eventType) {
-          case 'stage1_start':
-            setCurrentConversation((prev) => updateAssistantMessage(prev, (msg) => ({
-              ...msg,
-              loading: { stage1: true, stage2: false, stage3: false },
-              progress: {
-                ...msg.progress,
-                stage1: { completed: 0, total: event.total ?? 0 }
+          case 'stage_start':
+            setCurrentConversation((prev) => updateAssistantMessage(prev, (msg) => {
+              if (event.stage === 1) {
+                return {
+                  ...msg,
+                  loading: { stage1: true, stage2: false, stage3: false },
+                  progress: {
+                    ...msg.progress,
+                    stage1: { completed: 0, total: event.total ?? 0 }
+                  }
+                };
+              } else if (event.stage === 2) {
+                return {
+                  ...msg,
+                  loading: { stage1: false, stage2: true, stage3: false },
+                  progress: {
+                    ...msg.progress,
+                    stage2: { completed: 0, total: event.total ?? 0 }
+                  }
+                };
+              } else if (event.stage === 3) {
+                return {
+                  ...msg,
+                  loading: { stage1: false, stage2: false, stage3: true }
+                };
               }
-            })));
+              return msg;
+            }));
             break;
 
-          case 'stage1_progress':
-            setCurrentConversation((prev) => updateAssistantMessage(prev, (msg) => ({
-              ...msg,
-              progress: {
-                ...msg.progress,
-                stage1: {
-                  completed: event.completed ?? msg.progress?.stage1?.completed ?? 0,
-                  total: event.total ?? msg.progress?.stage1?.total ?? 0,
-                }
+          case 'stage_progress':
+            setCurrentConversation((prev) => updateAssistantMessage(prev, (msg) => {
+              if (event.stage === 1) {
+                return {
+                  ...msg,
+                  progress: {
+                    ...msg.progress,
+                    stage1: {
+                      completed: event.completed ?? msg.progress?.stage1?.completed ?? 0,
+                      total: event.total ?? msg.progress?.stage1?.total ?? 0,
+                    }
+                  }
+                };
+              } else if (event.stage === 2) {
+                return {
+                  ...msg,
+                  progress: {
+                    ...msg.progress,
+                    stage2: {
+                      completed: event.completed ?? msg.progress?.stage2?.completed ?? 0,
+                      total: event.total ?? msg.progress?.stage2?.total ?? 0,
+                    }
+                  }
+                };
               }
-            })));
+              return msg;
+            }));
             break;
 
-          case 'stage1_complete':
-            setCurrentConversation((prev) => updateAssistantMessage(prev, (msg) => ({
-              ...msg,
-              stage1: event.data,
-              loading: { ...msg.loading, stage1: false },
-              progress: { ...msg.progress, stage1: null }
-            })));
-            break;
-
-          case 'stage2_start':
-            setCurrentConversation((prev) => updateAssistantMessage(prev, (msg) => ({
-              ...msg,
-              loading: { stage1: false, stage2: true, stage3: false },
-              progress: {
-                ...msg.progress,
-                stage2: { completed: 0, total: event.total ?? 0 }
+          case 'stage_complete':
+            setCurrentConversation((prev) => updateAssistantMessage(prev, (msg) => {
+              if (event.stage === 1) {
+                return {
+                  ...msg,
+                  stage1: event.data,
+                  loading: { ...msg.loading, stage1: false },
+                  progress: { ...msg.progress, stage1: null }
+                };
+              } else if (event.stage === 2) {
+                return {
+                  ...msg,
+                  stage2: event.data,
+                  metadata: event.metadata,
+                  loading: { ...msg.loading, stage2: false },
+                  progress: { ...msg.progress, stage2: null }
+                };
+              } else if (event.stage === 3) {
+                return {
+                  ...msg,
+                  stage3: event.data,
+                  loading: { ...msg.loading, stage3: false }
+                };
               }
-            })));
-            break;
-
-          case 'stage2_progress':
-            setCurrentConversation((prev) => updateAssistantMessage(prev, (msg) => ({
-              ...msg,
-              progress: {
-                ...msg.progress,
-                stage2: {
-                  completed: event.completed ?? msg.progress?.stage2?.completed ?? 0,
-                  total: event.total ?? msg.progress?.stage2?.total ?? 0,
-                }
-              }
-            })));
-            break;
-
-          case 'stage2_complete':
-            setCurrentConversation((prev) => updateAssistantMessage(prev, (msg) => ({
-              ...msg,
-              stage2: event.data,
-              metadata: event.metadata,
-              loading: { ...msg.loading, stage2: false },
-              progress: { ...msg.progress, stage2: null }
-            })));
-            break;
-
-          case 'stage3_start':
-            setCurrentConversation((prev) => updateAssistantMessage(prev, (msg) => ({
-              ...msg,
-              loading: { stage1: false, stage2: false, stage3: true }
-            })));
-            break;
-
-          case 'stage3_complete':
-            setCurrentConversation((prev) => updateAssistantMessage(prev, (msg) => ({
-              ...msg,
-              stage3: event.data,
-              loading: { ...msg.loading, stage3: false }
-            })));
+              return msg;
+            }));
             break;
 
           case 'title_complete':
