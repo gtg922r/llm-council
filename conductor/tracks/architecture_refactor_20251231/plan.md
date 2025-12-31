@@ -6,12 +6,12 @@ This plan follows the 5-phase refactor guide to move the application to a Modula
 - [x] Task: Clean existing data (Delete `data/conversations/` and `data/blobs/`) 2e15e4e
 - [x] Task: Initialize new backend test infrastructure (Create `backend/tests/unit`, `backend/tests/integration`) 66242d0
 
-## Phase 1: Domain Modeling & Metadata Persistence
+## Phase 1: Domain Modeling & Metadata Persistence [checkpoint: c15007a]
 - [x] Task: Define Pydantic models in `backend/domain/models.py` (Conversation, Message, CouncilRun) 65e3ccb
 - [x] Task: Implement `metadata` field in `AssistantMessage` for peer rankings and label maps 65e3ccb
 - [x] Task: Update `council.py` logic to use and populate new Domain models 4877cc4
 - [x] Task: Update `storage.py` to handle Pydantic serialization/deserialization 0940af9
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Domain Modeling & Metadata Persistence' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 1: Domain Modeling & Metadata Persistence' (Protocol in workflow.md) c15007a
 
 ## Phase 2: The Blob-Store Split
 - [ ] Task: Create `backend/infrastructure/blob_store.py` for local file persistence
