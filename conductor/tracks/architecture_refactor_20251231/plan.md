@@ -22,7 +22,7 @@ This plan follows the 5-phase refactor guide to move the application to a Modula
 
 ## Phase 3: Infrastructure Abstraction (The Repository Pattern)
 - [x] Task: Define abstract interfaces in `backend/ports.py` (`ConversationRepository`, `LLMProvider`) fbc7c73
-- [ ] Task: Implement `backend/infrastructure/json_repository.py` (implements `ConversationRepository`)
+- [x] Task: Implement `backend/infrastructure/json_repository.py` (implements `ConversationRepository`) a535146
 - [ ] Task: Implement `backend/infrastructure/openrouter_adapter.py` (implements `LLMProvider`)
 - [ ] Task: Refactor `main.py` routes to use Port interfaces (Dependency Injection)
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: Infrastructure Abstraction (The Repository Pattern)' (Protocol in workflow.md)
