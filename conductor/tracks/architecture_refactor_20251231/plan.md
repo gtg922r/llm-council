@@ -17,7 +17,7 @@ This plan follows the 5-phase refactor guide to move the application to a Modula
 - [x] Task: Create `backend/infrastructure/blob_store.py` for local file persistence b024a83
 - [x] Task: Update `UserMessage` domain model to use `file_reference_id` 6a8e847
 - [x] Task: Refactor Prompt Builder to resolve `file_reference_id` via `BlobStore` 03a411b
-- [ ] Task: Update `storage.py` (or new repository) to save/load blobs during conversation persistence
+- [x] Task: Update `storage.py` (or new repository) to save/load blobs during conversation persistence 6a8e847
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: The Blob-Store Split' (Protocol in workflow.md)
 
 ## Phase 3: Infrastructure Abstraction (The Repository Pattern)
