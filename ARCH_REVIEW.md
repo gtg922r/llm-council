@@ -8,6 +8,10 @@ This review focuses on:
 
 ### 1A. Data flow (new request/message)
 
+- **How the browser reaches the backend**
+  - The frontend uses `API_BASE = ''` and calls `/api/...` on the current origin.
+  - In development, Vite proxies `/api` to `http://localhost:8001` (see `frontend/vite.config.js`).
+
 - **Conversation lifecycle**
   - **Create**: `POST /api/conversations` creates a conversation ID and persists a JSON file in `data/conversations/{id}.json`.
   - **List**: `GET /api/conversations` returns metadata (id, title, flags, message_count).
@@ -28,6 +32,7 @@ This review focuses on:
       - **Stage 3**: chairman synthesizes final answer, emits final result.
     - Generates a conversation title (first message only) concurrently, persists it, emits a `title_complete` event.
     - Persists the **assistant message** (stage1/stage2/stage3) at the end of the stream.
+    - Important durability detail: if the client disconnects mid-stream (or the process crashes), the **user message may be persisted but the assistant message may never be saved**, because persistence happens only at the end.
 
 - **Non-streaming message send (batch path)**
   - `POST /api/conversations/{id}/message`:
@@ -51,6 +56,8 @@ This review focuses on:
       - Assistant: `{ role: "assistant", stage1: [...], stage2: [...], stage3: {...} }`
   - **Notably not persisted**:
     - The API-level `metadata` object (`label_to_model`, `aggregate_rankings`) is returned for batch and streamed in SSE for the default flow, but it is **not saved** in the conversation JSON.
+  - **Concurrency model**:
+    - Storage is a read-modify-write of a single JSON file with no explicit file locking/transactions, so concurrent writes to the same conversation risk lost updates.
 
 - **Browser / frontend**
   - Conversation state is held in **React state only** (in-memory). There is no local persistence (no LocalStorage/IndexedDB).
@@ -59,6 +66,7 @@ This review focuses on:
     - The UI shows file chips and stores only filename/size in the optimistic UI message.
     - The backend receives a single `content` string (often containing the concatenated file contents) and stores it as plain message text.
     - On reload, the conversation is rehydrated from backend JSON, so file “chips” disappear and the user message text may now include the full file contents inline.
+  - The UI’s per-message `loading/progress` fields are purely client-side and are not reconstructible after refresh.
 
 ## 2. Proposed refactor (toward idiomatic, elegant architecture)
 
@@ -96,6 +104,7 @@ This is intentionally staged: you can adopt the “minimal refactor” first (hi
     - the original user text
     - the attachment references / extracted content (as appropriate)
     - (optionally) the final prompt for debugging in a gated, safe manner
+  - Note: there is already an internal track spec in `conductor/tracks/refactor_backend_file_transmission_20251229/spec.md` describing this exact direction.
 
 ### 2B. Data storage refactor
 
@@ -113,6 +122,9 @@ This is intentionally staged: you can adopt the “minimal refactor” first (hi
     - Index by `conversation_id`, `created_at`
     - Store stage payloads as JSON columns (or normalized tables later if needed)
   - If you keep JSON for now, introduce a “storage adapter” interface so the rest of the app doesn’t care which backend is used.
+  - If you keep JSON longer than “prototype”, add at least:
+    - atomic writes (write temp file then rename)
+    - file locking (per-conversation) to prevent concurrent clobbers
 
 - **Model versioning / migrations**
   - Add a `schema_version` to persisted conversation/message records.
@@ -147,6 +159,7 @@ These guidelines are intentionally biased toward “small app done well”: clea
 - **Idempotency + correlation**
   - Add `request_id` / `message_id` and carry it through logs and events.
   - Make “retry” safe where possible (especially for streaming reconnects).
+  - Prefer “persist first, then stream updates” for long-running work so a refresh doesn’t lose the canonical record.
 
 - **Separation of concerns**
   - Domain logic (`council` orchestration) should not know about HTTP/SSE details.
