@@ -1,0 +1,7 @@
+Task 1.1: Create Modal Component and Styles
+Summary: Implemented a reusable, accessible Modal component with backdrop closing and Escape key support.
+Files:
+- frontend/src/components/Modal.jsx
+- frontend/src/components/Modal.css
+- frontend/src/components/__tests__/Modal.test.jsx
+Why: Foundation for the delete confirmation modal and future UI modals.
