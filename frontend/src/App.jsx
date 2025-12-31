@@ -94,8 +94,10 @@ function App() {
   };
 
   const handleSelectConversation = async (id) => {
-    setCurrentConversation(null);
-    setCurrentConversationId(id);
+    if (currentConversationId !== id) {
+      setCurrentConversation(null);
+      setCurrentConversationId(id);
+    }
     try {
       await api.markAsRead(id);
       loadConversations();
@@ -349,7 +351,7 @@ function App() {
           case 'stage1_start':
             setCurrentConversation((prev) => updateAssistantMessage(prev, (msg) => ({
               ...msg,
-              loading: { ...msg.loading, stage1: true },
+              loading: { stage1: true, stage2: false, stage3: false },
               progress: {
                 ...msg.progress,
                 stage1: { completed: 0, total: event.total ?? 0 }
@@ -382,7 +384,7 @@ function App() {
           case 'stage2_start':
             setCurrentConversation((prev) => updateAssistantMessage(prev, (msg) => ({
               ...msg,
-              loading: { ...msg.loading, stage2: true },
+              loading: { stage1: false, stage2: true, stage3: false },
               progress: {
                 ...msg.progress,
                 stage2: { completed: 0, total: event.total ?? 0 }
@@ -416,7 +418,7 @@ function App() {
           case 'stage3_start':
             setCurrentConversation((prev) => updateAssistantMessage(prev, (msg) => ({
               ...msg,
-              loading: { ...msg.loading, stage3: true }
+              loading: { stage1: false, stage2: false, stage3: true }
             })));
             break;
 

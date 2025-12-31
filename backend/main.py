@@ -368,6 +368,8 @@ async def send_message_stream(conversation_id: str, request: SendMessageRequest)
                 files=attachments
             )
             conversation.messages.append(user_msg)
+            conversation_repo.save(conversation)
+            
             prompt_content = build_prompt_content(request.content, attachments)
 
             # Start title generation in parallel (don't await yet)
