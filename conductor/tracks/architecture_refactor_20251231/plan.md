@@ -8,7 +8,7 @@ This plan follows the 5-phase refactor guide to move the application to a Modula
 
 ## Phase 1: Domain Modeling & Metadata Persistence
 - [x] Task: Define Pydantic models in `backend/domain/models.py` (Conversation, Message, CouncilRun) 65e3ccb
-- [ ] Task: Implement `metadata` field in `AssistantMessage` for peer rankings and label maps
+- [x] Task: Implement `metadata` field in `AssistantMessage` for peer rankings and label maps 65e3ccb
 - [ ] Task: Update `council.py` logic to use and populate new Domain models
 - [ ] Task: Update `storage.py` to handle Pydantic serialization/deserialization
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Domain Modeling & Metadata Persistence' (Protocol in workflow.md)
