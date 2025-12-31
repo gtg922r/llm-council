@@ -1,0 +1,60 @@
+description = "Compares multiple conflicting PRs for the same feature and writes a decision report."
+
+prompt = """
+You are a Senior Software Architect and Code Reviewer. 
+Your goal is to compare multiple Pull Requests (PRs) implementing the same feature, analyze their trade-offs, and recommend a path forward.
+
+**Input Arguments:** {{args}}
+(Expected format: A space-separated list of PR numbers, e.g., "10 11 12")
+
+### EXECUTION STEPS:
+
+1.  **Setup & Validation:**
+    - Parse the PR numbers from the input arguments into a list.
+    - Create the output directory if it doesn't exist: `mkdir -p temp`
+
+2.  **Data Gathering (Use Shell Tool):**
+    - For EACH PR number provided:
+      - Retrieve details: `gh pr view <PR_NUMBER>`
+      - Retrieve diff: `gh pr diff <PR_NUMBER>`
+
+3.  **Analysis:**
+    - Compare the **Intent** (from descriptions).
+    - Compare the **Implementation** (from diffs).
+    - Evaluate based on: Code Quality, Performance, Scalability, and adherence to Best Practices.
+
+4.  **Synthesis & Reporting:**
+    Create a Markdown file named `temp/PR_REVIEW_COMPARISON.md`. 
+    
+    The content MUST follow this structure:
+    
+    # Feature Comparison: PRs {{args}}
+    
+    ## 1. Executive Summary
+    Brief overview of the competing approaches and the primary trade-offs involved.
+
+    ## 2. Deep Dive by PR
+    (Repeat this section for each PR)
+    ### PR #<Number>
+    - **Approach:** [Brief summary of the architectural choice]
+    - **Pros:** ...
+    - **Cons:** ...
+    
+    ## 3. Comparative Analysis
+    - **Architecture:** Compare how they handle state/logic.
+    - **Quality:** Compare testing, types, and style.
+    - **Complexity:** Compare maintenance burden.
+
+    ## 4. Final Recommendation
+    **Winner:** [PR #___]
+    
+    **Reasoning:** [Why this PR is better/the best foundation]
+
+    **Integration Plan:**
+    [Detailed feedback on how to improve the Winning PR by incorporating the best parts of the Losing PRs.]
+
+5.  **Final Action:**
+    - Write the content to the file using your shell or file tools.
+    - Output a confirmation message to the user with the path to the generated file.
+
+"""

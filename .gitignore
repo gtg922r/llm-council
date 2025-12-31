@@ -17,6 +17,7 @@ firebase-debug.log
 
 # Data files
 data/
+temp/
 
 # Frontend
 frontend/node_modules/
