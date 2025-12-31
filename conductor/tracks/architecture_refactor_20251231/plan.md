@@ -35,7 +35,7 @@ This plan follows the 5-phase refactor guide to move the application to a Modula
 - [x] Task: Conductor - User Manual Verification 'Phase 4: Service Layer Unification' (Protocol in workflow.md) a377823
 
 ## Phase 5: Frontend Alignment
-- [ ] Task: Update `frontend/src/api.js` to handle standardized `AssistantMessage` structure
+- [x] Task: Update `frontend/src/api.js` to handle standardized `AssistantMessage` structure b260701
 - [ ] Task: Update `ChatInterface.jsx` and components to display peer rankings from metadata
 - [ ] Task: Refactor frontend state machine to handle explicit Domain Events from SSE
 - [ ] Task: Conductor - User Manual Verification 'Phase 5: Frontend Alignment' (Protocol in workflow.md)
