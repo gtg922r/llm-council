@@ -32,6 +32,8 @@ vi.mock('../components/Sidebar', () => ({
   default: ({
     onNewConversation,
     onSelectConversation,
+    onDeleteConversation,
+    onBulkDelete,
     conversations,
     pendingConversationIds,
   }) => (
@@ -44,11 +46,19 @@ vi.mock('../components/Sidebar', () => ({
           Select Conversation
         </button>
       )}
+      {conversations?.[0] && (
+        <button type="button" onClick={() => onDeleteConversation(conversations[0].id)}>
+          Delete Conversation
+        </button>
+      )}
       {conversations?.[1] && (
         <button type="button" onClick={() => onSelectConversation(conversations[1].id)}>
           Select Conversation 2
         </button>
       )}
+      <button type="button" onClick={onBulkDelete}>
+        Empty Trash
+      </button>
       <div data-testid="pending-count">
         {pendingConversationIds ? pendingConversationIds.size : 0}
       </div>
@@ -69,6 +79,18 @@ vi.mock('../components/ChatInterface', () => ({
   ),
 }));
 
+vi.mock('../components/DeleteConfirmationModal', () => ({
+  default: ({ isOpen, onConfirm, onClose, title }) => (
+    isOpen ? (
+      <div data-testid="delete-modal">
+        {title && <span>{title}</span>}
+        <button onClick={onConfirm}>Confirm Delete</button>
+        <button onClick={onClose}>Cancel</button>
+      </div>
+    ) : null
+  ),
+}));
+
 import App from '../App';
 import { api } from '../api';
 
@@ -85,6 +107,87 @@ describe('App', () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
+  });
+
+  it('opens bulk delete confirmation modal and deletes all archived', async () => {
+    api.listConversations.mockResolvedValueOnce([
+      {
+        id: 'conv-1',
+        created_at: 'now',
+        title: 'Archived 1',
+        is_pinned: false,
+        is_archived: true,
+        message_count: 0,
+        has_unread: false,
+      },
+      {
+        id: 'conv-2',
+        created_at: 'later',
+        title: 'Archived 2',
+        is_pinned: false,
+        is_archived: true,
+        message_count: 0,
+        has_unread: false,
+      },
+    ]);
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Empty Trash')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText('Empty Trash'));
+
+    // Check if modal is open with correct title
+    expect(screen.getByTestId('delete-modal')).toBeInTheDocument();
+    expect(screen.getByText('Delete All Archived')).toBeInTheDocument();
+
+    // Confirm deletion
+    fireEvent.click(screen.getByText('Confirm Delete'));
+
+    await waitFor(() => {
+      expect(api.deleteConversation).toHaveBeenCalledWith('conv-1');
+      expect(api.deleteConversation).toHaveBeenCalledWith('conv-2');
+    });
+
+    // Check if modal is closed
+    expect(screen.queryByTestId('delete-modal')).not.toBeInTheDocument();
+  });
+
+  it('opens delete confirmation modal and deletes conversation', async () => {
+    api.listConversations.mockResolvedValueOnce([
+      {
+        id: 'conv-1',
+        created_at: 'now',
+        title: 'Delete Me',
+        is_pinned: false,
+        is_archived: false,
+        message_count: 0,
+        has_unread: false,
+      },
+    ]);
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Delete Conversation')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText('Delete Conversation'));
+
+    // Check if modal is open
+    expect(screen.getByTestId('delete-modal')).toBeInTheDocument();
+
+    // Confirm deletion
+    fireEvent.click(screen.getByText('Confirm Delete'));
+
+    await waitFor(() => {
+      expect(api.deleteConversation).toHaveBeenCalledWith('conv-1');
+    });
+
+    // Check if modal is closed
+    expect(screen.queryByTestId('delete-modal')).not.toBeInTheDocument();
   });
 
   it('passes file contents to the API when sending messages', async () => {

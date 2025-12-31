@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Sidebar from './components/Sidebar';
 import ChatInterface from './components/ChatInterface';
+import DeleteConfirmationModal from './components/DeleteConfirmationModal';
 import { api } from './api';
 import { ThemeProvider } from './context/ThemeContext';
 import './App.css';
@@ -11,6 +12,11 @@ function App() {
   const [currentConversation, setCurrentConversation] = useState(null);
   const [loadingConversationId, setLoadingConversationId] = useState(null);
   const [pendingConversationIds, setPendingConversationIds] = useState(() => new Set());
+  const [deleteModalConfig, setDeleteModalConfig] = useState({ 
+    isOpen: false, 
+    type: null, // 'single' or 'bulk'
+    id: null 
+  });
   const currentConversationIdRef = useRef(null);
 
   const loadConversations = useCallback(async () => {
@@ -103,31 +109,46 @@ function App() {
     }
   };
 
-  const handleDeleteConversation = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this conversation forever?')) return;
+  const handleDeleteConversation = (id) => {
+    setDeleteModalConfig({
+      isOpen: true,
+      type: 'single',
+      id
+    });
+  };
+
+  const handleConfirmDelete = async () => {
+    const { type, id } = deleteModalConfig;
+    
     try {
-      await api.deleteConversation(id);
-      loadConversations();
-      if (currentConversationId === id) {
-        setCurrentConversationId(null);
-        setCurrentConversation(null);
+      if (type === 'single') {
+        await api.deleteConversation(id);
+        if (currentConversationId === id) {
+          setCurrentConversationId(null);
+          setCurrentConversation(null);
+        }
+      } else if (type === 'bulk') {
+        const archived = conversations.filter(c => c.is_archived);
+        await Promise.all(archived.map(c => api.deleteConversation(c.id)));
       }
+      
+      loadConversations();
     } catch (error) {
-      console.error('Failed to delete conversation:', error);
+      console.error('Deletion failed:', error);
+    } finally {
+      setDeleteModalConfig({ isOpen: false, type: null, id: null });
     }
   };
 
-  const handleBulkDelete = async () => {
+  const handleBulkDelete = () => {
     const archived = conversations.filter(c => c.is_archived);
     if (archived.length === 0) return;
-    if (!window.confirm(`Are you sure you want to delete all ${archived.length} archived conversations?`)) return;
     
-    try {
-      await Promise.all(archived.map(c => api.deleteConversation(c.id)));
-      loadConversations();
-    } catch (error) {
-      console.error('Failed bulk delete:', error);
-    }
+    setDeleteModalConfig({
+      isOpen: true,
+      type: 'bulk',
+      id: null
+    });
   };
 
   const handleDuplicateConversation = async (id) => {
@@ -476,6 +497,15 @@ function App() {
           onHeaderAction={handleHeaderAction}
           onUpdateTitle={handleUpdateTitle}
           isLoading={isLoading}
+        />
+        <DeleteConfirmationModal
+          isOpen={deleteModalConfig.isOpen}
+          onClose={() => setDeleteModalConfig({ ...deleteModalConfig, isOpen: false })}
+          onConfirm={handleConfirmDelete}
+          title={deleteModalConfig.type === 'bulk' ? "Delete All Archived" : undefined}
+          message={deleteModalConfig.type === 'bulk' 
+            ? `Are you sure you want to delete all ${conversations.filter(c => c.is_archived).length} archived conversations?` 
+            : undefined}
         />
       </div>
     </ThemeProvider>

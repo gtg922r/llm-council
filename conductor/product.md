@@ -23,3 +23,4 @@ The LLM Council solves the problem of "single-model bias" for challenging questi
 - **Chairman Follow-up:** Direct dialogue with the Chairman model after synthesis, allowing for clarifications or deeper exploration of the final response without re-running the full council.
 - **File Context Support:** Drag and drop or attach text-based files (.txt, .md, code) to provide grounding context for council queries or Chairman follow-ups.
 - **Conversation Management:** Robust sidebar controls for pinning important chats, archiving old ones, and duplicating conversations. Inline title editing allows for easy organization.
+- **Enhanced Deletion Experience:** A custom, theme-aware confirmation modal replaces native browser prompts for both single and bulk deletions, ensuring a consistent and accessible UI.
