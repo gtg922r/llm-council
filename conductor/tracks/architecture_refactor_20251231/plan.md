@@ -3,7 +3,7 @@
 This plan follows the 5-phase refactor guide to move the application to a Modular Hexagonal architecture, improving persistence, performance, and testability.
 
 ## Phase 0: Preparation
-- [ ] Task: Clean existing data (Delete `data/conversations/` and `data/blobs/`)
+- [x] Task: Clean existing data (Delete `data/conversations/` and `data/blobs/`) 2e15e4e
 - [ ] Task: Initialize new backend test infrastructure (Create `backend/tests/unit`, `backend/tests/integration`)
 
 ## Phase 1: Domain Modeling & Metadata Persistence
