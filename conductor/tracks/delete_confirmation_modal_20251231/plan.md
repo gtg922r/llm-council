@@ -5,7 +5,7 @@ This plan outlines the steps to replace browser-native `window.confirm` calls wi
 ## Phase 1: Foundation - Generic Modal Component
 **Goal:** Create a reusable `Modal` component that handles backdrops, centering, and accessibility (Esc key).
 
-- [~] **Task 1.1: Create `Modal` Component and Styles**
+- [x] **Task 1.1: Create `Modal` Component and Styles** (862c9a8)
     - Write tests in `frontend/src/components/__tests__/Modal.test.jsx` for visibility, backdrop click closing, and `Esc` key closing.
     - Implement `frontend/src/components/Modal.jsx` and `frontend/src/components/Modal.css`.
     - Ensure it uses CSS variables for theming.
