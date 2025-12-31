@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Sidebar from './components/Sidebar';
 import ChatInterface from './components/ChatInterface';
 import { api } from './api';
@@ -10,6 +10,8 @@ function App() {
   const [currentConversationId, setCurrentConversationId] = useState(null);
   const [currentConversation, setCurrentConversation] = useState(null);
   const [loadingConversationId, setLoadingConversationId] = useState(null);
+  const [pendingConversationIds, setPendingConversationIds] = useState(() => new Set());
+  const currentConversationIdRef = useRef(null);
 
   const loadConversations = useCallback(async () => {
     try {
@@ -27,6 +29,7 @@ function App() {
 
   // Load conversation details when selected
   useEffect(() => {
+    currentConversationIdRef.current = currentConversationId;
     if (currentConversationId) {
       let isActive = true;
       api.getConversation(currentConversationId)
@@ -67,9 +70,15 @@ function App() {
     }
   };
 
-  const handleSelectConversation = (id) => {
+  const handleSelectConversation = async (id) => {
     setCurrentConversation(null);
     setCurrentConversationId(id);
+    try {
+      await api.markAsRead(id);
+      loadConversations();
+    } catch (error) {
+      console.error('Failed to mark conversation as read:', error);
+    }
   };
 
   const handleTogglePin = async (id, isPinned) => {
@@ -160,6 +169,17 @@ function App() {
     }
   };
 
+  const refreshConversationUnreadState = useCallback(async (conversationId) => {
+    if (conversationId === currentConversationIdRef.current) {
+      try {
+        await api.markAsRead(conversationId);
+      } catch (error) {
+        console.error('Failed to clear unread status:', error);
+      }
+    }
+    loadConversations();
+  }, [loadConversations]);
+
   const readFileContent = (file) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -173,6 +193,11 @@ function App() {
     if (!currentConversationId) return;
 
     const conversationId = currentConversationId;
+    setPendingConversationIds((prev) => {
+      const next = new Set(prev);
+      next.add(conversationId);
+      return next;
+    });
     setLoadingConversationId(conversationId);
     try {
       // Optimistically add user message to UI (original content + file metadata)
@@ -235,7 +260,12 @@ function App() {
             return { ...prev, messages };
           });
           setLoadingConversationId((prev) => (prev === conversationId ? null : prev));
-          loadConversations();
+          await refreshConversationUnreadState(conversationId);
+          setPendingConversationIds((prev) => {
+            const next = new Set(prev);
+            next.delete(conversationId);
+            return next;
+          });
           return;
         } catch (error) {
           console.error('Follow-up failed:', error);
@@ -385,13 +415,23 @@ function App() {
 
           case 'complete':
             // Stream complete, reload conversations list
-            loadConversations();
+            refreshConversationUnreadState(conversationId);
             setLoadingConversationId((prev) => (prev === conversationId ? null : prev));
+            setPendingConversationIds((prev) => {
+              const next = new Set(prev);
+              next.delete(conversationId);
+              return next;
+            });
             break;
 
           case 'error':
             console.error('Stream error:', event.message);
             setLoadingConversationId((prev) => (prev === conversationId ? null : prev));
+            setPendingConversationIds((prev) => {
+              const next = new Set(prev);
+              next.delete(conversationId);
+              return next;
+            });
             break;
 
           default:
@@ -406,6 +446,11 @@ function App() {
         return { ...prev, messages: prev.messages.slice(0, -2) };
       });
       setLoadingConversationId((prev) => (prev === conversationId ? null : prev));
+      setPendingConversationIds((prev) => {
+        const next = new Set(prev);
+        next.delete(conversationId);
+        return next;
+      });
     }
   };
 
@@ -417,6 +462,7 @@ function App() {
         <Sidebar
           conversations={conversations}
           currentConversationId={currentConversationId}
+          pendingConversationIds={pendingConversationIds}
           onSelectConversation={handleSelectConversation}
           onNewConversation={handleNewConversation}
           onTogglePin={handleTogglePin}

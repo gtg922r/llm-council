@@ -15,6 +15,7 @@ import './Sidebar.css';
 export default function Sidebar({
   conversations,
   currentConversationId,
+  pendingConversationIds,
   onSelectConversation,
   onNewConversation,
   onTogglePin,
@@ -83,8 +84,11 @@ export default function Sidebar({
         {activeConversations.length === 0 ? (
           <div className="no-conversations">No active conversations</div>
         ) : (
-          activeConversations.map((conv) => (
-            <div
+          activeConversations.map((conv) => {
+            const isPending = pendingConversationIds?.has(conv.id);
+            const showUnread = conv.has_unread && conv.id !== currentConversationId && !isPending;
+            return (
+              <div
               key={conv.id}
               className={`conversation-item ${
                 conv.id === currentConversationId ? 'active' : ''
@@ -100,6 +104,11 @@ export default function Sidebar({
                 </div>
               </div>
               <div className="item-actions">
+                {isPending ? (
+                  <span className="conversation-pending-dot" aria-label="Pending conversation" />
+                ) : showUnread ? (
+                  <span className="conversation-unread-dot" aria-label="Unread conversation" />
+                ) : null}
                 <button
                   className="action-btn pin-btn"
                   onClick={(e) => {
@@ -122,7 +131,8 @@ export default function Sidebar({
                 </button>
               </div>
             </div>
-          ))
+            );
+          })
         )}
       </div>
 
@@ -146,8 +156,11 @@ export default function Sidebar({
                   <Trash2 size={12} /> Empty Trash
                 </button>
               </div>
-              {archivedConversations.map((conv) => (
-                <div
+              {archivedConversations.map((conv) => {
+                const isPending = pendingConversationIds?.has(conv.id);
+                const showUnread = conv.has_unread && conv.id !== currentConversationId && !isPending;
+                return (
+                  <div
                   key={conv.id}
                   className={`conversation-item archived-item ${
                     conv.id === currentConversationId ? 'active' : ''
@@ -158,6 +171,11 @@ export default function Sidebar({
                     <div className="conversation-title">{conv.title}</div>
                   </div>
                   <div className="item-actions">
+                    {isPending ? (
+                      <span className="conversation-pending-dot" aria-label="Pending conversation" />
+                    ) : showUnread ? (
+                      <span className="conversation-unread-dot" aria-label="Unread conversation" />
+                    ) : null}
                     <button
                       className="action-btn restore-btn"
                       onClick={(e) => {
@@ -180,7 +198,8 @@ export default function Sidebar({
                     </button>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

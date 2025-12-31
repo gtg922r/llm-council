@@ -1,34 +1,34 @@
 # Implementation Plan: Multi-Conversation UX Improvements
 
-## Phase 1: Backend Persistence & API
+## Phase 1: Backend Persistence & API [checkpoint: 90cf201]
 Introduce the `has_unread` field to the data model and expose it via the API.
 
-- [ ] Task: Backend - Update `storage.py` to include `has_unread` in conversation model and default it to `False`
-- [ ] Task: Backend - Update `main.py` Pydantic models (`ConversationMetadata`, `Conversation`) to include `has_unread`
-- [ ] Task: Backend - Update `add_assistant_message` in `storage.py` to set `has_unread = True`
-- [ ] Task: Backend - Create/Update `PATCH /api/conversations/{id}` logic to allow clearing `has_unread`
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Backend Persistence & API' (Protocol in workflow.md)
+- [x] Task: Backend - Update `storage.py` to include `has_unread` in conversation model and default it to `False` [52836b4]
+- [x] Task: Backend - Update `main.py` Pydantic models (`ConversationMetadata`, `Conversation`) to include `has_unread` [316a955]
+- [x] Task: Backend - Update `add_assistant_message` in `storage.py` to set `has_unread = True` [500e524]
+- [x] Task: Backend - Create/Update `PATCH /api/conversations/{id}` logic to allow clearing `has_unread` [c6d7b4b]
+- [x] Task: Conductor - User Manual Verification 'Phase 1: Backend Persistence & API' (Protocol in workflow.md) [90cf201]
 
-## Phase 2: Frontend Unread Indicator (Blue Dot)
+## Phase 2: Frontend Unread Indicator (Blue Dot) [checkpoint: d93fd12]
 Implement the visual "unread" indicator in the sidebar and the logic to clear it.
 
-- [ ] Task: Frontend - Update `api.js` to handle the new `has_unread` field and provide a `markAsRead` function
-- [ ] Task: Frontend - Modify `Sidebar.jsx` to display a blue dot if `conv.has_unread` is true
-- [ ] Task: Frontend - Add logic in `App.jsx` to call `markAsRead` when a conversation is selected
-- [ ] Task: Frontend - Add logic in `App.jsx` to automatically clear `has_unread` if a message arrives while the conversation is already active
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Frontend Unread Indicator (Blue Dot)' (Protocol in workflow.md)
+- [x] Task: Frontend - Update `api.js` to handle the new `has_unread` field and provide a `markAsRead` function [03adf39]
+- [x] Task: Frontend - Modify `Sidebar.jsx` to display a blue dot if `conv.has_unread` is true [2f0464a]
+- [x] Task: Frontend - Add logic in `App.jsx` to call `markAsRead` when a conversation is selected [bf6b73e]
+- [x] Task: Frontend - Add logic in `App.jsx` to automatically clear `has_unread` if a message arrives while the conversation is already active [a8f9e94]
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Frontend Unread Indicator (Blue Dot)' (Protocol in workflow.md) [d93fd12]
 
-## Phase 3: Frontend Pending Indicator (Pulsing Grey Dot)
+## Phase 3: Frontend Pending Indicator (Pulsing Grey Dot) [checkpoint: be35220]
 Implement the visual "pending" indicator to track background processing.
 
-- [ ] Task: Frontend - Add `pendingConversations` state (Set/Map) to `App.jsx`
-- [ ] Task: Frontend - Update `handleSendMessage` to add/remove conversation IDs from `pendingConversations`
-- [ ] Task: Frontend - Update `Sidebar.jsx` to display a pulsing grey dot if a conversation ID is in `pendingConversations`
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: Frontend Pending Indicator (Pulsing Grey Dot)' (Protocol in workflow.md)
+- [x] Task: Frontend - Add `pendingConversations` state (Set/Map) to `App.jsx` [889254c]
+- [x] Task: Frontend - Update `handleSendMessage` to add/remove conversation IDs from `pendingConversations` [889254c]
+- [x] Task: Frontend - Update `Sidebar.jsx` to display a pulsing grey dot if a conversation ID is in `pendingConversations` [9e086b9]
+- [x] Task: Conductor - User Manual Verification 'Phase 3: Frontend Pending Indicator (Pulsing Grey Dot)' (Protocol in workflow.md) [be35220]
 
-## Phase 4: CSS Styling & Polish
+## Phase 4: CSS Styling & Polish [checkpoint: aaa92d9]
 Finalize the animations and visual styles for both indicators.
 
-- [ ] Task: Frontend - Define CSS for the indicators in `Sidebar.css` using `var(--color-muted)` and `var(--color-accent-strong)`
-- [ ] Task: Frontend - Ensure responsive design and mobile-friendly touch targets for the indicators
-- [ ] Task: Conductor - User Manual Verification 'Phase 4: CSS Styling & Polish' (Protocol in workflow.md)
+- [x] Task: Frontend - Define CSS for the blue dot and the pulsing grey dot in `Sidebar.css` [29810f4]
+- [x] Task: Frontend - Ensure responsive design and mobile-friendly touch targets for the indicators [29810f4]
+- [x] Task: Conductor - User Manual Verification 'Phase 4: CSS Styling & Polish' (Protocol in workflow.md) [aaa92d9]

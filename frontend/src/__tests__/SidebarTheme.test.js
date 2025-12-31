@@ -23,4 +23,20 @@ describe('sidebar theme accents', () => {
     expect(css).toContain('justify-content: space-between');
     expect(css).toContain('width: 100%');
   });
+
+  it('styles unread and pending indicators with theme colors and animation', () => {
+    expect(css).toContain('.conversation-unread-dot');
+    expect(css).toContain('background: var(--color-accent');
+    expect(css).toContain('.conversation-pending-dot');
+    expect(css).toContain('background: var(--color-muted');
+    expect(css).toContain('animation: pendingPulse');
+  });
+
+  it('adds mobile-friendly sizing for indicators and actions', () => {
+    expect(css).toContain('@media (max-width: 720px)');
+    expect(css).toContain('.conversation-unread-dot');
+    expect(css).toContain('width: 12px');
+    expect(css).toContain('.action-btn');
+    expect(css).toContain('padding: 6px');
+  });
 });

@@ -18,7 +18,7 @@ def setup_test_data():
         shutil.rmtree(DATA_DIR)
 
 def test_list_conversations_includes_flags():
-    """Test GET /api/conversations includes is_pinned and is_archived."""
+    """Test GET /api/conversations includes is_pinned, is_archived, has_unread."""
     # Create a conversation
     client.post("/api/conversations", json={})
     
@@ -28,6 +28,16 @@ def test_list_conversations_includes_flags():
     assert len(conversations) == 1
     assert "is_pinned" in conversations[0]
     assert "is_archived" in conversations[0]
+    assert "has_unread" in conversations[0]
+
+def test_get_conversation_includes_has_unread():
+    """Test GET /api/conversations/{id} includes has_unread."""
+    create_resp = client.post("/api/conversations", json={})
+    conv_id = create_resp.json()["id"]
+
+    response = client.get(f"/api/conversations/{conv_id}")
+    assert response.status_code == 200
+    assert "has_unread" in response.json()
 
 def test_update_conversation_flags():
     """Test PATCH /api/conversations/{id} updates flags."""
@@ -44,6 +54,23 @@ def test_update_conversation_flags():
     patch_resp = client.patch(f"/api/conversations/{conv_id}", json={"is_archived": True})
     assert patch_resp.status_code == 200
     assert patch_resp.json()["is_archived"] is True
+
+def test_patch_clears_has_unread():
+    """Test PATCH /api/conversations/{id} clears has_unread."""
+    create_resp = client.post("/api/conversations", json={})
+    conv_id = create_resp.json()["id"]
+
+    from backend.storage import add_assistant_message
+    add_assistant_message(
+        conv_id,
+        stage1=[{"model": "test", "content": "one"}],
+        stage2=[{"model": "test", "content": "two"}],
+        stage3={"model": "test", "content": "three"},
+    )
+
+    patch_resp = client.patch(f"/api/conversations/{conv_id}", json={"has_unread": False})
+    assert patch_resp.status_code == 200
+    assert patch_resp.json()["has_unread"] is False
 
 def test_duplicate_conversation_api():
     """Test POST /api/conversations/{id}/duplicate."""
