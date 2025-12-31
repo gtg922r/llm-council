@@ -28,11 +28,11 @@ This plan follows the 5-phase refactor guide to move the application to a Modula
 - [x] Task: Conductor - User Manual Verification 'Phase 3: Infrastructure Abstraction (The Repository Pattern)' (Protocol in workflow.md)
 
 ## Phase 4: Service Layer Unification
-- [ ] Task: Implement `backend/application/council_service.py` (`CouncilOrchestrator`)
-- [ ] Task: Implement Domain Events (e.g., `StageStarted`, `ModelThinking`) as Pydantic models
-- [ ] Task: Refactor service to be an Async Generator yielding Domain Events
-- [ ] Task: Update FastAPI routes to consume `CouncilService` events for SSE and non-streaming responses
-- [ ] Task: Conductor - User Manual Verification 'Phase 4: Service Layer Unification' (Protocol in workflow.md)
+- [x] Task: Implement `backend/application/council_service.py` (`CouncilOrchestrator`)
+- [x] Task: Implement Domain Events (e.g., `StageStarted`, `ModelThinking`) as Pydantic models
+- [x] Task: Refactor service to be an Async Generator yielding Domain Events
+- [x] Task: Update FastAPI routes to consume `CouncilService` events for SSE and non-streaming responses
+- [x] Task: Conductor - User Manual Verification 'Phase 4: Service Layer Unification' (Protocol in workflow.md)
 
 ## Phase 5: Frontend Alignment
 - [ ] Task: Update `frontend/src/api.js` to handle standardized `AssistantMessage` structure
