@@ -91,18 +91,30 @@ class CouncilMetadata(BaseModel):
 class FileAttachment(BaseModel):
     """A file attached to a user message.
     
-    Note: In Phase 2, this will be updated to use file_reference_id instead of
-    storing content inline, to support the blob-store split.
+    Supports both inline content (for backward compatibility) and blob references
+    (for the blob-store split that keeps conversation JSON small).
     """
     
     name: str
     """The filename."""
     
-    content: str
-    """The file content (text only)."""
+    content: Optional[str] = None
+    """The file content (text only). Used for inline storage or when resolved from blob."""
     
     size: Optional[int] = None
     """The file size in bytes."""
+    
+    blob_reference_id: Optional[str] = None
+    """Reference ID for content stored in the blob store.
+    
+    If set, the actual content is stored in the blob store and should be
+    resolved via BlobStore.get_text(blob_reference_id) when needed.
+    """
+    
+    @property
+    def is_blob_reference(self) -> bool:
+        """Check if this attachment uses blob storage."""
+        return self.blob_reference_id is not None
 
 
 # =============================================================================

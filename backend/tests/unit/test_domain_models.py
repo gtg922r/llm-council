@@ -101,6 +101,35 @@ class TestDomainModels:
         assert message.files[0].name == "main.py"
         assert message.files[0].content == "print('hello')"
 
+    def test_file_attachment_with_blob_reference(self):
+        """Test FileAttachment with blob reference instead of inline content."""
+        from backend.domain.models import FileAttachment
+        
+        # Create attachment with blob reference
+        attachment = FileAttachment(
+            name="large_file.py",
+            size=100000,
+            blob_reference_id="abc123-uuid"
+        )
+        
+        assert attachment.name == "large_file.py"
+        assert attachment.content is None
+        assert attachment.blob_reference_id == "abc123-uuid"
+        assert attachment.is_blob_reference is True
+
+    def test_file_attachment_inline_is_not_blob_reference(self):
+        """Test that inline FileAttachment is not marked as blob reference."""
+        from backend.domain.models import FileAttachment
+        
+        attachment = FileAttachment(
+            name="small_file.py",
+            content="print('small')",
+            size=14
+        )
+        
+        assert attachment.is_blob_reference is False
+        assert attachment.content == "print('small')"
+
     def test_assistant_message_creation_with_metadata(self):
         """Test that AssistantMessage stores all stages and metadata."""
         from backend.domain.models import (
