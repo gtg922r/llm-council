@@ -11,7 +11,7 @@ This plan outlines the steps to replace browser-native `window.confirm` calls wi
 ## Phase 2: Specialized Implementation - Delete Confirmation
 **Goal:** Build the specific `DeleteConfirmationModal` that uses the generic `Modal`.
 
-- [ ] **Task 2.1: Create `DeleteConfirmationModal` Component and Styles**
+- [x] **Task 2.1: Create `DeleteConfirmationModal` Component and Styles** (c05ced5)
     - Write tests in `frontend/src/components/__tests__/DeleteConfirmationModal.test.jsx` verifying the specific warning text and button behaviors.
     - Implement `frontend/src/components/DeleteConfirmationModal.jsx` and `frontend/src/components/DeleteConfirmationModal.css`.
     - Style the "Delete" button with `var(--color-danger)`.
