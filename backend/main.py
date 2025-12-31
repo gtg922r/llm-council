@@ -1,35 +1,51 @@
-"""FastAPI backend for LLM Council."""
+"""FastAPI backend for LLM Council.
 
-from fastapi import FastAPI, HTTPException
+This module serves as the interface layer, handling HTTP requests/responses
+and delegating to the application layer for business logic.
+"""
+
+from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
+from datetime import datetime, timezone
 import uuid
 import json
-import asyncio
 
-from . import storage
 from . import config
-from .config import COUNCIL_MODELS
-from .council import (
-    run_full_council,
-    generate_conversation_title,
-    stage3_synthesize_final,
-    calculate_aggregate_rankings,
-    chairman_followup,
-    parse_ranking_from_text
+from .ports import ConversationRepository, BlobStorePort, LLMProvider
+from .infrastructure import (
+    JsonConversationRepository,
+    BlobStore,
+    OpenRouterAdapter,
 )
-from .openrouter import query_model
+from .application import CouncilService
+from .domain.models import (
+    Conversation,
+    ConversationMetadata,
+    UserMessage,
+    AssistantMessage,
+    Stage1Result,
+    Stage2Result,
+    Stage3Result,
+    CouncilMetadata,
+    AggregateRanking,
+    FileReference,
+    Stage1Complete,
+    Stage2Complete,
+    Stage3Complete,
+    TitleGenerated,
+    CouncilComplete,
+    CouncilError,
+)
 
 app = FastAPI(title="LLM Council API")
 
 # Configure CORS origins based on environment
 if config.IS_CODESPACE or config.DEBUG_MODE:
-    # Relaxed CORS for Codespaces/Development
     allow_origins = ["*"]
 else:
-    # Strict CORS for production
     allow_origins = ["http://localhost:5173", "http://localhost:3000"]
 
 app.add_middleware(
@@ -41,53 +57,51 @@ app.add_middleware(
 )
 
 
+# Dependency Injection - Infrastructure instances
+def get_repository() -> ConversationRepository:
+    """Provide the conversation repository."""
+    return JsonConversationRepository()
+
+
+def get_blob_store() -> BlobStorePort:
+    """Provide the blob store."""
+    return BlobStore()
+
+
+def get_llm_provider() -> LLMProvider:
+    """Provide the LLM provider."""
+    return OpenRouterAdapter()
+
+
+def get_council_service(
+    llm: LLMProvider = Depends(get_llm_provider),
+    blob_store: BlobStorePort = Depends(get_blob_store)
+) -> CouncilService:
+    """Provide the council service."""
+    return CouncilService(llm_provider=llm, blob_store=blob_store)
+
+
+# Request/Response Models
 class CreateConversationRequest(BaseModel):
     """Request to create a new conversation."""
     pass
 
 
-class FileContext(BaseModel):
-    """Structured file context sent alongside a message."""
+class FileContextRequest(BaseModel):
+    """File context sent alongside a message (before blob storage)."""
     name: str
     content: str
-    size: int | None = None
+    size: Optional[int] = None
 
 
 class SendMessageRequest(BaseModel):
     """Request to send a message in a conversation."""
     content: str
-    files: List[FileContext] = Field(default_factory=list)
-    target_model: str | None = None # e.g., "chairman" for follow-up
+    files: List[FileContextRequest] = Field(default_factory=list)
+    target_model: Optional[str] = None  # e.g., "chairman" for follow-up
 
 
-def build_prompt_content(
-    content: str,
-    files: List[FileContext] | List[Dict[str, Any]] | None
-) -> str:
-    """Construct the final prompt with user content and file blocks."""
-    if not files:
-        return content
-
-    sections = [content]
-    for file_context in files:
-        if isinstance(file_context, dict):
-            name = file_context.get("name")
-            file_content = file_context.get("content")
-        else:
-            name = file_context.name
-            file_content = file_context.content
-        if name is None or file_content is None:
-            raise ValueError("File context must include name and content.")
-        sections.append(
-            f"--- FILE: {name} ---\n"
-            f"{file_content}\n"
-            f"--- END FILE: {name} ---"
-        )
-
-    return "\n\n".join(sections)
-
-
-class ConversationMetadata(BaseModel):
+class ConversationMetadataResponse(BaseModel):
     """Conversation metadata for list view."""
     id: str
     created_at: str
@@ -98,8 +112,8 @@ class ConversationMetadata(BaseModel):
     message_count: int
 
 
-class Conversation(BaseModel):
-    """Full conversation with all messages."""
+class ConversationResponse(BaseModel):
+    """Full conversation response."""
     id: str
     created_at: str
     title: str
@@ -111,10 +125,50 @@ class Conversation(BaseModel):
 
 class UpdateConversationRequest(BaseModel):
     """Request to update conversation flags."""
-    title: str | None = None
-    is_pinned: bool | None = None
-    is_archived: bool | None = None
-    has_unread: bool | None = None
+    title: Optional[str] = None
+    is_pinned: Optional[bool] = None
+    is_archived: Optional[bool] = None
+    has_unread: Optional[bool] = None
+
+
+def _conversation_to_response(conv: Conversation) -> ConversationResponse:
+    """Convert a domain Conversation to API response format."""
+    messages = []
+    for msg in conv.messages:
+        if isinstance(msg, UserMessage):
+            msg_dict = {
+                "role": "user",
+                "content": msg.content,
+            }
+            if msg.files:
+                msg_dict["files"] = [
+                    {"name": f.name, "size": f.size}
+                    for f in msg.files
+                ]
+            messages.append(msg_dict)
+        elif isinstance(msg, AssistantMessage):
+            messages.append({
+                "role": "assistant",
+                "stage1": [r.model_dump() for r in msg.stage1],
+                "stage2": [r.model_dump() for r in msg.stage2],
+                "stage3": msg.stage3.model_dump() if msg.stage3 else None,
+                "metadata": {
+                    "label_to_model": msg.metadata.label_to_model,
+                    "aggregate_rankings": [
+                        r.model_dump() for r in msg.metadata.aggregate_rankings
+                    ]
+                }
+            })
+    
+    return ConversationResponse(
+        id=conv.id,
+        created_at=conv.created_at.isoformat(),
+        title=conv.title,
+        is_pinned=conv.is_pinned,
+        is_archived=conv.is_archived,
+        has_unread=conv.has_unread,
+        messages=messages
+    )
 
 
 @app.get("/")
@@ -123,348 +177,317 @@ async def root():
     return {"status": "ok", "service": "LLM Council API"}
 
 
-@app.get("/api/conversations", response_model=List[ConversationMetadata])
-async def list_conversations():
+@app.get("/api/conversations", response_model=List[ConversationMetadataResponse])
+async def list_conversations(repo: ConversationRepository = Depends(get_repository)):
     """List all conversations (metadata only)."""
-    return storage.list_conversations()
+    metadata_list = repo.list()
+    return [
+        ConversationMetadataResponse(
+            id=m.id,
+            created_at=m.created_at.isoformat(),
+            title=m.title,
+            is_pinned=m.is_pinned,
+            is_archived=m.is_archived,
+            has_unread=m.has_unread,
+            message_count=m.message_count
+        )
+        for m in metadata_list
+    ]
 
 
-@app.post("/api/conversations", response_model=Conversation)
-async def create_conversation(request: CreateConversationRequest):
+@app.post("/api/conversations", response_model=ConversationResponse)
+async def create_conversation(
+    request: CreateConversationRequest,
+    repo: ConversationRepository = Depends(get_repository)
+):
     """Create a new conversation."""
-    conversation_id = str(uuid.uuid4())
-    conversation = storage.create_conversation(conversation_id)
-    return conversation
+    conversation = Conversation(
+        id=str(uuid.uuid4()),
+        created_at=datetime.now(timezone.utc),
+        title="New Conversation",
+        messages=[]
+    )
+    repo.save(conversation)
+    return _conversation_to_response(conversation)
 
 
-@app.get("/api/conversations/{conversation_id}", response_model=Conversation)
-async def get_conversation(conversation_id: str):
+@app.get("/api/conversations/{conversation_id}", response_model=ConversationResponse)
+async def get_conversation(
+    conversation_id: str,
+    repo: ConversationRepository = Depends(get_repository)
+):
     """Get a specific conversation with all its messages."""
-    conversation = storage.get_conversation(conversation_id)
+    conversation = repo.get(conversation_id)
     if conversation is None:
         raise HTTPException(status_code=404, detail="Conversation not found")
-    return conversation
+    return _conversation_to_response(conversation)
 
 
-@app.patch("/api/conversations/{conversation_id}", response_model=Conversation)
-async def update_conversation(conversation_id: str, request: UpdateConversationRequest):
+@app.patch("/api/conversations/{conversation_id}", response_model=ConversationResponse)
+async def update_conversation(
+    conversation_id: str,
+    request: UpdateConversationRequest,
+    repo: ConversationRepository = Depends(get_repository)
+):
     """Update conversation metadata (title, pinned, archived)."""
-    conversation = storage.get_conversation(conversation_id)
+    conversation = repo.get(conversation_id)
     if conversation is None:
         raise HTTPException(status_code=404, detail="Conversation not found")
     
     if request.title is not None:
-        conversation["title"] = request.title
+        conversation.title = request.title
     if request.is_pinned is not None:
-        conversation["is_pinned"] = request.is_pinned
+        conversation.is_pinned = request.is_pinned
     if request.is_archived is not None:
-        conversation["is_archived"] = request.is_archived
+        conversation.is_archived = request.is_archived
     if request.has_unread is not None:
-        conversation["has_unread"] = request.has_unread
-        
-    storage.save_conversation(conversation)
-    return conversation
+        conversation.has_unread = request.has_unread
+    
+    repo.save(conversation)
+    return _conversation_to_response(conversation)
 
 
 @app.delete("/api/conversations/{conversation_id}")
-async def delete_conversation(conversation_id: str):
+async def delete_conversation(
+    conversation_id: str,
+    repo: ConversationRepository = Depends(get_repository)
+):
     """Permanently delete a conversation."""
-    storage.delete_conversation(conversation_id)
+    repo.delete(conversation_id)
     return {"status": "success"}
 
 
-@app.post("/api/conversations/{conversation_id}/duplicate", response_model=Conversation)
-async def duplicate_conversation(conversation_id: str):
+@app.post("/api/conversations/{conversation_id}/duplicate", response_model=ConversationResponse)
+async def duplicate_conversation(
+    conversation_id: str,
+    repo: ConversationRepository = Depends(get_repository)
+):
     """Duplicate a conversation."""
-    new_id = str(uuid.uuid4())
-    try:
-        new_conv = storage.duplicate_conversation(conversation_id, new_id)
-        return new_conv
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+    original = repo.get(conversation_id)
+    if original is None:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    
+    new_conversation = Conversation(
+        id=str(uuid.uuid4()),
+        created_at=datetime.now(timezone.utc),
+        title=f"{original.title} (Copy)",
+        is_pinned=False,
+        is_archived=False,
+        has_unread=False,
+        messages=original.messages.copy()
+    )
+    repo.save(new_conversation)
+    return _conversation_to_response(new_conversation)
 
 
 @app.post("/api/conversations/{conversation_id}/message")
-async def send_message(conversation_id: str, request: SendMessageRequest):
-    """
-    Send a message and run the 3-stage council process.
-    Returns the complete response with all stages.
-    """
-    # Check if conversation exists
-    conversation = storage.get_conversation(conversation_id)
+async def send_message(
+    conversation_id: str,
+    request: SendMessageRequest,
+    repo: ConversationRepository = Depends(get_repository),
+    blob_store: BlobStorePort = Depends(get_blob_store),
+    council_service: CouncilService = Depends(get_council_service)
+):
+    """Send a message and run the 3-stage council process."""
+    conversation = repo.get(conversation_id)
     if conversation is None:
         raise HTTPException(status_code=404, detail="Conversation not found")
-
-    # Check if this is the first message
-    is_first_message = len(conversation["messages"]) == 0
-
+    
+    is_first_message = len(conversation.messages) == 0
+    
+    # Store files in blob store and create references
+    file_refs = []
+    for file_ctx in request.files:
+        blob_id = blob_store.save_text(file_ctx.content)
+        file_refs.append(FileReference(
+            name=file_ctx.name,
+            blob_id=blob_id,
+            size=file_ctx.size
+        ))
+    
     # Add user message
-    files_payload = [file.model_dump() for file in request.files] if request.files else None
-    storage.add_user_message(conversation_id, request.content, files=files_payload)
-    prompt_content = build_prompt_content(request.content, request.files)
-
-    # If this is the first message, generate a title
-    if is_first_message:
-        title = await generate_conversation_title(request.content)
-        storage.update_conversation_title(conversation_id, title)
-
-    # Check for Follow-up (Target: Chairman)
+    user_msg = UserMessage(content=request.content, files=file_refs)
+    conversation.messages.append(user_msg)
+    
+    # Handle Follow-up (Target: Chairman)
     if request.target_model == "chairman":
-        # We need to find the previous context.
-        # Logic: Look for the last assistant message that has Stage 1/2/3 results.
-        # Iterate backwards through messages
         last_assistant_msg = None
-        for msg in reversed(conversation["messages"]):
-            if msg["role"] == "assistant" and "stage3" in msg:
+        for msg in reversed(conversation.messages):
+            if isinstance(msg, AssistantMessage) and msg.stage3:
                 last_assistant_msg = msg
                 break
         
         if last_assistant_msg:
-            # We found context
-            # Call chairman_followup
-            # Note: We need the original query too. Ideally, it's the user message immediately preceding the assistant message.
-            # But finding that might be tricky if there are multiple user messages.
-            # Let's assume the user message *before* the last assistant message is the original query.
-            # Or we can just pass "Previous Context" as the query if strictly following the function signature?
-            # The function expects 'original_query'.
-            # Let's try to find it.
-            
-            # Simplified approach: Use the "stage3" response as the base.
-            # The 'original_query' is less critical if we have the full stage1/2 text which includes the query usually?
-            # Actually, `chairman_followup` uses `original_query` in the prompt.
-            # We can try to extract it from the message history if we really want to be precise, 
-            # but for now, let's look for the user message before the last_assistant_msg.
-            
-            # This is a bit complex to find efficiently in a simple list without IDs/links.
-            # We'll use a placeholder or try to find it.
-            original_query = "Unknown (Context from previous turn)"
-            # A better way might be to look at `last_assistant_msg` index - 1
+            # Find original query
+            original_query = "Unknown"
             try:
-                idx = conversation["messages"].index(last_assistant_msg)
-                if idx > 0 and conversation["messages"][idx-1]["role"] == "user":
-                    original_query = conversation["messages"][idx-1]["content"]
+                idx = conversation.messages.index(last_assistant_msg)
+                if idx > 0:
+                    prev_msg = conversation.messages[idx - 1]
+                    if isinstance(prev_msg, UserMessage):
+                        original_query = prev_msg.content
             except ValueError:
                 pass
-
-            stage3_result = await chairman_followup(
+            
+            stage3_result = await council_service.run_followup(
                 original_query=original_query,
-                stage1_results=last_assistant_msg.get("stage1", []),
-                stage2_results=last_assistant_msg.get("stage2", []),
-                stage3_response=last_assistant_msg.get("stage3", {}).get("response", ""),
-                followup_query=prompt_content
+                stage1_results=last_assistant_msg.stage1,
+                stage2_results=last_assistant_msg.stage2,
+                stage3_response=last_assistant_msg.stage3.response if last_assistant_msg.stage3 else "",
+                followup_query=request.content
             )
-
-            # Store result
-            # For a follow-up, Stage 1 and Stage 2 are empty/skipped.
-            storage.add_assistant_message(
-                conversation_id,
+            
+            # Create assistant message for follow-up
+            assistant_msg = AssistantMessage(
                 stage1=[],
                 stage2=[],
-                stage3=stage3_result
+                stage3=stage3_result,
+                metadata=CouncilMetadata()
             )
-
+            conversation.messages.append(assistant_msg)
+            conversation.has_unread = True
+            repo.save(conversation)
+            
             return {
                 "stage1": [],
                 "stage2": [],
-                "stage3": stage3_result,
-                "metadata": {}
+                "stage3": stage3_result.model_dump(),
+                "metadata": {"label_to_model": {}, "aggregate_rankings": []}
             }
-        else:
-            # Fallback if no context found? Just run full council?
-            # Or raise error?
-            # Let's run full council as fallback but maybe log it?
-            pass
-
-    # Run the 3-stage council process (Default)
-    stage1_results, stage2_results, stage3_result, metadata = await run_full_council(
-        prompt_content
+    
+    # Run full council process (non-streaming)
+    stage1_results = []
+    stage2_results = []
+    stage3_result = None
+    metadata = CouncilMetadata()
+    title = None
+    
+    async for event in council_service.run_council(
+        prompt=request.content,
+        generate_title=is_first_message,
+        files=file_refs
+    ):
+        if isinstance(event, Stage1Complete):
+            stage1_results = event.data
+        elif isinstance(event, Stage2Complete):
+            stage2_results = event.data
+            metadata = event.metadata
+        elif isinstance(event, Stage3Complete):
+            stage3_result = event.data
+        elif isinstance(event, TitleGenerated):
+            title = event.title
+        elif isinstance(event, CouncilError):
+            raise HTTPException(status_code=500, detail=event.message)
+    
+    # Update title if generated
+    if title:
+        conversation.title = title
+    
+    # Add assistant message
+    assistant_msg = AssistantMessage(
+        stage1=stage1_results,
+        stage2=stage2_results,
+        stage3=stage3_result,
+        metadata=metadata
     )
-
-    # Add assistant message with all stages
-    storage.add_assistant_message(
-        conversation_id,
-        stage1_results,
-        stage2_results,
-        stage3_result
-    )
-
-    # Return the complete response with metadata
+    conversation.messages.append(assistant_msg)
+    conversation.has_unread = True
+    repo.save(conversation)
+    
     return {
-        "stage1": stage1_results,
-        "stage2": stage2_results,
-        "stage3": stage3_result,
-        "metadata": metadata
+        "stage1": [r.model_dump() for r in stage1_results],
+        "stage2": [r.model_dump() for r in stage2_results],
+        "stage3": stage3_result.model_dump() if stage3_result else None,
+        "metadata": {
+            "label_to_model": metadata.label_to_model,
+            "aggregate_rankings": [r.model_dump() for r in metadata.aggregate_rankings]
+        }
     }
 
 
 @app.post("/api/conversations/{conversation_id}/message/stream")
-async def send_message_stream(conversation_id: str, request: SendMessageRequest):
-    """
-    Send a message and stream the 3-stage council process.
-    Returns Server-Sent Events as each stage completes.
-    """
-    # Check if conversation exists
-    conversation = storage.get_conversation(conversation_id)
+async def send_message_stream(
+    conversation_id: str,
+    request: SendMessageRequest,
+    repo: ConversationRepository = Depends(get_repository),
+    blob_store: BlobStorePort = Depends(get_blob_store),
+    council_service: CouncilService = Depends(get_council_service)
+):
+    """Send a message and stream the 3-stage council process via SSE."""
+    conversation = repo.get(conversation_id)
     if conversation is None:
         raise HTTPException(status_code=404, detail="Conversation not found")
-
-    # Check if this is the first message
-    is_first_message = len(conversation["messages"]) == 0
-
+    
+    is_first_message = len(conversation.messages) == 0
+    
     async def event_generator():
         try:
-            async def query_with_model(model, messages):
-                try:
-                    return model, await query_model(model, messages)
-                except Exception as e:
-                    print(f"Exception raised while querying model {model}: {e}")
-                    return model, None
-
+            # Store files in blob store
+            file_refs = []
+            for file_ctx in request.files:
+                blob_id = blob_store.save_text(file_ctx.content)
+                file_refs.append(FileReference(
+                    name=file_ctx.name,
+                    blob_id=blob_id,
+                    size=file_ctx.size
+                ))
+            
             # Add user message
-            files_payload = [file.model_dump() for file in request.files] if request.files else None
-            storage.add_user_message(conversation_id, request.content, files=files_payload)
-            prompt_content = build_prompt_content(request.content, request.files)
-
-            # Start title generation in parallel (don't await yet)
-            title_task = None
-            if is_first_message:
-                title_task = asyncio.create_task(generate_conversation_title(request.content))
-
-            # Stage 1: Collect responses
-            yield f"data: {json.dumps({'type': 'stage1_start', 'total': len(COUNCIL_MODELS)})}\n\n"
-            stage1_messages = [{"role": "user", "content": prompt_content}]
-            stage1_tasks = [
-                asyncio.create_task(query_with_model(model, stage1_messages))
-                for model in COUNCIL_MODELS
-            ]
-            stage1_responses = {}
-            stage1_completed = 0
-            for task in asyncio.as_completed(stage1_tasks):
-                model, response = await task
-                stage1_responses[model] = response
-                stage1_completed += 1
-                yield f"data: {json.dumps({'type': 'stage1_progress', 'completed': stage1_completed, 'total': len(COUNCIL_MODELS)})}\n\n"
-
+            user_msg = UserMessage(content=request.content, files=file_refs)
+            conversation.messages.append(user_msg)
+            
+            # Track results for saving
             stage1_results = []
-            for model in COUNCIL_MODELS:
-                response = stage1_responses.get(model)
-                if response is not None:
-                    stage1_results.append({
-                        "model": model,
-                        "response": response.get('content', ''),
-                        "status": "success"
-                    })
-                else:
-                    stage1_results.append({
-                        "model": model,
-                        "response": "Error: Failed to get response from this model.",
-                        "status": "error"
-                    })
-            yield f"data: {json.dumps({'type': 'stage1_complete', 'data': stage1_results})}\n\n"
-
-            # Stage 2: Collect rankings
-            yield f"data: {json.dumps({'type': 'stage2_start', 'total': len(COUNCIL_MODELS)})}\n\n"
-            successful_results = [r for r in stage1_results if r.get('status') == "success"]
-            labels = [chr(65 + i) for i in range(len(successful_results))]
-            label_to_model = {
-                f"Response {label}": result['model']
-                for label, result in zip(labels, successful_results)
-            }
-            responses_text = "\n\n".join([
-                f"Response {label}:\n{result['response']}"
-                for label, result in zip(labels, successful_results)
-            ])
-            ranking_prompt = f"""You are evaluating different responses to the following question:
-
-Question: {prompt_content}
-
-Here are the responses from different models (anonymized):
-
-{responses_text}
-
-Your task:
-1. First, evaluate each response individually. For each response, explain what it does well and what it does poorly.
-2. Then, at the very end of your response, provide a final ranking.
-
-IMPORTANT: Your final ranking MUST be formatted EXACTLY as follows:
-- Start with the line "FINAL RANKING:" (all caps, with colon)
-- Then list the responses from best to worst as a numbered list
-- Each line should be: number, period, space, then ONLY the response label (e.g., "1. Response A")
-- Do not add any other text or explanations in the ranking section
-
-Example of the correct format for your ENTIRE response:
-
-Response A provides good detail on X but misses Y...
-Response B is accurate but lacks depth on Z...
-Response C offers the most comprehensive answer...
-
-FINAL RANKING:
-1. Response C
-2. Response A
-3. Response B
-
-Now provide your evaluation and ranking:"""
-            stage2_messages = [{"role": "user", "content": ranking_prompt}]
-            stage2_tasks = [
-                asyncio.create_task(query_with_model(model, stage2_messages))
-                for model in COUNCIL_MODELS
-            ]
-            stage2_responses = {}
-            stage2_completed = 0
-            for task in asyncio.as_completed(stage2_tasks):
-                model, response = await task
-                stage2_responses[model] = response
-                stage2_completed += 1
-                yield f"data: {json.dumps({'type': 'stage2_progress', 'completed': stage2_completed, 'total': len(COUNCIL_MODELS)})}\n\n"
-
             stage2_results = []
-            for model in COUNCIL_MODELS:
-                response = stage2_responses.get(model)
-                if response is not None:
-                    full_text = response.get('content', '')
-                    parsed = parse_ranking_from_text(full_text)
-                    stage2_results.append({
-                        "model": model,
-                        "ranking": full_text,
-                        "parsed_ranking": parsed,
-                        "status": "success"
-                    })
-                else:
-                    stage2_results.append({
-                        "model": model,
-                        "ranking": "Error: Failed to get ranking from this model.",
-                        "parsed_ranking": [],
-                        "status": "error"
-                    })
-            aggregate_rankings = calculate_aggregate_rankings(stage2_results, label_to_model)
-            yield f"data: {json.dumps({'type': 'stage2_complete', 'data': stage2_results, 'metadata': {'label_to_model': label_to_model, 'aggregate_rankings': aggregate_rankings}})}\n\n"
-
-            # Stage 3: Synthesize final answer
-            yield f"data: {json.dumps({'type': 'stage3_start'})}\n\n"
-            stage3_result = await stage3_synthesize_final(prompt_content, stage1_results, stage2_results)
-            yield f"data: {json.dumps({'type': 'stage3_complete', 'data': stage3_result})}\n\n"
-
-            # Wait for title generation if it was started
-            if title_task:
-                title = await title_task
-                storage.update_conversation_title(conversation_id, title)
-                yield f"data: {json.dumps({'type': 'title_complete', 'data': {'title': title}})}\n\n"
-
-            # Save complete assistant message
-            storage.add_assistant_message(
-                conversation_id,
-                stage1_results,
-                stage2_results,
-                stage3_result
-            )
-
-            # Send completion event
-            yield f"data: {json.dumps({'type': 'complete'})}\n\n"
-
+            stage3_result = None
+            metadata = CouncilMetadata()
+            title = None
+            
+            # Stream events from council service
+            async for event in council_service.run_council(
+                prompt=request.content,
+                generate_title=is_first_message,
+                files=file_refs
+            ):
+                # Convert domain event to SSE format
+                event_dict = event.model_dump()
+                
+                # Track completed stages for persistence
+                if isinstance(event, Stage1Complete):
+                    stage1_results = event.data
+                elif isinstance(event, Stage2Complete):
+                    stage2_results = event.data
+                    metadata = event.metadata
+                    # Include metadata in the event
+                    event_dict["metadata"] = {
+                        "label_to_model": metadata.label_to_model,
+                        "aggregate_rankings": [r.model_dump() for r in metadata.aggregate_rankings]
+                    }
+                elif isinstance(event, Stage3Complete):
+                    stage3_result = event.data
+                elif isinstance(event, TitleGenerated):
+                    title = event.title
+                    event_dict = {"type": "title_complete", "data": {"title": title}}
+                elif isinstance(event, CouncilComplete):
+                    # Save conversation before signaling completion
+                    if title:
+                        conversation.title = title
+                    
+                    assistant_msg = AssistantMessage(
+                        stage1=stage1_results,
+                        stage2=stage2_results,
+                        stage3=stage3_result,
+                        metadata=metadata
+                    )
+                    conversation.messages.append(assistant_msg)
+                    conversation.has_unread = True
+                    repo.save(conversation)
+                
+                yield f"data: {json.dumps(event_dict)}\n\n"
+            
         except Exception as e:
-            # Send error event
             yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
-
+    
     return StreamingResponse(
         event_generator(),
         media_type="text/event-stream",

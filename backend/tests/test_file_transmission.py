@@ -1,14 +1,20 @@
+"""Tests for file transmission functionality.
+
+Updated to work with the new hexagonal architecture.
+"""
+
 import pytest
-import backend.main as main
-from backend.main import SendMessageRequest, FileContext, build_prompt_content
-from backend import storage
+from backend.main import SendMessageRequest, FileContextRequest
+from backend.domain.models import FileContext, FileReference
+from backend.application.council_service import build_prompt_content
+from backend.infrastructure.blob_store import BlobStore
 
 
 def test_send_message_request_accepts_files():
     """SendMessageRequest should accept structured file context."""
     request = SendMessageRequest(
         content="hello",
-        files=[FileContext(name="notes.txt", content="example", size=7)],
+        files=[FileContextRequest(name="notes.txt", content="example", size=7)],
     )
 
     assert request.files[0].name == "notes.txt"
@@ -20,32 +26,26 @@ def test_file_context_size_optional():
     """FileContext size is optional."""
     request = SendMessageRequest(
         content="hello",
-        files=[FileContext(name="notes.txt", content="example")],
+        files=[FileContextRequest(name="notes.txt", content="example")],
     )
 
     assert request.files[0].size is None
 
 
-def test_add_user_message_stores_files(tmp_path, monkeypatch):
-    """Storage should persist files alongside user messages."""
-    monkeypatch.setattr(storage, "DATA_DIR", str(tmp_path))
-    storage.create_conversation("conv-1")
-    files = [{"name": "notes.txt", "content": "example", "size": 7}]
-
-    storage.add_user_message("conv-1", "hello", files=files)
-    conversation = storage.get_conversation("conv-1")
-
-    assert conversation["messages"][-1]["files"] == files
-
-
-def test_build_prompt_content_appends_files():
-    """Prompt builder should append file blocks after the user message."""
+def test_build_prompt_content_with_blob_store(tmp_path):
+    """Prompt builder should append file content from blob store."""
+    blob_store = BlobStore(blob_dir=str(tmp_path))
+    
+    # Store files in blob store
+    blob_id1 = blob_store.save_text("example")
+    blob_id2 = blob_store.save_text("- item")
+    
     files = [
-        FileContext(name="notes.txt", content="example", size=7),
-        FileContext(name="todo.md", content="- item", size=6),
+        FileReference(name="notes.txt", blob_id=blob_id1, size=7),
+        FileReference(name="todo.md", blob_id=blob_id2, size=6),
     ]
 
-    prompt = build_prompt_content("hello", files)
+    prompt = build_prompt_content("hello", files, blob_store)
 
     assert prompt == (
         "hello\n\n"
@@ -58,69 +58,25 @@ def test_build_prompt_content_appends_files():
     )
 
 
-def test_build_prompt_content_accepts_dict_files():
-    """Prompt builder should accept file dicts from storage."""
-    files = [{"name": "notes.txt", "content": "example", "size": 7}]
-
-    prompt = build_prompt_content("hello", files)
-
-    assert prompt == (
-        "hello\n\n"
-        "--- FILE: notes.txt ---\n"
-        "example\n"
-        "--- END FILE: notes.txt ---"
-    )
+def test_build_prompt_content_no_files():
+    """Prompt builder should return original content if no files."""
+    prompt = build_prompt_content("hello", [], None)
+    assert prompt == "hello"
 
 
-def test_add_user_message_omits_files_when_none(tmp_path, monkeypatch):
-    """Storage should omit files when none are provided."""
-    monkeypatch.setattr(storage, "DATA_DIR", str(tmp_path))
-    storage.create_conversation("conv-1")
-
-    storage.add_user_message("conv-1", "hello")
-    conversation = storage.get_conversation("conv-1")
-
-    assert "files" not in conversation["messages"][-1]
+def test_build_prompt_content_no_blob_store():
+    """Prompt builder should return original content if no blob store."""
+    files = [FileReference(name="notes.txt", blob_id="abc", size=7)]
+    prompt = build_prompt_content("hello", files, None)
+    assert prompt == "hello"
 
 
-def test_build_prompt_content_requires_name_and_content():
-    """Prompt builder should reject incomplete file dicts."""
-    with pytest.raises(ValueError):
-        build_prompt_content("hello", [{"name": "notes.txt"}])
-
-
-@pytest.mark.asyncio
-async def test_send_message_uses_prompt_builder(monkeypatch):
-    """send_message should store raw content and send formatted prompt to models."""
-    captured = {}
-
-    def fake_get_conversation(_conversation_id):
-        return {"messages": [{"role": "user", "content": "prior"}]}
-
-    def fake_add_user_message(_conversation_id, content, files=None):
-        captured["content"] = content
-        captured["files"] = files
-
-    def fake_add_assistant_message(_conversation_id, _stage1, _stage2, _stage3):
-        return None
-
-    async def fake_run_full_council(prompt_content):
-        captured["prompt"] = prompt_content
-        return [], [], {"response": "ok"}, {}
-
-    monkeypatch.setattr(main.storage, "get_conversation", fake_get_conversation)
-    monkeypatch.setattr(main.storage, "add_user_message", fake_add_user_message)
-    monkeypatch.setattr(main.storage, "add_assistant_message", fake_add_assistant_message)
-    monkeypatch.setattr(main, "run_full_council", fake_run_full_council)
-
-    request = SendMessageRequest(
-        content="hello",
-        files=[FileContext(name="notes.txt", content="example", size=7)],
-    )
-
-    response = await main.send_message("conv-1", request)
-
-    assert captured["content"] == "hello"
-    assert captured["files"] == [{"name": "notes.txt", "content": "example", "size": 7}]
-    assert captured["prompt"] == build_prompt_content("hello", request.files)
-    assert response["stage3"]["response"] == "ok"
+def test_blob_store_integration(tmp_path):
+    """Test the blob store saves and retrieves content correctly."""
+    blob_store = BlobStore(blob_dir=str(tmp_path))
+    
+    content = "Test file content"
+    blob_id = blob_store.save_text(content)
+    
+    retrieved = blob_store.get_text(blob_id)
+    assert retrieved == content

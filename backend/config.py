@@ -23,8 +23,9 @@ CHAIRMAN_MODEL = "google/gemini-3-pro-preview"
 # OpenRouter API endpoint
 OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
 
-# Data directory for conversation storage
+# Data directories
 DATA_DIR = "data/conversations"
+BLOB_DIR = "data/blobs"
 
 # Environment detection
 IS_CODESPACE = os.getenv("CODESPACES") == "true"
