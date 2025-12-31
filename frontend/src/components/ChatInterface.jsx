@@ -178,7 +178,7 @@ export default function ChatInterface({
                         {msg.files.map((file, fIndex) => (
                           <div key={fIndex} className="file-chip">
                             <Paperclip size={14} />
-                            <span className="file-chip-name">{file.name}</span>
+                            <span className="file-chip-name">{file.filename || file.name}</span>
                           </div>
                         ))}
                       </div>
