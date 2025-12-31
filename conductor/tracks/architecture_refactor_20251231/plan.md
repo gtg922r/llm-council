@@ -20,12 +20,12 @@ This plan follows the 5-phase refactor guide to move the application to a Modula
 - [x] Task: Update `storage.py` (or new repository) to save/load blobs during conversation persistence 6a8e847
 - [x] Task: Conductor - User Manual Verification 'Phase 2: The Blob-Store Split' (Protocol in workflow.md) 04512ab
 
-## Phase 3: Infrastructure Abstraction (The Repository Pattern)
+## Phase 3: Infrastructure Abstraction (The Repository Pattern) [checkpoint: d42b56d]
 - [x] Task: Define abstract interfaces in `backend/ports.py` (`ConversationRepository`, `LLMProvider`) fbc7c73
 - [x] Task: Implement `backend/infrastructure/json_repository.py` (implements `ConversationRepository`) a535146
 - [x] Task: Implement `backend/infrastructure/openrouter_adapter.py` (implements `LLMProvider`) 5968f29
 - [x] Task: Refactor `main.py` routes to use Port interfaces (Dependency Injection) 3cf8790
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: Infrastructure Abstraction (The Repository Pattern)' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 3: Infrastructure Abstraction (The Repository Pattern)' (Protocol in workflow.md) d42b56d
 
 ## Phase 4: Service Layer Unification
 - [ ] Task: Implement `backend/application/council_service.py` (`CouncilOrchestrator`)
