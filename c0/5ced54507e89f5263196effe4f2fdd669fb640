@@ -1,0 +1,7 @@
+Task 2.1: Create DeleteConfirmationModal Component and Styles
+Summary: Implemented a specialized modal for deletion confirmation using the generic Modal component. Features warning icon, destructive styling, and customizable title/message.
+Files:
+- frontend/src/components/DeleteConfirmationModal.jsx
+- frontend/src/components/DeleteConfirmationModal.css
+- frontend/src/components/__tests__/DeleteConfirmationModal.test.jsx
+Why: To replace window.confirm with a theme-aware, custom UI.
