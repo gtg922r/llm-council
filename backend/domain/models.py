@@ -39,7 +39,7 @@ class Message(BaseModel):
 
 class UserMessage(Message):
     role: MessageRole = MessageRole.USER
-    attachments: List[Attachment] = Field(default_factory=list)
+    files: Optional[List[Any]] = None
 
 class AssistantMessage(Message):
     role: MessageRole = MessageRole.ASSISTANT

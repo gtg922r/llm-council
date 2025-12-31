@@ -63,9 +63,9 @@ def test_patch_clears_has_unread():
     from backend.storage import add_assistant_message
     add_assistant_message(
         conv_id,
-        stage1=[{"model": "test", "content": "one"}],
-        stage2=[{"model": "test", "content": "two"}],
-        stage3={"model": "test", "content": "three"},
+        stage1=[{"model": "test", "response": "one", "status": "success"}],
+        stage2=[{"model": "test", "ranking": "two", "parsed_ranking": [], "status": "success"}],
+        stage3={"model": "test", "response": "three"},
     )
 
     patch_resp = client.patch(f"/api/conversations/{conv_id}", json={"has_unread": False})

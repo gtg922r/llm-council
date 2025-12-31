@@ -101,7 +101,7 @@ async def test_send_message_uses_prompt_builder(monkeypatch):
         captured["content"] = content
         captured["files"] = files
 
-    def fake_add_assistant_message(_conversation_id, _stage1, _stage2, _stage3):
+    def fake_add_assistant_message(_conversation_id, _stage1, _stage2, _stage3, metadata=None):
         return None
 
     async def fake_run_full_council(prompt_content):

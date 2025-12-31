@@ -14,13 +14,13 @@ def test_user_message_creation():
     msg = UserMessage(content="Hello")
     assert msg.role == MessageRole.USER
     assert msg.content == "Hello"
-    assert msg.attachments == []
+    assert msg.files is None
 
 def test_user_message_with_attachments():
     att = Attachment(filename="test.txt", content_type="text/plain", file_reference_id="ref123")
-    msg = UserMessage(content="Check this", attachments=[att])
-    assert len(msg.attachments) == 1
-    assert msg.attachments[0].file_reference_id == "ref123"
+    msg = UserMessage(content="Check this", files=[att])
+    assert len(msg.files) == 1
+    assert msg.files[0].file_reference_id == "ref123"
 
 def test_assistant_message_creation():
     # Minimal assistant message

@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any
+from datetime import datetime
 import uuid
 import json
 import asyncio
@@ -92,7 +93,7 @@ def build_prompt_content(
 class ConversationMetadata(BaseModel):
     """Conversation metadata for list view."""
     id: str
-    created_at: str
+    created_at: datetime
     title: str
     is_pinned: bool = False
     is_archived: bool = False
@@ -103,7 +104,7 @@ class ConversationMetadata(BaseModel):
 class Conversation(BaseModel):
     """Full conversation with all messages."""
     id: str
-    created_at: str
+    created_at: datetime
     title: str
     is_pinned: bool = False
     is_archived: bool = False
@@ -287,7 +288,8 @@ async def send_message(conversation_id: str, request: SendMessageRequest):
         conversation_id,
         [r.model_dump() for r in run_result.stage1_results],
         [r.model_dump() for r in run_result.stage2_results],
-        run_result.stage3_result
+        run_result.stage3_result,
+        metadata=run_result.metadata.model_dump()
     )
 
     # Return the complete response with metadata
@@ -457,7 +459,8 @@ Now provide your evaluation and ranking:"""
                 conversation_id,
                 [r.model_dump() for r in stage1_results],
                 [r.model_dump() for r in stage2_results],
-                stage3_result
+                stage3_result,
+                metadata={'label_to_model': label_to_model, 'aggregate_rankings': [r.model_dump() for r in aggregate_rankings]}
             )
 
             # Send completion event
