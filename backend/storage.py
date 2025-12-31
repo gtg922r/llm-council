@@ -6,13 +6,15 @@ from datetime import datetime, timezone
 from typing import List, Dict, Any, Optional, Union
 from pathlib import Path
 from .config import DATA_DIR
+from .infrastructure.blob_store import BlobStore
 from .domain.models import (
     Conversation, 
     UserMessage, 
     AssistantMessage, 
     AssistantMetadata,
     Stage1Result,
-    Stage2Result
+    Stage2Result,
+    Attachment
 )
 
 
@@ -159,21 +161,28 @@ def add_user_message(
 
     conversation = Conversation.model_validate(data)
     
-    # In Phase 2, files will be handled via BlobStore. 
-    # For now, we keep them as raw dicts if provided.
+    blob_store = BlobStore()
+    
+    attachments = []
+    if files:
+        for f in files:
+            # Save content to blob store if present
+            file_content = f.get("content", "")
+            ref_id = blob_store.save_text(file_content)
+            
+            attachments.append(Attachment(
+                filename=f.get("name") or f.get("filename", "unnamed"),
+                content_type=f.get("content_type", "text/plain"),
+                file_reference_id=ref_id,
+                size=f.get("size")
+            ))
+
     message = UserMessage(
         content=content,
-        # We'll need to map files to Attachments later, 
-        # but for now we might still have legacy 'files' field in dicts.
+        files=attachments
     )
     
-    # Temporary: attach legacy files if present
-    msg_dict = message.model_dump()
-    if files is not None:
-        msg_dict["files"] = files
-    
-    # We use the dict representation for now to allow mixed model/legacy fields
-    conversation.messages.append(msg_dict) # type: ignore
+    conversation.messages.append(message)
 
     save_conversation(conversation)
 

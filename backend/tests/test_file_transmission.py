@@ -27,15 +27,28 @@ def test_file_context_size_optional():
 
 
 def test_add_user_message_stores_files(tmp_path, monkeypatch):
-    """Storage should persist files alongside user messages."""
+    """Storage should persist files in BlobStore and store references in messages."""
     monkeypatch.setattr(storage, "DATA_DIR", str(tmp_path))
+    blob_dir = tmp_path / "blobs"
+    
+    # We need to mock BlobStore to use our tmp path
+    from backend.infrastructure.blob_store import BlobStore
+    monkeypatch.setattr("backend.storage.BlobStore", lambda: BlobStore(blob_dir=str(blob_dir)))
+    
     storage.create_conversation("conv-1")
     files = [{"name": "notes.txt", "content": "example", "size": 7}]
 
     storage.add_user_message("conv-1", "hello", files=files)
     conversation = storage.get_conversation("conv-1")
 
-    assert conversation["messages"][-1]["files"] == files
+    attachments = conversation["messages"][-1]["files"]
+    assert len(attachments) == 1
+    assert attachments[0]["filename"] == "notes.txt"
+    assert "file_reference_id" in attachments[0]
+    
+    # Verify content in blob store
+    store = BlobStore(blob_dir=str(blob_dir))
+    assert store.get_text(attachments[0]["file_reference_id"]) == "example"
 
 
 def test_build_prompt_content_appends_files():
@@ -80,7 +93,7 @@ def test_add_user_message_omits_files_when_none(tmp_path, monkeypatch):
     storage.add_user_message("conv-1", "hello")
     conversation = storage.get_conversation("conv-1")
 
-    assert "files" not in conversation["messages"][-1]
+    assert conversation["messages"][-1]["files"] == []
 
 
 def test_build_prompt_content_requires_name_and_content():

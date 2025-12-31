@@ -10,8 +10,10 @@ class MessageRole(str, Enum):
 
 class Attachment(BaseModel):
     filename: str
-    content_type: str
-    file_reference_id: str
+    content_type: str = "text/plain"
+    file_reference_id: Optional[str] = None
+    content: Optional[str] = None
+    size: Optional[int] = None
 
 class Stage1Result(BaseModel):
     model: str
@@ -39,7 +41,7 @@ class Message(BaseModel):
 
 class UserMessage(Message):
     role: MessageRole = MessageRole.USER
-    files: Optional[List[Any]] = None
+    files: List[Attachment] = Field(default_factory=list)
 
 class AssistantMessage(Message):
     role: MessageRole = MessageRole.ASSISTANT

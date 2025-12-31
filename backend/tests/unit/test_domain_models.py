@@ -14,7 +14,7 @@ def test_user_message_creation():
     msg = UserMessage(content="Hello")
     assert msg.role == MessageRole.USER
     assert msg.content == "Hello"
-    assert msg.files is None
+    assert msg.files == []
 
 def test_user_message_with_attachments():
     att = Attachment(filename="test.txt", content_type="text/plain", file_reference_id="ref123")
