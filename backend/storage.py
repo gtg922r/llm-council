@@ -3,9 +3,12 @@
 import json
 import os
 from datetime import datetime, timezone
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Union
 from pathlib import Path
 from .config import DATA_DIR
+from .domain.models import (
+    Conversation, UserMessage, AssistantMessage, Message
+)
 
 
 def ensure_data_dir():
@@ -227,3 +230,124 @@ def delete_conversation(conversation_id: str):
     path = get_conversation_path(conversation_id)
     if os.path.exists(path):
         os.remove(path)
+
+
+# =============================================================================
+# Typed API (using Domain Models)
+# =============================================================================
+
+def create_conversation_typed(conversation_id: str) -> Conversation:
+    """
+    Create a new conversation using domain models.
+
+    Args:
+        conversation_id: Unique identifier for the conversation
+
+    Returns:
+        New Conversation domain model
+    """
+    ensure_data_dir()
+
+    conversation = Conversation(
+        id=conversation_id,
+        created_at=datetime.now(timezone.utc),
+        title="New Conversation",
+        is_pinned=False,
+        is_archived=False,
+        has_unread=False,
+        messages=[]
+    )
+
+    # Save to file
+    save_conversation_typed(conversation)
+
+    return conversation
+
+
+def get_conversation_typed(conversation_id: str) -> Optional[Conversation]:
+    """
+    Load a conversation from storage as a domain model.
+
+    Args:
+        conversation_id: Unique identifier for the conversation
+
+    Returns:
+        Conversation domain model or None if not found
+    """
+    path = get_conversation_path(conversation_id)
+
+    if not os.path.exists(path):
+        return None
+
+    with open(path, 'r') as f:
+        data = json.load(f)
+    
+    # Parse messages - discriminate by 'role' field
+    messages: List[Union[UserMessage, AssistantMessage]] = []
+    for msg_data in data.get("messages", []):
+        if msg_data.get("role") == "user":
+            messages.append(UserMessage.model_validate(msg_data))
+        elif msg_data.get("role") == "assistant":
+            messages.append(AssistantMessage.model_validate(msg_data))
+    
+    # Build conversation - handle datetime parsing
+    created_at_str = data["created_at"]
+    if isinstance(created_at_str, str):
+        # Handle ISO format with 'Z' suffix (UTC indicator)
+        if created_at_str.endswith('Z'):
+            created_at_str = created_at_str[:-1] + '+00:00'
+        created_at = datetime.fromisoformat(created_at_str)
+    else:
+        created_at = created_at_str
+    
+    return Conversation(
+        id=data["id"],
+        created_at=created_at,
+        title=data.get("title", "New Conversation"),
+        is_pinned=data.get("is_pinned", False),
+        is_archived=data.get("is_archived", False),
+        has_unread=data.get("has_unread", False),
+        messages=messages
+    )
+
+
+def save_conversation_typed(conversation: Conversation):
+    """
+    Save a conversation to storage using domain models.
+
+    Args:
+        conversation: Conversation domain model to save
+    """
+    ensure_data_dir()
+
+    path = get_conversation_path(conversation.id)
+    
+    # Serialize conversation to JSON-compatible dict
+    data = conversation.model_dump(mode='json')
+    
+    with open(path, 'w') as f:
+        json.dump(data, f, indent=2)
+
+
+def add_message_typed(
+    conversation_id: str,
+    message: Union[UserMessage, AssistantMessage]
+):
+    """
+    Add a message to a conversation using domain models.
+
+    Args:
+        conversation_id: Conversation identifier
+        message: UserMessage or AssistantMessage to add
+    """
+    conversation = get_conversation_typed(conversation_id)
+    if conversation is None:
+        raise ValueError(f"Conversation {conversation_id} not found")
+
+    conversation.messages.append(message)
+    
+    # Mark as having unread if it's an assistant message
+    if isinstance(message, AssistantMessage):
+        conversation.has_unread = True
+
+    save_conversation_typed(conversation)

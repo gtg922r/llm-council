@@ -1,8 +1,12 @@
 """3-stage LLM Council orchestration."""
 
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict, Any, Tuple, Optional
 from .openrouter import query_models_parallel, query_model
 from .config import COUNCIL_MODELS, CHAIRMAN_MODEL
+from .domain.models import (
+    Stage1Response, Stage2Ranking, Stage3Synthesis,
+    CouncilMetadata, AggregateRanking, CouncilRun
+)
 
 
 async def stage1_collect_responses(user_query: str) -> List[Dict[str, Any]]:
@@ -425,3 +429,326 @@ Answer:"""
         "model": CHAIRMAN_MODEL,
         "response": response.get('content', '')
     }
+
+
+# =============================================================================
+# Typed API (using Domain Models)
+# =============================================================================
+
+async def stage1_collect_responses_typed(
+    user_query: str,
+    council_models: Optional[List[str]] = None
+) -> List[Stage1Response]:
+    """
+    Stage 1: Collect individual responses from all council models.
+    
+    Returns typed Stage1Response domain models.
+
+    Args:
+        user_query: The user's question
+        council_models: Optional list of models to query (defaults to COUNCIL_MODELS)
+
+    Returns:
+        List of Stage1Response domain models
+    """
+    models = council_models or COUNCIL_MODELS
+    messages = [{"role": "user", "content": user_query}]
+
+    # Query all models in parallel
+    responses = await query_models_parallel(models, messages)
+
+    # Format results as domain models
+    results: List[Stage1Response] = []
+    for model in models:
+        response = responses.get(model)
+        if response is not None:
+            results.append(Stage1Response(
+                model=model,
+                response=response.get('content', ''),
+                status="success"
+            ))
+        else:
+            results.append(Stage1Response(
+                model=model,
+                response="Error: Failed to get response from this model.",
+                status="error"
+            ))
+
+    return results
+
+
+async def stage2_collect_rankings_typed(
+    user_query: str,
+    stage1_results: List[Stage1Response],
+    council_models: Optional[List[str]] = None
+) -> Tuple[List[Stage2Ranking], Dict[str, str]]:
+    """
+    Stage 2: Each model ranks the anonymized responses.
+    
+    Returns typed Stage2Ranking domain models.
+
+    Args:
+        user_query: The original user query
+        stage1_results: Results from Stage 1 as domain models
+        council_models: Optional list of models to query (defaults to COUNCIL_MODELS)
+
+    Returns:
+        Tuple of (rankings list as domain models, label_to_model mapping)
+    """
+    models = council_models or COUNCIL_MODELS
+    
+    # Create anonymized labels for successful responses
+    successful_results = [r for r in stage1_results if r.status == "success"]
+    labels = [chr(65 + i) for i in range(len(successful_results))]
+
+    # Create mapping from label to model name
+    label_to_model = {
+        f"Response {label}": result.model
+        for label, result in zip(labels, successful_results)
+    }
+
+    # Build the ranking prompt
+    responses_text = "\n\n".join([
+        f"Response {label}:\n{result.response}"
+        for label, result in zip(labels, successful_results)
+    ])
+
+    ranking_prompt = f"""You are evaluating different responses to the following question:
+
+Question: {user_query}
+
+Here are the responses from different models (anonymized):
+
+{responses_text}
+
+Your task:
+1. First, evaluate each response individually. For each response, explain what it does well and what it does poorly.
+2. Then, at the very end of your response, provide a final ranking.
+
+IMPORTANT: Your final ranking MUST be formatted EXACTLY as follows:
+- Start with the line "FINAL RANKING:" (all caps, with colon)
+- Then list the responses from best to worst as a numbered list
+- Each line should be: number, period, space, then ONLY the response label (e.g., "1. Response A")
+- Do not add any other text or explanations in the ranking section
+
+Example of the correct format for your ENTIRE response:
+
+Response A provides good detail on X but misses Y...
+Response B is accurate but lacks depth on Z...
+Response C offers the most comprehensive answer...
+
+FINAL RANKING:
+1. Response C
+2. Response A
+3. Response B
+
+Now provide your evaluation and ranking:"""
+
+    messages = [{"role": "user", "content": ranking_prompt}]
+
+    # Get rankings from all council models in parallel
+    responses = await query_models_parallel(models, messages)
+
+    # Format results as domain models
+    results: List[Stage2Ranking] = []
+    for model in models:
+        response = responses.get(model)
+        if response is not None:
+            full_text = response.get('content', '')
+            parsed = parse_ranking_from_text(full_text)
+            results.append(Stage2Ranking(
+                model=model,
+                ranking=full_text,
+                parsed_ranking=parsed,
+                status="success"
+            ))
+        else:
+            results.append(Stage2Ranking(
+                model=model,
+                ranking="Error: Failed to get ranking from this model.",
+                parsed_ranking=[],
+                status="error"
+            ))
+
+    return results, label_to_model
+
+
+async def stage3_synthesize_final_typed(
+    user_query: str,
+    stage1_results: List[Stage1Response],
+    stage2_results: List[Stage2Ranking],
+    chairman_model: Optional[str] = None
+) -> Stage3Synthesis:
+    """
+    Stage 3: Chairman synthesizes final response.
+    
+    Returns typed Stage3Synthesis domain model.
+
+    Args:
+        user_query: The original user query
+        stage1_results: Individual model responses from Stage 1
+        stage2_results: Rankings from Stage 2
+        chairman_model: The chairman model to use (defaults to CHAIRMAN_MODEL)
+
+    Returns:
+        Stage3Synthesis domain model
+    """
+    model = chairman_model or CHAIRMAN_MODEL
+    
+    # Build comprehensive context for chairman
+    stage1_text = ""
+    for result in stage1_results:
+        status_info = "" if result.status == "success" else f" [STATUS: {result.status.upper()}]"
+        stage1_text += f"Model: {result.model}{status_info}\nResponse: {result.response}\n\n"
+
+    stage2_text = ""
+    for result in stage2_results:
+        status_info = "" if result.status == "success" else f" [STATUS: {result.status.upper()}]"
+        stage2_text += f"Model: {result.model}{status_info}\nRanking: {result.ranking}\n\n"
+
+    chairman_prompt = f"""You are the Chairman of an LLM Council. Multiple AI models have provided responses to a user's question, and then ranked each other's responses.
+
+Original Question: {user_query}
+
+STAGE 1 - Individual Responses:
+{stage1_text}
+
+STAGE 2 - Peer Rankings:
+{stage2_text}
+
+Your task as Chairman is to synthesize all of this information into a single, comprehensive, accurate answer to the user's original question. Consider:
+- The individual responses and their insights
+- The peer rankings and what they reveal about response quality
+- Any patterns of agreement or disagreement
+- Note: Some models may have failed to respond (indicated by STATUS: ERROR).
+
+Provide a clear, well-reasoned final answer that represents the council's collective wisdom:"""
+
+    messages = [{"role": "user", "content": chairman_prompt}]
+
+    # Query the chairman model
+    response = await query_model(model, messages)
+
+    if response is None:
+        return Stage3Synthesis(
+            model=model,
+            response="Error: Unable to generate final synthesis."
+        )
+
+    return Stage3Synthesis(
+        model=model,
+        response=response.get('content', '')
+    )
+
+
+def calculate_aggregate_rankings_typed(
+    stage2_results: List[Stage2Ranking],
+    label_to_model: Dict[str, str]
+) -> List[AggregateRanking]:
+    """
+    Calculate aggregate rankings across all models.
+    
+    Returns typed AggregateRanking domain models.
+
+    Args:
+        stage2_results: Rankings from each model as domain models
+        label_to_model: Mapping from anonymous labels to model names
+
+    Returns:
+        List of AggregateRanking domain models, sorted best to worst
+    """
+    from collections import defaultdict
+
+    # Track positions for each model
+    model_positions = defaultdict(list)
+
+    for ranking in stage2_results:
+        for position, label in enumerate(ranking.parsed_ranking, start=1):
+            if label in label_to_model:
+                model_name = label_to_model[label]
+                model_positions[model_name].append(position)
+
+    # Calculate average position for each model
+    aggregate: List[AggregateRanking] = []
+    for model, positions in model_positions.items():
+        if positions:
+            avg_rank = sum(positions) / len(positions)
+            aggregate.append(AggregateRanking(
+                model=model,
+                average_rank=round(avg_rank, 2),
+                rankings_count=len(positions)
+            ))
+
+    # Sort by average rank (lower is better)
+    aggregate.sort(key=lambda x: x.average_rank)
+
+    return aggregate
+
+
+async def run_full_council_typed(
+    user_query: str,
+    council_models: Optional[List[str]] = None,
+    chairman_model: Optional[str] = None
+) -> CouncilRun:
+    """
+    Run the complete 3-stage council process.
+    
+    Returns a typed CouncilRun domain model with all results and metadata.
+
+    Args:
+        user_query: The user's question
+        council_models: Optional list of models (defaults to COUNCIL_MODELS)
+        chairman_model: Optional chairman model (defaults to CHAIRMAN_MODEL)
+
+    Returns:
+        CouncilRun domain model containing all stages and metadata
+    """
+    models = council_models or COUNCIL_MODELS
+    chairman = chairman_model or CHAIRMAN_MODEL
+    
+    # Stage 1: Collect individual responses
+    stage1_results = await stage1_collect_responses_typed(user_query, models)
+
+    # If no models responded successfully, return early
+    successful_stage1 = [r for r in stage1_results if r.status == "success"]
+    if not successful_stage1:
+        return CouncilRun(
+            user_query=user_query,
+            stage1=stage1_results,
+            stage2=[],
+            stage3=Stage3Synthesis(
+                model="error",
+                response="All models failed to respond. Please try again."
+            ),
+            metadata=CouncilMetadata()
+        )
+
+    # Stage 2: Collect rankings
+    stage2_results, label_to_model = await stage2_collect_rankings_typed(
+        user_query, stage1_results, models
+    )
+
+    # Calculate aggregate rankings
+    aggregate_rankings = calculate_aggregate_rankings_typed(stage2_results, label_to_model)
+
+    # Stage 3: Synthesize final answer
+    stage3_result = await stage3_synthesize_final_typed(
+        user_query,
+        stage1_results,
+        stage2_results,
+        chairman
+    )
+
+    # Build metadata
+    metadata = CouncilMetadata(
+        label_to_model=label_to_model,
+        aggregate_rankings=aggregate_rankings
+    )
+
+    return CouncilRun(
+        user_query=user_query,
+        stage1=stage1_results,
+        stage2=stage2_results,
+        stage3=stage3_result,
+        metadata=metadata
+    )

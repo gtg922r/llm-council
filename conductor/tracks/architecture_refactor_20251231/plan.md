@@ -3,15 +3,15 @@
 This plan follows the 5-phase refactor guide to move the application to a Modular Hexagonal architecture, improving persistence, performance, and testability.
 
 ## Phase 0: Preparation
-- [ ] Task: Clean existing data (Delete `data/conversations/` and `data/blobs/`)
-- [ ] Task: Initialize new backend test infrastructure (Create `backend/tests/unit`, `backend/tests/integration`)
+- [x] Task: Clean existing data (Delete `data/conversations/` and `data/blobs/`)
+- [x] Task: Initialize new backend test infrastructure (Create `backend/tests/unit`, `backend/tests/integration`)
 
 ## Phase 1: Domain Modeling & Metadata Persistence
-- [ ] Task: Define Pydantic models in `backend/domain/models.py` (Conversation, Message, CouncilRun)
-- [ ] Task: Implement `metadata` field in `AssistantMessage` for peer rankings and label maps
-- [ ] Task: Update `council.py` logic to use and populate new Domain models
-- [ ] Task: Update `storage.py` to handle Pydantic serialization/deserialization
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Domain Modeling & Metadata Persistence' (Protocol in workflow.md)
+- [x] Task: Define Pydantic models in `backend/domain/models.py` (Conversation, Message, CouncilRun)
+- [x] Task: Implement `metadata` field in `AssistantMessage` for peer rankings and label maps
+- [x] Task: Update `council.py` logic to use and populate new Domain models
+- [x] Task: Update `storage.py` to handle Pydantic serialization/deserialization
+- [x] Task: Conductor - User Manual Verification 'Phase 1: Domain Modeling & Metadata Persistence' (Protocol in workflow.md)
 
 ## Phase 2: The Blob-Store Split
 - [ ] Task: Create `backend/infrastructure/blob_store.py` for local file persistence
