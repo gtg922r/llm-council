@@ -1,7 +1,7 @@
 from fastapi.testclient import TestClient
 
+import backend.config as config
 import backend.main as main
-from backend import storage
 
 
 def _collect_event_lines(response):
@@ -17,26 +17,26 @@ def _collect_event_lines(response):
 
 def test_send_message_stream_emits_expected_events(tmp_path, monkeypatch):
     """Streaming endpoint should emit stage events and store files."""
-    monkeypatch.setattr(storage, "DATA_DIR", str(tmp_path))
-    monkeypatch.setattr(main.storage, "DATA_DIR", str(tmp_path))
-    monkeypatch.setattr(main, "COUNCIL_MODELS", ["test-model"])
+    conversations_dir = tmp_path / "conversations"
+    blobs_dir = tmp_path / "blobs"
+    monkeypatch.setattr(config, "DATA_DIR", str(conversations_dir))
+    monkeypatch.setattr(config, "BLOB_DIR", str(blobs_dir))
+    monkeypatch.setattr(config, "COUNCIL_MODELS", ["test-model"])
+    monkeypatch.setattr(config, "CHAIRMAN_MODEL", "test-chairman")
 
-    async def fake_query_model(_model, _messages):
-        return {"content": "Mock response\n\nFINAL RANKING:\n1. Response A"}
-
-    async def fake_stage3(_prompt, _stage1, _stage2):
-        return {"response": "final"}
-
-    async def fake_title(_content):
-        return "Mock Title"
-
-    monkeypatch.setattr(main, "query_model", fake_query_model)
-    monkeypatch.setattr(main, "stage3_synthesize_final", fake_stage3)
-    monkeypatch.setattr(main, "generate_conversation_title", fake_title)
-    monkeypatch.setattr(main, "parse_ranking_from_text", lambda _text: ["Response A"])
-    monkeypatch.setattr(main, "calculate_aggregate_rankings", lambda *_args, **_kwargs: [])
+    class FakeLLM:
+        async def chat(self, model, messages, *, timeout=None):
+            prompt = messages[0]["content"]
+            if "Generate a very short title" in prompt:
+                return {"content": "Mock Title"}
+            if "You are evaluating different responses" in prompt:
+                return {"content": "Eval\n\nFINAL RANKING:\n1. Response A"}
+            if "You are the Chairman of an LLM Council" in prompt:
+                return {"content": "Final synthesis"}
+            return {"content": "Stage 1 response"}
 
     client = TestClient(main.app)
+    main.app.dependency_overrides[main.get_llm] = lambda: FakeLLM()
     conv = client.post("/api/conversations", json={}).json()
 
     payload = {
@@ -59,5 +59,7 @@ def test_send_message_stream_emits_expected_events(tmp_path, monkeypatch):
     assert any('"type": "title_complete"' in line for line in data_lines)
     assert any('"type": "complete"' in line for line in data_lines)
 
-    conversation = storage.get_conversation(conv["id"])
+    conversation = client.get(f"/api/conversations/{conv['id']}").json()
     assert conversation["messages"][-1]["role"] == "assistant"
+
+    main.app.dependency_overrides.clear()

@@ -1,229 +1,134 @@
-"""JSON-based storage for conversations."""
+"""Compatibility helpers for JSON-backed conversation persistence.
 
-import json
-import os
-from datetime import datetime, timezone
-from typing import List, Dict, Any, Optional
-from pathlib import Path
-from .config import DATA_DIR
+The refactor introduces `JsonConversationRepository` + `LocalFileBlobStore` as the
+preferred infrastructure adapters. This module remains as a thin wrapper to avoid
+breaking imports in older tests/scripts.
+"""
+
+from __future__ import annotations
+
+from typing import Any, Dict, List, Optional
+
+from . import config
+from .domain.models import AssistantMessage, AssistantMessageMetadata, Conversation, FileAttachment, Stage3Result, UserMessage
+from .infrastructure.blob_store import LocalFileBlobStore
+from .infrastructure.json_repository import JsonConversationRepository
+
+# Overridable in tests via monkeypatch
+DATA_DIR = config.DATA_DIR
+BLOB_DIR = config.BLOB_DIR
+
+
+def _repo() -> JsonConversationRepository:
+    return JsonConversationRepository(DATA_DIR)
+
+
+def _blobs() -> LocalFileBlobStore:
+    return LocalFileBlobStore(BLOB_DIR)
 
 
 def ensure_data_dir():
-    """Ensure the data directory exists."""
-    Path(DATA_DIR).mkdir(parents=True, exist_ok=True)
-
-
-def get_conversation_path(conversation_id: str) -> str:
-    """Get the file path for a conversation."""
-    return os.path.join(DATA_DIR, f"{conversation_id}.json")
+    _repo()  # constructor ensures directory
 
 
 def create_conversation(conversation_id: str) -> Dict[str, Any]:
-    """
-    Create a new conversation.
-
-    Args:
-        conversation_id: Unique identifier for the conversation
-
-    Returns:
-        New conversation dict
-    """
-    ensure_data_dir()
-
-    conversation = {
-        "id": conversation_id,
-        "created_at": datetime.now(timezone.utc).isoformat(),
-        "title": "New Conversation",
-        "is_pinned": False,
-        "is_archived": False,
-        "has_unread": False,
-        "messages": []
-    }
-
-    # Save to file
-    path = get_conversation_path(conversation_id)
-    with open(path, 'w') as f:
-        json.dump(conversation, f, indent=2)
-
-    return conversation
+    return _repo().create(conversation_id).model_dump(mode="json", exclude_none=True)
 
 
 def get_conversation(conversation_id: str) -> Optional[Dict[str, Any]]:
-    """
-    Load a conversation from storage.
-
-    Args:
-        conversation_id: Unique identifier for the conversation
-
-    Returns:
-        Conversation dict or None if not found
-    """
-    path = get_conversation_path(conversation_id)
-
-    if not os.path.exists(path):
-        return None
-
-    with open(path, 'r') as f:
-        return json.load(f)
+    conv = _repo().get(conversation_id)
+    return None if conv is None else conv.model_dump(mode="json", exclude_none=True)
 
 
 def save_conversation(conversation: Dict[str, Any]):
-    """
-    Save a conversation to storage.
-
-    Args:
-        conversation: Conversation dict to save
-    """
-    ensure_data_dir()
-
-    path = get_conversation_path(conversation['id'])
-    with open(path, 'w') as f:
-        json.dump(conversation, f, indent=2)
+    conv = Conversation.model_validate(conversation)
+    _repo().save(conv)
 
 
 def list_conversations() -> List[Dict[str, Any]]:
-    """
-    List all conversations (metadata only).
-
-    Returns:
-        List of conversation metadata dicts
-    """
-    ensure_data_dir()
-
-    conversations = []
-    for filename in os.listdir(DATA_DIR):
-        if filename.endswith('.json'):
-            path = os.path.join(DATA_DIR, filename)
-            with open(path, 'r') as f:
-                data = json.load(f)
-                # Return metadata only
-                conversations.append({
-                    "id": data["id"],
-                    "created_at": data["created_at"],
-                    "title": data.get("title", "New Conversation"),
-                    "is_pinned": data.get("is_pinned", False),
-                    "is_archived": data.get("is_archived", False),
-                    "has_unread": data.get("has_unread", False),
-                    "message_count": len(data["messages"])
-                })
-
-    # Sort by creation time, newest first
-    conversations.sort(key=lambda x: x["created_at"], reverse=True)
-
-    return conversations
+    return [c.model_dump(mode="json", exclude_none=True) for c in _repo().list()]
 
 
-def add_user_message(
-    conversation_id: str,
-    content: str,
-    files: Optional[List[Dict[str, Any]]] = None
-):
-    """
-    Add a user message to a conversation.
-
-    Args:
-        conversation_id: Conversation identifier
-        content: User message content
-        files: Optional list of file context dicts
-    """
-    conversation = get_conversation(conversation_id)
-    if conversation is None:
+def add_user_message(conversation_id: str, content: str, files: Optional[List[Dict[str, Any]]] = None):
+    repo = _repo()
+    conv = repo.get(conversation_id)
+    if conv is None:
         raise ValueError(f"Conversation {conversation_id} not found")
 
-    message = {
-        "role": "user",
-        "content": content
-    }
-    if files is not None:
-        message["files"] = files
+    attachments: list[FileAttachment] = []
+    for f in files or []:
+        name = f.get("name")
+        raw_content = f.get("content")
+        if not name or raw_content is None:
+            continue
+        ref_id = _blobs().save_text(str(raw_content))
+        attachments.append(FileAttachment(name=str(name), reference_id=ref_id, size=f.get("size")))
 
-    conversation["messages"].append(message)
-
-    save_conversation(conversation)
+    conv.messages.append(UserMessage(content=content, files=attachments))
+    repo.save(conv)
 
 
 def add_assistant_message(
     conversation_id: str,
     stage1: List[Dict[str, Any]],
     stage2: List[Dict[str, Any]],
-    stage3: Dict[str, Any]
+    stage3: Dict[str, Any],
+    metadata: Dict[str, Any] | None = None,
 ):
-    """
-    Add an assistant message with all 3 stages to a conversation.
-
-    Args:
-        conversation_id: Conversation identifier
-        stage1: List of individual model responses
-        stage2: List of model rankings
-        stage3: Final synthesized response
-    """
-    conversation = get_conversation(conversation_id)
-    if conversation is None:
+    repo = _repo()
+    conv = repo.get(conversation_id)
+    if conv is None:
         raise ValueError(f"Conversation {conversation_id} not found")
 
-    conversation["messages"].append({
-        "role": "assistant",
-        "stage1": stage1,
-        "stage2": stage2,
-        "stage3": stage3
-    })
-    conversation["has_unread"] = True
+    def _normalize_stage1(items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        normalized: List[Dict[str, Any]] = []
+        for item in items:
+            if "response" not in item and "content" in item:
+                item = dict(item)
+                item["response"] = item.pop("content")
+            item.setdefault("status", "success")
+            normalized.append(item)
+        return normalized
 
-    save_conversation(conversation)
+    def _normalize_stage2(items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        normalized: List[Dict[str, Any]] = []
+        for item in items:
+            if "ranking" not in item and "content" in item:
+                item = dict(item)
+                item["ranking"] = item.pop("content")
+            item.setdefault("parsed_ranking", [])
+            item.setdefault("status", "success")
+            normalized.append(item)
+        return normalized
+
+    stage3_model = stage3.get("model") or "unknown"
+    stage3_text = stage3.get("response") or stage3.get("content") or ""
+    stage3_obj = Stage3Result(model=stage3_model, response=stage3_text)
+
+    conv.messages.append(
+        AssistantMessage(
+            stage1=_normalize_stage1(stage1),
+            stage2=_normalize_stage2(stage2),
+            stage3=stage3_obj,
+            metadata=AssistantMessageMetadata.model_validate(metadata or {}),
+        )
+    )
+    conv.has_unread = True
+    repo.save(conv)
 
 
 def update_conversation_title(conversation_id: str, title: str):
-    """
-    Update the title of a conversation.
-
-    Args:
-        conversation_id: Conversation identifier
-        title: New title for the conversation
-    """
-    conversation = get_conversation(conversation_id)
-    if conversation is None:
+    repo = _repo()
+    conv = repo.get(conversation_id)
+    if conv is None:
         raise ValueError(f"Conversation {conversation_id} not found")
-
-    conversation["title"] = title
-    save_conversation(conversation)
+    conv.title = title
+    repo.save(conv)
 
 
 def duplicate_conversation(original_id: str, new_id: str) -> Dict[str, Any]:
-    """
-    Duplicate an existing conversation.
-
-    Args:
-        original_id: ID of the conversation to duplicate
-        new_id: ID for the new conversation
-
-    Returns:
-        The new duplicated conversation
-    """
-    original = get_conversation(original_id)
-    if original is None:
-        raise ValueError(f"Original conversation {original_id} not found")
-
-    new_conversation = {
-        "id": new_id,
-        "created_at": datetime.now(timezone.utc).isoformat(),
-        "title": f"{original.get('title', 'New Conversation')} (Copy)",
-        "is_pinned": False,
-        "is_archived": False,
-        "has_unread": False,
-        "messages": original["messages"].copy()
-    }
-
-    save_conversation(new_conversation)
-    return new_conversation
+    return _repo().duplicate(original_id, new_id).model_dump(mode="json")
 
 
 def delete_conversation(conversation_id: str):
-    """
-    Permanently delete a conversation.
-
-    Args:
-        conversation_id: ID of the conversation to delete
-    """
-    path = get_conversation_path(conversation_id)
-    if os.path.exists(path):
-        os.remove(path)
+    _repo().delete(conversation_id)
