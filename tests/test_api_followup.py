@@ -30,11 +30,12 @@ class TestApiFollowup(unittest.TestCase):
         conv_id = create_resp.json()["id"]
 
         # 2. Mock initial council run
-        mock_council.return_value = (
-            [{"model": "A", "response": "resp A", "status": "success"}], # Stage 1
-            [{"model": "A", "ranking": "rank A", "status": "success"}], # Stage 2
-            {"model": "Chairman", "response": "Initial response"},       # Stage 3
-            {}                                                           # Metadata
+        from backend.domain.models import CouncilRun, AssistantMetadata, Stage1Result, Stage2Result
+        mock_council.return_value = CouncilRun(
+            stage1_results=[Stage1Result(model="A", response="resp A", status="success")],
+            stage2_results=[Stage2Result(model="A", ranking="rank A", parsed_ranking=["Response A"], status="success")],
+            stage3_result={"model": "Chairman", "response": "Initial response"},
+            metadata=AssistantMetadata()
         )
         mock_title.return_value = "Test Conv"
 

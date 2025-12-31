@@ -106,7 +106,13 @@ async def test_send_message_uses_prompt_builder(monkeypatch):
 
     async def fake_run_full_council(prompt_content):
         captured["prompt"] = prompt_content
-        return [], [], {"response": "ok"}, {}
+        from backend.domain.models import CouncilRun, AssistantMetadata
+        return CouncilRun(
+            stage1_results=[],
+            stage2_results=[],
+            stage3_result={"response": "ok"},
+            metadata=AssistantMetadata()
+        )
 
     monkeypatch.setattr(main.storage, "get_conversation", fake_get_conversation)
     monkeypatch.setattr(main.storage, "add_user_message", fake_add_user_message)

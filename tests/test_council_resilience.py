@@ -23,14 +23,15 @@ class TestCouncilResilience(unittest.IsolatedAsyncioTestCase):
         
         # We expect ALL models to be present
         self.assertEqual(len(results), len(COUNCIL_MODELS))
-        error_results = [r for r in results if r.get('status') == "error"]
+        error_results = [r for r in results if r.status == "error"]
         self.assertEqual(len(error_results), 1)
 
     @patch('backend.openrouter.query_model')
     async def test_stage2_handles_exceptions(self, mock_query):
         """Test Stage 2 handles exceptions from query_model."""
+        from backend.domain.models import Stage1Result
         stage1_results = [
-            {"model": m, "response": f"Response {m}", "status": "success"}
+            Stage1Result(model=m, response=f"Response {m}", status="success")
             for m in COUNCIL_MODELS
         ]
         
@@ -45,7 +46,7 @@ class TestCouncilResilience(unittest.IsolatedAsyncioTestCase):
         results, mapping = await stage2_collect_rankings("Test query", stage1_results)
         
         self.assertEqual(len(results), len(COUNCIL_MODELS))
-        error_results = [r for r in results if r.get('status') == "error"]
+        error_results = [r for r in results if r.status == "error"]
         self.assertEqual(len(error_results), 1)
 
     @patch('backend.council.query_model')
@@ -66,12 +67,13 @@ class TestCouncilResilience(unittest.IsolatedAsyncioTestCase):
         mock_council_query.return_value = None
         mock_openrouter_query.return_value = None
         
-        from backend.council import run_full_council
-        stage1, stage2, stage3, metadata = await run_full_council("Test query")
+        from backend.council import run_full_council, CouncilRun
+        result = await run_full_council("Test query")
         
-        self.assertEqual(len(stage1), len(COUNCIL_MODELS))
-        self.assertEqual(stage3['model'], "error")
-        self.assertIn("All models failed", stage3['response'])
+        self.assertIsInstance(result, CouncilRun)
+        self.assertEqual(len(result.stage1_results), len(COUNCIL_MODELS))
+        self.assertEqual(result.stage3_result['model'], "error")
+        self.assertIn("All models failed", result.stage3_result['response'])
 
 if __name__ == "__main__":
     unittest.main()

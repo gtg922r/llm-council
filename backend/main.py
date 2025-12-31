@@ -18,7 +18,9 @@ from .council import (
     stage3_synthesize_final,
     calculate_aggregate_rankings,
     chairman_followup,
-    parse_ranking_from_text
+    parse_ranking_from_text,
+    Stage1Result,
+    Stage2Result
 )
 from .openrouter import query_model
 
@@ -276,24 +278,24 @@ async def send_message(conversation_id: str, request: SendMessageRequest):
             pass
 
     # Run the 3-stage council process (Default)
-    stage1_results, stage2_results, stage3_result, metadata = await run_full_council(
+    run_result = await run_full_council(
         prompt_content
     )
 
     # Add assistant message with all stages
     storage.add_assistant_message(
         conversation_id,
-        stage1_results,
-        stage2_results,
-        stage3_result
+        [r.model_dump() for r in run_result.stage1_results],
+        [r.model_dump() for r in run_result.stage2_results],
+        run_result.stage3_result
     )
 
     # Return the complete response with metadata
     return {
-        "stage1": stage1_results,
-        "stage2": stage2_results,
-        "stage3": stage3_result,
-        "metadata": metadata
+        "stage1": run_result.stage1_results,
+        "stage2": run_result.stage2_results,
+        "stage3": run_result.stage3_result,
+        "metadata": run_result.metadata.model_dump()
     }
 
 
@@ -349,29 +351,29 @@ async def send_message_stream(conversation_id: str, request: SendMessageRequest)
             for model in COUNCIL_MODELS:
                 response = stage1_responses.get(model)
                 if response is not None:
-                    stage1_results.append({
-                        "model": model,
-                        "response": response.get('content', ''),
-                        "status": "success"
-                    })
+                    stage1_results.append(Stage1Result(
+                        model=model,
+                        response=response.get('content', ''),
+                        status="success"
+                    ))
                 else:
-                    stage1_results.append({
-                        "model": model,
-                        "response": "Error: Failed to get response from this model.",
-                        "status": "error"
-                    })
-            yield f"data: {json.dumps({'type': 'stage1_complete', 'data': stage1_results})}\n\n"
+                    stage1_results.append(Stage1Result(
+                        model=model,
+                        response="Error: Failed to get response from this model.",
+                        status="error"
+                    ))
+            yield f"data: {json.dumps({'type': 'stage1_complete', 'data': [r.model_dump() for r in stage1_results]})}\n\n"
 
             # Stage 2: Collect rankings
             yield f"data: {json.dumps({'type': 'stage2_start', 'total': len(COUNCIL_MODELS)})}\n\n"
-            successful_results = [r for r in stage1_results if r.get('status') == "success"]
+            successful_results = [r for r in stage1_results if r.status == "success"]
             labels = [chr(65 + i) for i in range(len(successful_results))]
             label_to_model = {
-                f"Response {label}": result['model']
+                f"Response {label}": result.model
                 for label, result in zip(labels, successful_results)
             }
             responses_text = "\n\n".join([
-                f"Response {label}:\n{result['response']}"
+                f"Response {label}:\n{result.response}"
                 for label, result in zip(labels, successful_results)
             ])
             ranking_prompt = f"""You are evaluating different responses to the following question:
@@ -423,21 +425,21 @@ Now provide your evaluation and ranking:"""
                 if response is not None:
                     full_text = response.get('content', '')
                     parsed = parse_ranking_from_text(full_text)
-                    stage2_results.append({
-                        "model": model,
-                        "ranking": full_text,
-                        "parsed_ranking": parsed,
-                        "status": "success"
-                    })
+                    stage2_results.append(Stage2Result(
+                        model=model,
+                        ranking=full_text,
+                        parsed_ranking=parsed,
+                        status="success"
+                    ))
                 else:
-                    stage2_results.append({
-                        "model": model,
-                        "ranking": "Error: Failed to get ranking from this model.",
-                        "parsed_ranking": [],
-                        "status": "error"
-                    })
+                    stage2_results.append(Stage2Result(
+                        model=model,
+                        ranking="Error: Failed to get ranking from this model.",
+                        parsed_ranking=[],
+                        status="error"
+                    ))
             aggregate_rankings = calculate_aggregate_rankings(stage2_results, label_to_model)
-            yield f"data: {json.dumps({'type': 'stage2_complete', 'data': stage2_results, 'metadata': {'label_to_model': label_to_model, 'aggregate_rankings': aggregate_rankings}})}\n\n"
+            yield f"data: {json.dumps({'type': 'stage2_complete', 'data': [r.model_dump() for r in stage2_results], 'metadata': {'label_to_model': label_to_model, 'aggregate_rankings': [r.model_dump() for r in aggregate_rankings]}})}\n\n"
 
             # Stage 3: Synthesize final answer
             yield f"data: {json.dumps({'type': 'stage3_start'})}\n\n"
@@ -453,8 +455,8 @@ Now provide your evaluation and ranking:"""
             # Save complete assistant message
             storage.add_assistant_message(
                 conversation_id,
-                stage1_results,
-                stage2_results,
+                [r.model_dump() for r in stage1_results],
+                [r.model_dump() for r in stage2_results],
                 stage3_result
             )
 

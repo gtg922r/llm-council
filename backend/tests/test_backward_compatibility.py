@@ -22,7 +22,13 @@ def test_backward_compatibility_with_legacy_messages(tmp_path, monkeypatch):
     storage.save_conversation(conversation)
 
     async def fake_run_full_council(_prompt_content):
-        return [], [], {"response": "ok"}, {}
+        from backend.domain.models import CouncilRun, AssistantMetadata
+        return CouncilRun(
+            stage1_results=[],
+            stage2_results=[],
+            stage3_result={"response": "ok"},
+            metadata=AssistantMetadata()
+        )
 
     monkeypatch.setattr(main, "run_full_council", fake_run_full_council)
 
