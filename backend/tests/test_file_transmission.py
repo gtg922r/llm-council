@@ -96,10 +96,11 @@ def test_add_user_message_omits_files_when_none(tmp_path, monkeypatch):
     assert conversation["messages"][-1]["files"] == []
 
 
-def test_build_prompt_content_requires_name_and_content():
-    """Prompt builder should reject incomplete file dicts."""
-    with pytest.raises(ValueError):
-        build_prompt_content("hello", [{"name": "notes.txt"}])
+def test_build_prompt_content_skips_invalid_files():
+    """Prompt builder should skip incomplete file dicts."""
+    # This used to raise ValueError, but now it skips
+    prompt = build_prompt_content("hello", [{"not_a_name": "foo"}])
+    assert prompt == "hello"
 
 
 @pytest.mark.asyncio

@@ -45,5 +45,5 @@ def test_backward_compatibility_with_legacy_messages(tmp_path, monkeypatch):
     assert post_response.status_code == 200
 
     stored = storage.get_conversation("conv-1")
-    assert "files" not in stored["messages"][0]
+    assert stored["messages"][0]["files"] == []
     assert stored["messages"][-1]["role"] == "assistant"
