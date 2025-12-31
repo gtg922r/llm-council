@@ -15,3 +15,15 @@ This file tracks all major tracks for the project. Each track has its own detail
 ---
 
 
+
+## [~] Track: Delete Confirmation Modal
+
+*Link: [./conductor/tracks/delete_confirmation_modal_20251231/](./conductor/tracks/delete_confirmation_modal_20251231/)*
+
+
+
+
+
+---
+
+
