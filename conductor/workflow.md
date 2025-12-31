@@ -326,3 +326,27 @@ When a track is completed, follow these steps to archive or delete it:
     -   Stage all changes related to the cleanup (file moves, deletions, `tracks.md` updates).
     -   Commit these changes immediately with a message like `conductor: Archive track '<track_name>'`.
     -   Ensure the working directory is clean before finishing the session.
+
+## Track Integration
+
+Once a track has been completed and archived, if it was developed on a branch or worktree, it must be integrated into the main repository.
+
+1.  **Sync to Head:**
+    -   Fetch the latest changes from the remote repository.
+    -   Merge the main branch into your current feature branch to ensure it is up-to-date.
+
+2.  **Resolve Conflicts:**
+    -   Carefully and thoughtfully address any merge conflicts that arise during the sync.
+    -   Verify that the application still functions correctly and all tests pass after resolving conflicts.
+
+3.  **Create Pull Request:**
+    -   Use the GitHub CLI (`gh`) to create a new pull request.
+    -   **Command:** `gh pr create`
+    -   **Format:** The PR description must be clean, professional, and well-formatted.
+    -   **Required Sections:**
+        -   **Overview:** A high-level summary of the track's purpose, goals, and final outcome.
+        -   **Key Changes:** A bulleted list of significant modifications, including new files, refactored components, and modified logic.
+        -   **Verification:** A detailed description of the steps taken to verify the changes. This should include:
+            -   Automated tests run (and their results).
+            -   Manual verification steps performed.
+            -   Confirmation of the "Definition of Done".
