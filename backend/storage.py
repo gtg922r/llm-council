@@ -3,10 +3,13 @@
 import json
 import os
 from datetime import datetime, timezone
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Union
 from pathlib import Path
 from .config import DATA_DIR
-
+try:
+    from .domain.models import AssistantMessageMetadata, Stage1Result, Stage2Result, Stage3Result
+except ImportError:
+    pass  # Allow running without models for initial setup if needed
 
 def ensure_data_dir():
     """Ensure the data directory exists."""
@@ -77,8 +80,17 @@ def save_conversation(conversation: Dict[str, Any]):
     ensure_data_dir()
 
     path = get_conversation_path(conversation['id'])
+    
+    # Ensure serialization of any Pydantic models
+    def json_serializer(obj):
+        if hasattr(obj, 'model_dump'):
+            return obj.model_dump()
+        raise TypeError(f"Type {type(obj)} not serializable")
+
     with open(path, 'w') as f:
-        json.dump(conversation, f, indent=2)
+        # Use default=json_serializer for Pydantic models if they slip through
+        # However, it's better to dump them before saving
+        json.dump(conversation, f, indent=2, default=str)
 
 
 def list_conversations() -> List[Dict[str, Any]]:
@@ -94,18 +106,21 @@ def list_conversations() -> List[Dict[str, Any]]:
     for filename in os.listdir(DATA_DIR):
         if filename.endswith('.json'):
             path = os.path.join(DATA_DIR, filename)
-            with open(path, 'r') as f:
-                data = json.load(f)
-                # Return metadata only
-                conversations.append({
-                    "id": data["id"],
-                    "created_at": data["created_at"],
-                    "title": data.get("title", "New Conversation"),
-                    "is_pinned": data.get("is_pinned", False),
-                    "is_archived": data.get("is_archived", False),
-                    "has_unread": data.get("has_unread", False),
-                    "message_count": len(data["messages"])
-                })
+            try:
+                with open(path, 'r') as f:
+                    data = json.load(f)
+                    # Return metadata only
+                    conversations.append({
+                        "id": data["id"],
+                        "created_at": data["created_at"],
+                        "title": data.get("title", "New Conversation"),
+                        "is_pinned": data.get("is_pinned", False),
+                        "is_archived": data.get("is_archived", False),
+                        "has_unread": data.get("has_unread", False),
+                        "message_count": len(data["messages"])
+                    })
+            except Exception as e:
+                print(f"Error reading conversation {filename}: {e}")
 
     # Sort by creation time, newest first
     conversations.sort(key=lambda x: x["created_at"], reverse=True)
@@ -146,7 +161,8 @@ def add_assistant_message(
     conversation_id: str,
     stage1: List[Dict[str, Any]],
     stage2: List[Dict[str, Any]],
-    stage3: Dict[str, Any]
+    stage3: Dict[str, Any],
+    metadata: Optional[Dict[str, Any]] = None
 ):
     """
     Add an assistant message with all 3 stages to a conversation.
@@ -156,17 +172,23 @@ def add_assistant_message(
         stage1: List of individual model responses
         stage2: List of model rankings
         stage3: Final synthesized response
+        metadata: Optional metadata including label map and aggregate rankings
     """
     conversation = get_conversation(conversation_id)
     if conversation is None:
         raise ValueError(f"Conversation {conversation_id} not found")
 
-    conversation["messages"].append({
+    message = {
         "role": "assistant",
         "stage1": stage1,
         "stage2": stage2,
         "stage3": stage3
-    })
+    }
+    
+    if metadata:
+        message["metadata"] = metadata
+
+    conversation["messages"].append(message)
     conversation["has_unread"] = True
 
     save_conversation(conversation)

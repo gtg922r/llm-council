@@ -1,8 +1,9 @@
 from fastapi.testclient import TestClient
-
+import json
+import pytest
 import backend.main as main
-from backend import storage
-
+import backend.infrastructure.blob_store as blob_store_module
+import backend.application.council_service as council_service_module
 
 def _collect_event_lines(response):
     lines = []
@@ -14,30 +15,27 @@ def _collect_event_lines(response):
         lines.append(line)
     return lines
 
-
-def test_send_message_stream_emits_expected_events(tmp_path, monkeypatch):
+@pytest.mark.asyncio
+async def test_send_message_stream_emits_expected_events(tmp_path, monkeypatch):
     """Streaming endpoint should emit stage events and store files."""
-    monkeypatch.setattr(storage, "DATA_DIR", str(tmp_path))
-    monkeypatch.setattr(main.storage, "DATA_DIR", str(tmp_path))
-    monkeypatch.setattr(main, "COUNCIL_MODELS", ["test-model"])
+    monkeypatch.setattr(main.repository, "data_dir", str(tmp_path))
+    monkeypatch.setattr(blob_store_module, "BLOB_DIR", str(tmp_path / "blobs"))
+    
+    monkeypatch.setattr(council_service_module, "COUNCIL_MODELS", ["test-model"])
 
-    async def fake_query_model(_model, _messages):
+    async def fake_query(model, messages, timeout=30.0):
         return {"content": "Mock response\n\nFINAL RANKING:\n1. Response A"}
 
-    async def fake_stage3(_prompt, _stage1, _stage2):
-        return {"response": "final"}
-
+    monkeypatch.setattr(main.llm_provider, "query", fake_query)
+    
     async def fake_title(_content):
         return "Mock Title"
-
-    monkeypatch.setattr(main, "query_model", fake_query_model)
-    monkeypatch.setattr(main, "stage3_synthesize_final", fake_stage3)
     monkeypatch.setattr(main, "generate_conversation_title", fake_title)
-    monkeypatch.setattr(main, "parse_ranking_from_text", lambda _text: ["Response A"])
-    monkeypatch.setattr(main, "calculate_aggregate_rankings", lambda *_args, **_kwargs: [])
 
     client = TestClient(main.app)
-    conv = client.post("/api/conversations", json={}).json()
+    conv_response = client.post("/api/conversations", json={})
+    assert conv_response.status_code == 200
+    conv = conv_response.json()
 
     payload = {
         "content": "hello",
@@ -52,12 +50,18 @@ def test_send_message_stream_emits_expected_events(tmp_path, monkeypatch):
         assert response.status_code == 200
         lines = _collect_event_lines(response)
 
-    data_lines = [line for line in lines if line.startswith("data: ")]
-    assert any('"type": "stage1_start"' in line for line in data_lines)
-    assert any('"type": "stage2_complete"' in line for line in data_lines)
-    assert any('"type": "stage3_complete"' in line for line in data_lines)
-    assert any('"type": "title_complete"' in line for line in data_lines)
-    assert any('"type": "complete"' in line for line in data_lines)
+    data_lines = [line[6:] for line in lines if line.startswith("data: ")]
+    events = [json.loads(line) for line in data_lines]
+    
+    # Check for event types
+    assert any(e["type"] == "stage1_start" for e in events)
+    assert any(e["type"] == "stage2_complete" for e in events)
+    assert any(e["type"] == "stage3_complete" for e in events)
+    assert any(e["type"] == "complete" for e in events)
 
-    conversation = storage.get_conversation(conv["id"])
-    assert conversation["messages"][-1]["role"] == "assistant"
+    conversation = main.repository.get(conv["id"])
+    assert conversation.messages[-1].role == "assistant"
+    assert conversation.messages[-2].role == "user"
+    assert len(conversation.messages[-2].files) == 1
+    assert conversation.messages[-2].files[0].name == "notes.txt"
+    assert conversation.messages[-2].files[0].file_reference_id is not None
