@@ -10,14 +10,15 @@ class TestChairmanFollowup(unittest.IsolatedAsyncioTestCase):
         including original query, council results, initial response, and follow-up.
         """
         # Mock data
+        from backend.domain.models import Stage1Result, Stage2Result
         original_query = "What is 2+2?"
         stage1_results = [
-            {"model": "ModelA", "response": "The answer is 4.", "status": "success"},
-            {"model": "ModelB", "response": "2+2 = 4", "status": "success"}
+            Stage1Result(model="ModelA", response="The answer is 4.", status="success"),
+            Stage1Result(model="ModelB", response="2+2 = 4", status="success")
         ]
         stage2_results = [
-            {"model": "ModelA", "ranking": "FINAL RANKING:\n1. Response A\n2. Response B", "status": "success"},
-            {"model": "ModelB", "ranking": "FINAL RANKING:\n1. Response A\n2. Response B", "status": "success"}
+            Stage2Result(model="ModelA", ranking="FINAL RANKING:\n1. Response A\n2. Response B", parsed_ranking=["Response A", "Response B"], status="success"),
+            Stage2Result(model="ModelB", ranking="FINAL RANKING:\n1. Response A\n2. Response B", parsed_ranking=["Response A", "Response B"], status="success")
         ]
         stage3_response = "Based on the council, the answer is 4."
         followup_query = "Are you absolutely sure?"

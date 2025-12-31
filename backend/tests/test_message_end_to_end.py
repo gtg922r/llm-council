@@ -13,7 +13,13 @@ def test_send_message_end_to_end_with_files(tmp_path, monkeypatch):
 
     async def fake_run_full_council(prompt_content):
         captured["prompt"] = prompt_content
-        return [], [], {"response": "ok"}, {}
+        from backend.domain.models import CouncilRun, AssistantMetadata
+        return CouncilRun(
+            stage1_results=[],
+            stage2_results=[],
+            stage3_result={"response": "ok"},
+            metadata=AssistantMetadata()
+        )
 
     monkeypatch.setattr(main, "run_full_council", fake_run_full_council)
 
