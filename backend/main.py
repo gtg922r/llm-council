@@ -12,6 +12,18 @@ import asyncio
 
 from . import config
 from .config import COUNCIL_MODELS
+from .infrastructure.blob_store import BlobStore
+from .infrastructure.json_repository import JsonConversationRepository
+from .infrastructure.openrouter_adapter import OpenRouterAdapter
+from .application.council_service import CouncilOrchestrator
+from .application.prompt_builder import build_prompt_content
+from .domain.models import (
+    Attachment, 
+    Conversation as ConversationModel, 
+    UserMessage as UserMessageModel, 
+    AssistantMessage as AssistantMessageModel,
+    AssistantMetadata
+)
 from .council import (
     run_full_council,
     generate_conversation_title,
@@ -24,16 +36,6 @@ from .council import (
     Stage1Result,
     Stage2Result
 )
-from .infrastructure.blob_store import BlobStore
-from .infrastructure.json_repository import JsonConversationRepository
-from .infrastructure.openrouter_adapter import OpenRouterAdapter
-from .domain.models import (
-    Attachment, 
-    Conversation as ConversationModel, 
-    UserMessage as UserMessageModel, 
-    AssistantMessage as AssistantMessageModel,
-    AssistantMetadata
-)
 from .openrouter import query_model
 
 app = FastAPI(title="LLM Council API")
@@ -42,6 +44,13 @@ app = FastAPI(title="LLM Council API")
 conversation_repo = JsonConversationRepository(data_dir=config.DATA_DIR)
 llm_provider = OpenRouterAdapter(api_key=config.OPENROUTER_API_KEY)
 blob_store = BlobStore()
+
+# Application Services
+orchestrator = CouncilOrchestrator(
+    llm_provider=llm_provider, 
+    conversation_repo=conversation_repo,
+    blob_store=blob_store
+)
 
 # Configure CORS origins based on environment
 if config.IS_CODESPACE or config.DEBUG_MODE:
@@ -77,46 +86,6 @@ class SendMessageRequest(BaseModel):
     content: str
     files: List[FileContext] = Field(default_factory=list)
     target_model: str | None = None # e.g., "chairman" for follow-up
-
-
-def build_prompt_content(
-    content: str,
-    files: List[FileContext] | List[Dict[str, Any]] | List[Attachment] | None
-) -> str:
-    """Construct the final prompt with user content and file blocks."""
-    if not files:
-        return content
-
-    blob_store = BlobStore()
-    sections = [content]
-    for f in files:
-        if isinstance(f, dict):
-            name = f.get("name") or f.get("filename")
-            file_content = f.get("content")
-        elif isinstance(f, Attachment):
-            name = f.filename
-            if f.file_reference_id:
-                try:
-                    file_content = blob_store.get_text(f.file_reference_id)
-                except FileNotFoundError:
-                    file_content = f.content or "[Error: Content not found in blob store]"
-            else:
-                file_content = f.content
-        else:
-            name = f.name
-            file_content = f.content
-            
-        if name is None or file_content is None:
-            # Skip invalid files or handle error
-            continue
-            
-        sections.append(
-            f"--- FILE: {name} ---\n"
-            f"{file_content}\n"
-            f"--- END FILE: {name} ---"
-        )
-
-    return "\n\n".join(sections)
 
 
 class ConversationMetadata(BaseModel):
@@ -259,14 +228,8 @@ async def send_message(conversation_id: str, request: SendMessageRequest):
         files=attachments
     )
     conversation.messages.append(user_msg)
+    conversation_repo.save(conversation)
     
-    prompt_content = build_prompt_content(request.content, attachments)
-
-    # If this is the first message, generate a title
-    if is_first_message:
-        title = await generate_conversation_title(request.content)
-        conversation.title = title
-
     # Check for Follow-up (Target: Chairman)
     if request.target_model == "chairman":
         last_assistant_msg = None
@@ -284,6 +247,7 @@ async def send_message(conversation_id: str, request: SendMessageRequest):
             except ValueError:
                 pass
 
+            prompt_content = build_prompt_content(request.content, attachments)
             stage3_result = await chairman_followup(
                 original_query=original_query,
                 stage1_results=last_assistant_msg.stage1,
@@ -309,30 +273,30 @@ async def send_message(conversation_id: str, request: SendMessageRequest):
                 "metadata": {}
             }
 
-    # Run the 3-stage council process (Default)
-    run_result = await run_full_council(
-        prompt_content,
-        llm_provider=llm_provider
-    )
-
-    # Add assistant message with all stages
-    assistant_msg = AssistantMessageModel(
-        stage1=run_result.stage1_results,
-        stage2=run_result.stage2_results,
-        stage3=run_result.stage3_result,
-        metadata=run_result.metadata
-    )
-    conversation.messages.append(assistant_msg)
-    conversation.has_unread = True
-    conversation_repo.save(conversation)
-
-    # Return the complete response with metadata
-    return {
-        "stage1": run_result.stage1_results,
-        "stage2": run_result.stage2_results,
-        "stage3": run_result.stage3_result,
-        "metadata": run_result.metadata.model_dump()
+    # Run the 3-stage council process using Orchestrator
+    final_result = {
+        "stage1": [],
+        "stage2": [],
+        "stage3": {},
+        "metadata": {}
     }
+    
+    async for event in orchestrator.run_council(
+        conversation_id, 
+        request.content,
+        attachments=attachments,
+        is_first_message=is_first_message
+    ):
+        if event.type == "stage_complete":
+            if event.stage == 1:
+                final_result["stage1"] = event.data
+            elif event.stage == 2:
+                final_result["stage2"] = event.data
+                final_result["metadata"] = event.metadata
+            elif event.stage == 3:
+                final_result["stage3"] = event.data
+                
+    return final_result
 
 
 @app.post("/api/conversations/{conversation_id}/message/stream")
@@ -370,90 +334,27 @@ async def send_message_stream(conversation_id: str, request: SendMessageRequest)
             conversation.messages.append(user_msg)
             conversation_repo.save(conversation)
             
-            prompt_content = build_prompt_content(request.content, attachments)
-
-            # Start title generation in parallel (don't await yet)
-            title_task = None
-            if is_first_message:
-                title_task = asyncio.create_task(generate_conversation_title(request.content))
-
-            # Stage 1: Collect responses
-            yield f"data: {json.dumps({'type': 'stage1_start', 'total': len(COUNCIL_MODELS)})}\n\n"
-            
-            # Using llm_provider for parallel calls
-            responses = await llm_provider.chat_parallel(COUNCIL_MODELS, [{"role": "user", "content": prompt_content}])
-            # For progress simulation, we could iterate but chat_parallel gathers them.
-            # In Phase 4 we'll have better events.
-            
-            stage1_results = []
-            for model in COUNCIL_MODELS:
-                response = responses.get(model)
-                if response is not None:
-                    stage1_results.append(Stage1Result(
-                        model=model,
-                        response=response.get('content', ''),
-                        status="success"
-                    ))
-                else:
-                    stage1_results.append(Stage1Result(
-                        model=model,
-                        response="Error: Failed to get response from this model.",
-                        status="error"
-                    ))
-            yield f"data: {json.dumps({'type': 'stage1_complete', 'data': [r.model_dump() for r in stage1_results]})}\n\n"
-
-            # Stage 2: Collect rankings
-            yield f"data: {json.dumps({'type': 'stage2_start', 'total': len(COUNCIL_MODELS)})}\n\n"
-            
-            stage2_results, label_to_model = await stage2_collect_rankings(
-                prompt_content, 
-                stage1_results, 
-                llm_provider=llm_provider
-            )
-            
-            aggregate_rankings = calculate_aggregate_rankings(stage2_results, label_to_model)
-            yield f"data: {json.dumps({'type': 'stage2_complete', 'data': [r.model_dump() for r in stage2_results], 'metadata': {'label_to_model': label_to_model, 'aggregate_rankings': [r.model_dump() for r in aggregate_rankings]}})}\n\n"
-
-            # Stage 3: Synthesize final answer
-            yield f"data: {json.dumps({'type': 'stage3_start'})}\n\n"
-            stage3_result = await stage3_synthesize_final(
-                prompt_content, 
-                stage1_results, 
-                stage2_results, 
-                llm_provider=llm_provider
-            )
-            yield f"data: {json.dumps({'type': 'stage3_complete', 'data': stage3_result})}\n\n"
-
-            # Wait for title generation if it was started
-            if title_task:
-                title = await title_task
-                conversation.title = title
-                yield f"data: {json.dumps({'type': 'title_complete', 'data': {'title': title}})}\n\n"
-
-            # Save complete assistant message
-            assistant_msg = AssistantMessageModel(
-                stage1=stage1_results,
-                stage2=stage2_results,
-                stage3=stage3_result,
-                metadata=AssistantMetadata(
-                    label_to_model=label_to_model,
-                    aggregate_rankings=aggregate_rankings
-                )
-            )
-            conversation.messages.append(assistant_msg)
-            conversation.has_unread = True
-            conversation_repo.save(conversation)
-
-            # Send completion event
-            yield f"data: {json.dumps({'type': 'complete'})}\n\n"
+            # Use Orchestrator
+            async for event in orchestrator.run_council(
+                conversation_id, 
+                request.content,
+                attachments=attachments,
+                is_first_message=is_first_message
+            ):
+                yield f"data: {event.model_dump_json()}\n\n"
 
         except Exception as e:
             # Send error event
             yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
 
-        except Exception as e:
-            # Send error event
-            yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+        }
+    )
 
     return StreamingResponse(
         event_generator(),

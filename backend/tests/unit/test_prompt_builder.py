@@ -1,5 +1,5 @@
 from unittest.mock import patch, MagicMock
-from backend.main import build_prompt_content
+from backend.application.prompt_builder import build_prompt_content
 from backend.domain.models import Attachment
 from backend.infrastructure.blob_store import BlobStore
 
@@ -14,8 +14,8 @@ def test_build_prompt_content_resolves_blobs(tmp_path):
     # Create attachment reference
     att = Attachment(filename="test.txt", file_reference_id=ref_id)
     
-    # Mock BlobStore in main.py
-    with patch("backend.main.BlobStore") as mock_store_class:
+    # Mock BlobStore in application.prompt_builder
+    with patch("backend.application.prompt_builder.BlobStore") as mock_store_class:
         mock_instance = MagicMock()
         mock_instance.get_text.return_value = content
         mock_store_class.return_value = mock_instance

@@ -2,6 +2,7 @@ from fastapi.testclient import TestClient
 
 import backend.main as main
 from backend import storage
+from backend.application.prompt_builder import build_prompt_content
 
 
 def test_send_message_end_to_end_with_files(tmp_path, monkeypatch):
@@ -20,17 +21,13 @@ def test_send_message_end_to_end_with_files(tmp_path, monkeypatch):
 
     captured = {}
 
-    async def fake_run_full_council(prompt_content, llm_provider=None):
-        captured["prompt"] = prompt_content
-        from backend.domain.models import CouncilRun, AssistantMetadata
-        return CouncilRun(
-            stage1_results=[],
-            stage2_results=[],
-            stage3_result={"response": "ok"},
-            metadata=AssistantMetadata()
-        )
+    from backend.application.council_service import StageCompleted, RunCompleted
+    async def fake_run_council(conversation_id, content, attachments=None, is_first_message=False):
+        captured["prompt"] = build_prompt_content(content, attachments)
+        yield StageCompleted(stage=3, data={"response": "ok"})
+        yield RunCompleted()
 
-    monkeypatch.setattr(main, "run_full_council", fake_run_full_council)
+    monkeypatch.setattr(main.orchestrator, "run_council", fake_run_council)
 
     client = TestClient(main.app)
     conv = client.post("/api/conversations", json={}).json()

@@ -36,6 +36,11 @@ def test_send_message_stream_emits_expected_events(tmp_path, monkeypatch):
     monkeypatch.setattr(main, "blob_store", store)
     monkeypatch.setattr(main, "llm_provider", MockLLM())
     monkeypatch.setattr(main, "COUNCIL_MODELS", ["test-model"])
+    
+    # Update orchestrator to use the new instances
+    monkeypatch.setattr(main.orchestrator, "repo", repo)
+    monkeypatch.setattr(main.orchestrator, "blob_store", store)
+    monkeypatch.setattr(main.orchestrator, "llm_provider", main.llm_provider)
 
     client = TestClient(main.app)
     conv = client.post("/api/conversations", json={}).json()
@@ -53,15 +58,17 @@ def test_send_message_stream_emits_expected_events(tmp_path, monkeypatch):
         assert response.status_code == 200
         lines = _collect_event_lines(response)
 
+    import json
     data_lines = [line for line in lines if line.startswith("data: ")]
-    for line in data_lines:
-        print(f"STREAM DATA: {line}")
+    events = [json.loads(line[6:]) for line in data_lines]
+    for e in events:
+        print(f"STREAM EVENT: {e}")
 
-    assert any("\"type\": \"stage1_start\"" in line for line in data_lines)
-    assert any("\"type\": \"stage2_complete\"" in line for line in data_lines)
-    assert any("\"type\": \"stage3_complete\"" in line for line in data_lines)
-    assert any("\"type\": \"title_complete\"" in line for line in data_lines)
-    assert any("\"type\": \"complete\"" in line for line in data_lines)
+    assert any(e.get("type") == "stage_start" and e.get("stage") == 1 for e in events)
+    assert any(e.get("type") == "stage_complete" and e.get("stage") == 1 for e in events)
+    assert any(e.get("type") == "stage_complete" and e.get("stage") == 2 for e in events)
+    assert any(e.get("type") == "stage_complete" and e.get("stage") == 3 for e in events)
+    assert any(e.get("type") == "complete" for e in events)
 
     conversation = repo.get(conv["id"])
     assert conversation.messages[-1].role == "assistant"

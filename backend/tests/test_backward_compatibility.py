@@ -23,17 +23,21 @@ def test_backward_compatibility_with_legacy_messages(tmp_path, monkeypatch):
     )
     repo.save(conversation)
 
-    async def fake_run_full_council(_prompt_content, llm_provider=None):
-        from backend.domain.models import CouncilRun, AssistantMetadata
-        return CouncilRun(
-            stage1_results=[],
-            stage2_results=[],
-            stage3_result={"response": "ok"},
-            metadata=AssistantMetadata()
-        )
-
-    monkeypatch.setattr(main, "run_full_council", fake_run_full_council)
-
+    from backend.application.council_service import StageCompleted, RunCompleted
+    from backend.domain.models import AssistantMessage
+    class MockOrchestrator:
+        async def run_council(self, conversation_id, content, attachments=None, is_first_message=False):
+            # Simulate orchestrator saving the result
+            conv = repo.get(conversation_id)
+            conv.messages.append(AssistantMessage(
+                stage1=[], stage2=[], stage3={"response": "ok"}
+            ))
+            repo.save(conv)
+            
+            yield StageCompleted(stage=3, data={"response": "ok"})
+            yield RunCompleted()
+    
+    monkeypatch.setattr(main, "orchestrator", MockOrchestrator())
     client = TestClient(main.app)
 
     get_response = client.get("/api/conversations/conv-1")
@@ -48,4 +52,5 @@ def test_backward_compatibility_with_legacy_messages(tmp_path, monkeypatch):
 
     stored = repo.get("conv-1")
     assert stored.messages[0].content == "legacy"
+    # The last message should be assistant response from orchestrator
     assert stored.messages[-1].role == "assistant"
