@@ -4,7 +4,7 @@ This plan follows the 5-phase refactor guide to move the application to a Modula
 
 ## Phase 0: Preparation
 - [x] Task: Clean existing data (Delete `data/conversations/` and `data/blobs/`) 2e15e4e
-- [ ] Task: Initialize new backend test infrastructure (Create `backend/tests/unit`, `backend/tests/integration`)
+- [x] Task: Initialize new backend test infrastructure (Create `backend/tests/unit`, `backend/tests/integration`) 66242d0
 
 ## Phase 1: Domain Modeling & Metadata Persistence
 - [ ] Task: Define Pydantic models in `backend/domain/models.py` (Conversation, Message, CouncilRun)
