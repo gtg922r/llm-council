@@ -21,7 +21,7 @@ Your goal is to compare multiple Pull Requests (PRs) implementing the same featu
 3.  **Analysis:**
     - Compare the **Intent** (from descriptions).
     - Compare the **Implementation** (from diffs).
-    - Evaluate based on: Code Quality, Performance, Scalability, and adherence to Best Practices.
+    - Evaluate based on: Architectural Decisions, Code Quality, Performance, Scalability, and adherence to Best Practices.
 
 4.  **Synthesis & Reporting:**
     Create a Markdown file named `temp/PR_REVIEW_COMPARISON.md`. 
@@ -36,7 +36,7 @@ Your goal is to compare multiple Pull Requests (PRs) implementing the same featu
     ## 2. Deep Dive by PR
     (Repeat this section for each PR)
     ### PR #<Number>
-    - **Approach:** [Brief summary of the architectural choice]
+    - **Approach:** [Summary of the architectural choice]
     - **Pros:** ...
     - **Cons:** ...
     
