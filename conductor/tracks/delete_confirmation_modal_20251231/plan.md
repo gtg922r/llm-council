@@ -2,14 +2,11 @@
 
 This plan outlines the steps to replace browser-native `window.confirm` calls with a custom, accessible, and theme-aware React Modal component.
 
-## Phase 1: Foundation - Generic Modal Component
+## Phase 1: Foundation - Generic Modal Component [checkpoint: 62e9626]
 **Goal:** Create a reusable `Modal` component that handles backdrops, centering, and accessibility (Esc key).
 
 - [x] **Task 1.1: Create `Modal` Component and Styles** (862c9a8)
-    - Write tests in `frontend/src/components/__tests__/Modal.test.jsx` for visibility, backdrop click closing, and `Esc` key closing.
-    - Implement `frontend/src/components/Modal.jsx` and `frontend/src/components/Modal.css`.
-    - Ensure it uses CSS variables for theming.
-- [ ] **Task 1.2: Conductor - User Manual Verification 'Phase 1: Foundation' (Protocol in workflow.md)**
+- [x] **Task 1.2: Conductor - User Manual Verification 'Phase 1: Foundation' (Protocol in workflow.md)** (62e9626)
 
 ## Phase 2: Specialized Implementation - Delete Confirmation
 **Goal:** Build the specific `DeleteConfirmationModal` that uses the generic `Modal`.
