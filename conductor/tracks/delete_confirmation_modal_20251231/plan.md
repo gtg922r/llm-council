@@ -17,10 +17,6 @@ This plan outlines the steps to replace browser-native `window.confirm` calls wi
 ## Phase 3: Integration and Refactor
 **Goal:** Replace `window.confirm` in `App.jsx` with the new component.
 
-- [ ] **Task 3.1: Integrate into `App.jsx` for Single Deletion**
-    - Update `App.test.jsx` to reflect the new modal-based flow.
-    - Refactor `App.jsx` to use state for controlling the `DeleteConfirmationModal` for single conversation deletion.
-- [ ] **Task 3.2: Integrate into `App.jsx` for Archive Deletion**
-    - Update tests for archive deletion.
-    - Refactor `App.jsx` to use the modal for "Delete All Archived".
+- [x] **Task 3.1: Integrate into `App.jsx` for Single Deletion** (a5cdbe1)
+- [x] **Task 3.2: Integrate into `App.jsx` for Archive Deletion** (a5cdbe1)
 - [ ] **Task 3.3: Conductor - User Manual Verification 'Phase 3: Integration and Refactor' (Protocol in workflow.md)**
