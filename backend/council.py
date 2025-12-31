@@ -3,6 +3,8 @@
 from typing import List, Dict, Any, Tuple
 from .openrouter import query_models_parallel, query_model
 from .config import COUNCIL_MODELS, CHAIRMAN_MODEL
+from typing import List, Dict, Any, Tuple, Optional
+from .ports import LLMProvider, ConversationRepository
 from .domain.models import (
     Stage1Result, 
     Stage2Result, 
@@ -12,24 +14,41 @@ from .domain.models import (
 )
 
 
-async def stage1_collect_responses(user_query: str) -> List[Stage1Result]:
+async def stage1_collect_responses(
+    user_query: str, 
+    llm_provider: Optional[LLMProvider] = None
+) -> List[Stage1Result]:
     """
     Stage 1: Collect individual responses from all council models.
 
     Args:
         user_query: The user's question
+        llm_provider: LLM provider instance
 
     Returns:
         List of Stage1Result objects
     """
+    from .openrouter import query_models_parallel
+    
     messages = [{"role": "user", "content": user_query}]
 
     # Query all models in parallel
-    responses = await query_models_parallel(COUNCIL_MODELS, messages)
+    if llm_provider:
+        # Assuming the implementation has chat_parallel or we use gather
+        # Let's check if we should add it to LLMProvider port or just use chat
+        if hasattr(llm_provider, 'chat_parallel'):
+            responses = await llm_provider.chat_parallel(COUNCIL_MODELS, messages)
+        else:
+            tasks = [llm_provider.chat(model, messages) for model in COUNCIL_MODELS]
+            results = await asyncio.gather(*tasks)
+            responses = dict(zip(COUNCIL_MODELS, results))
+    else:
+        responses = await query_models_parallel(COUNCIL_MODELS, messages)
 
     # Format results
     stage1_results = []
-    for model, response in responses.items():
+    for model in COUNCIL_MODELS:
+        response = responses.get(model)
         if response is not None:
             stage1_results.append(Stage1Result(
                 model=model,
@@ -48,7 +67,8 @@ async def stage1_collect_responses(user_query: str) -> List[Stage1Result]:
 
 async def stage2_collect_rankings(
     user_query: str,
-    stage1_results: List[Stage1Result]
+    stage1_results: List[Stage1Result],
+    llm_provider: Optional[LLMProvider] = None
 ) -> Tuple[List[Stage2Result], Dict[str, str]]:
     """
     Stage 2: Each model ranks the anonymized responses.
@@ -56,10 +76,13 @@ async def stage2_collect_rankings(
     Args:
         user_query: The original user query
         stage1_results: Results from Stage 1
+        llm_provider: LLM provider instance
 
     Returns:
         Tuple of (rankings list, label_to_model mapping)
     """
+    from .openrouter import query_models_parallel
+
     # Create anonymized labels for successful responses (Response A, Response B, etc.)
     successful_results = [r for r in stage1_results if r.status == "success"]
     
@@ -111,11 +134,20 @@ Now provide your evaluation and ranking:"""
     messages = [{"role": "user", "content": ranking_prompt}]
 
     # Get rankings from all council models in parallel
-    responses = await query_models_parallel(COUNCIL_MODELS, messages)
+    if llm_provider:
+        if hasattr(llm_provider, 'chat_parallel'):
+            responses = await llm_provider.chat_parallel(COUNCIL_MODELS, messages)
+        else:
+            tasks = [llm_provider.chat(model, messages) for model in COUNCIL_MODELS]
+            results = await asyncio.gather(*tasks)
+            responses = dict(zip(COUNCIL_MODELS, results))
+    else:
+        responses = await query_models_parallel(COUNCIL_MODELS, messages)
 
     # Format results
     stage2_results = []
-    for model, response in responses.items():
+    for model in COUNCIL_MODELS:
+        response = responses.get(model)
         if response is not None:
             full_text = response.get('content', '')
             parsed = parse_ranking_from_text(full_text)
@@ -140,7 +172,8 @@ Now provide your evaluation and ranking:"""
 async def stage3_synthesize_final(
     user_query: str,
     stage1_results: List[Stage1Result],
-    stage2_results: List[Stage2Result]
+    stage2_results: List[Stage2Result],
+    llm_provider: Optional[LLMProvider] = None
 ) -> Dict[str, Any]:
     """
     Stage 3: Chairman synthesizes final response.
@@ -149,10 +182,13 @@ async def stage3_synthesize_final(
         user_query: The original user query
         stage1_results: Individual model responses from Stage 1
         stage2_results: Rankings from Stage 2
+        llm_provider: LLM provider instance
 
     Returns:
         Dict with 'model' and 'response' keys
     """
+    from .openrouter import query_model
+
     # Build comprehensive context for chairman
     stage1_text = ""
     for result in stage1_results:
@@ -186,7 +222,10 @@ Provide a clear, well-reasoned final answer that represents the council's collec
     messages = [{"role": "user", "content": chairman_prompt}]
 
     # Query the chairman model
-    response = await query_model(CHAIRMAN_MODEL, messages)
+    if llm_provider:
+        response = await llm_provider.chat(CHAIRMAN_MODEL, messages)
+    else:
+        response = await query_model(CHAIRMAN_MODEL, messages)
 
     if response is None:
         # Fallback if chairman fails
@@ -318,18 +357,22 @@ Title:"""
     return title
 
 
-async def run_full_council(user_query: str) -> CouncilRun:
+async def run_full_council(
+    user_query: str,
+    llm_provider: Optional[LLMProvider] = None
+) -> CouncilRun:
     """
     Run the complete 3-stage council process.
 
     Args:
         user_query: The user's question
+        llm_provider: LLM provider instance
 
     Returns:
         CouncilRun domain model
     """
     # Stage 1: Collect individual responses
-    stage1_results = await stage1_collect_responses(user_query)
+    stage1_results = await stage1_collect_responses(user_query, llm_provider=llm_provider)
 
     # If no models responded successfully, return error
     successful_stage1 = [r for r in stage1_results if r.status == "success"]
@@ -345,7 +388,11 @@ async def run_full_council(user_query: str) -> CouncilRun:
         )
 
     # Stage 2: Collect rankings
-    stage2_results, label_to_model = await stage2_collect_rankings(user_query, stage1_results)
+    stage2_results, label_to_model = await stage2_collect_rankings(
+        user_query, 
+        stage1_results, 
+        llm_provider=llm_provider
+    )
 
     # Calculate aggregate rankings
     aggregate_rankings = calculate_aggregate_rankings(stage2_results, label_to_model)
@@ -354,7 +401,8 @@ async def run_full_council(user_query: str) -> CouncilRun:
     stage3_result = await stage3_synthesize_final(
         user_query,
         stage1_results,
-        stage2_results
+        stage2_results,
+        llm_provider=llm_provider
     )
 
     # Prepare metadata
@@ -376,7 +424,8 @@ async def chairman_followup(
     stage1_results: List[Stage1Result],
     stage2_results: List[Stage2Result],
     stage3_response: str,
-    followup_query: str
+    followup_query: str,
+    llm_provider: Optional[LLMProvider] = None
 ) -> Dict[str, Any]:
     """
     Handle a follow-up question to the Chairman.
@@ -387,10 +436,13 @@ async def chairman_followup(
         stage2_results: Rankings from Stage 2
         stage3_response: The Chairman's initial response
         followup_query: The user's follow-up question
+        llm_provider: LLM provider instance
 
     Returns:
         Dict with 'model' and 'response' keys
     """
+    from .openrouter import query_model
+
     # Build comprehensive context for chairman
     stage1_text = ""
     for result in stage1_results:
@@ -428,7 +480,10 @@ Answer:"""
     messages = [{"role": "user", "content": chairman_prompt}]
 
     # Query the chairman model
-    response = await query_model(CHAIRMAN_MODEL, messages)
+    if llm_provider:
+        response = await llm_provider.chat(CHAIRMAN_MODEL, messages)
+    else:
+        response = await query_model(CHAIRMAN_MODEL, messages)
 
     if response is None:
         return {

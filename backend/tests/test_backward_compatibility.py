@@ -8,20 +8,22 @@ from backend import storage
 
 def test_backward_compatibility_with_legacy_messages(tmp_path, monkeypatch):
     """Legacy conversations without files should still load and accept new messages."""
-    monkeypatch.setattr(storage, "DATA_DIR", str(tmp_path))
-    monkeypatch.setattr(main.storage, "DATA_DIR", str(tmp_path))
+    from backend.infrastructure.json_repository import JsonConversationRepository
+    from backend.domain.models import Conversation as ConversationModel
+    
+    data_dir = tmp_path / "conversations"
+    repo = JsonConversationRepository(data_dir=str(data_dir))
+    monkeypatch.setattr(main, "conversation_repo", repo)
 
-    conversation = {
-        "id": "conv-1",
-        "created_at": datetime.now(timezone.utc).isoformat(),
-        "title": "Legacy Conversation",
-        "is_pinned": False,
-        "is_archived": False,
-        "messages": [{"role": "user", "content": "legacy"}],
-    }
-    storage.save_conversation(conversation)
+    conversation = ConversationModel(
+        id="conv-1",
+        created_at=datetime.now(timezone.utc),
+        title="Legacy Conversation",
+        messages=[{"role": "user", "content": "legacy"}]
+    )
+    repo.save(conversation)
 
-    async def fake_run_full_council(_prompt_content):
+    async def fake_run_full_council(_prompt_content, llm_provider=None):
         from backend.domain.models import CouncilRun, AssistantMetadata
         return CouncilRun(
             stage1_results=[],
@@ -44,6 +46,6 @@ def test_backward_compatibility_with_legacy_messages(tmp_path, monkeypatch):
     )
     assert post_response.status_code == 200
 
-    stored = storage.get_conversation("conv-1")
-    assert stored["messages"][0]["files"] == []
-    assert stored["messages"][-1]["role"] == "assistant"
+    stored = repo.get("conv-1")
+    assert stored.messages[0].content == "legacy"
+    assert stored.messages[-1].role == "assistant"

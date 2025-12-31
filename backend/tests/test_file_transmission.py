@@ -1,5 +1,8 @@
 import pytest
-import backend.main as main
+from unittest.mock import MagicMock
+from backend import storage, main
+from datetime import datetime
+from backend.domain.models import Conversation as ConversationModel, UserMessage as UserMessageModel
 from backend.main import SendMessageRequest, FileContext, build_prompt_content
 from backend import storage
 
@@ -118,7 +121,7 @@ async def test_send_message_uses_prompt_builder(monkeypatch):
     def fake_add_assistant_message(_conversation_id, _stage1, _stage2, _stage3, metadata=None):
         return None
 
-    async def fake_run_full_council(prompt_content):
+    async def fake_run_full_council(prompt_content, llm_provider=None):
         captured["prompt"] = prompt_content
         from backend.domain.models import CouncilRun, AssistantMetadata
         return CouncilRun(
@@ -127,12 +130,16 @@ async def test_send_message_uses_prompt_builder(monkeypatch):
             stage3_result={"response": "ok"},
             metadata=AssistantMetadata()
         )
-
-    monkeypatch.setattr(main.storage, "get_conversation", fake_get_conversation)
-    monkeypatch.setattr(main.storage, "add_user_message", fake_add_user_message)
-    monkeypatch.setattr(main.storage, "add_assistant_message", fake_add_assistant_message)
+    
+    mock_repo = MagicMock()
+    mock_repo.get.return_value = ConversationModel(id="conv-1", created_at=datetime.now(), messages=[UserMessageModel(content="prior")])
+    
+    monkeypatch.setattr(main, "conversation_repo", mock_repo)
+    mock_blob = MagicMock()
+    mock_blob.save_text.return_value = "ref123"
+    monkeypatch.setattr(main, "blob_store", mock_blob)
     monkeypatch.setattr(main, "run_full_council", fake_run_full_council)
-
+    
     request = SendMessageRequest(
         content="hello",
         files=[FileContext(name="notes.txt", content="example", size=7)],
@@ -140,7 +147,16 @@ async def test_send_message_uses_prompt_builder(monkeypatch):
 
     response = await main.send_message("conv-1", request)
 
-    assert captured["content"] == "hello"
-    assert captured["files"] == [{"name": "notes.txt", "content": "example", "size": 7}]
-    assert captured["prompt"] == build_prompt_content("hello", request.files)
+    # Verify repo.save was called with the new messages
+    mock_repo.save.assert_called()
+    saved_conv = mock_repo.save.call_args[0][0]
+    
+    # messages[-2] is the user message I just added
+    assert saved_conv.messages[-2].content == "hello"
+    assert saved_conv.messages[-2].files[0].filename == "notes.txt"
+    
+    # messages[-1] is the assistant response
+    assert saved_conv.messages[-1].role == "assistant"
+    
+    assert captured["prompt"] == build_prompt_content("hello", saved_conv.messages[-2].files)
     assert response["stage3"]["response"] == "ok"
