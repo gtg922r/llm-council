@@ -276,24 +276,41 @@ function App() {
       // Send message with streaming (Default Council flow)
       await api.sendMessageStream(currentConversationId, content, filesForRequest, (eventType, event) => {
         switch (eventType) {
-          case 'stage1_start':
-            setCurrentConversation((prev) => {
-              if (!prev || prev.id !== conversationId) return prev;
-              const messages = [...prev.messages];
-              const lastMsgIndex = messages.length - 1;
-              messages[lastMsgIndex] = {
-                ...messages[lastMsgIndex],
-                loading: { ...messages[lastMsgIndex].loading, stage1: true },
-                progress: {
-                  ...messages[lastMsgIndex].progress,
-                  stage1: { completed: 0, total: event.total ?? 0 }
-                }
-              };
-              return { ...prev, messages };
-            });
+          case 'stage_started': {
+            const stage = event.stage;
+            if (stage === 'stage1' || stage === 'stage2') {
+              setCurrentConversation((prev) => {
+                if (!prev || prev.id !== conversationId) return prev;
+                const messages = [...prev.messages];
+                const lastMsgIndex = messages.length - 1;
+                messages[lastMsgIndex] = {
+                  ...messages[lastMsgIndex],
+                  loading: { ...messages[lastMsgIndex].loading, [stage]: true },
+                  progress: {
+                    ...messages[lastMsgIndex].progress,
+                    [stage]: { completed: 0, total: event.total ?? 0 }
+                  }
+                };
+                return { ...prev, messages };
+              });
+            } else if (stage === 'stage3') {
+              setCurrentConversation((prev) => {
+                if (!prev || prev.id !== conversationId) return prev;
+                const messages = [...prev.messages];
+                const lastMsgIndex = messages.length - 1;
+                messages[lastMsgIndex] = {
+                  ...messages[lastMsgIndex],
+                  loading: { ...messages[lastMsgIndex].loading, stage3: true }
+                };
+                return { ...prev, messages };
+              });
+            }
             break;
+          }
 
-          case 'stage1_progress':
+          case 'stage_progress': {
+            const stage = event.stage;
+            if (stage !== 'stage1' && stage !== 'stage2') break;
             setCurrentConversation((prev) => {
               if (!prev || prev.id !== conversationId) return prev;
               const messages = [...prev.messages];
@@ -303,118 +320,61 @@ function App() {
                 ...current,
                 progress: {
                   ...current.progress,
-                  stage1: {
-                    completed: event.completed ?? current.progress?.stage1?.completed ?? 0,
-                    total: event.total ?? current.progress?.stage1?.total ?? 0,
+                  [stage]: {
+                    completed: event.completed ?? current.progress?.[stage]?.completed ?? 0,
+                    total: event.total ?? current.progress?.[stage]?.total ?? 0,
                   }
                 }
               };
               return { ...prev, messages };
             });
             break;
+          }
 
-          case 'stage1_complete':
+          case 'stage_completed': {
+            const stage = event.stage;
             setCurrentConversation((prev) => {
               if (!prev || prev.id !== conversationId) return prev;
               const messages = [...prev.messages];
               const lastMsgIndex = messages.length - 1;
-              messages[lastMsgIndex] = {
-                ...messages[lastMsgIndex],
-                stage1: event.data,
-                loading: { ...messages[lastMsgIndex].loading, stage1: false },
-                progress: { ...messages[lastMsgIndex].progress, stage1: null }
-              };
+
+              if (stage === 'stage1') {
+                messages[lastMsgIndex] = {
+                  ...messages[lastMsgIndex],
+                  stage1: event.data,
+                  loading: { ...messages[lastMsgIndex].loading, stage1: false },
+                  progress: { ...messages[lastMsgIndex].progress, stage1: null }
+                };
+              } else if (stage === 'stage2') {
+                messages[lastMsgIndex] = {
+                  ...messages[lastMsgIndex],
+                  stage2: event.data,
+                  metadata: event.metadata,
+                  loading: { ...messages[lastMsgIndex].loading, stage2: false },
+                  progress: { ...messages[lastMsgIndex].progress, stage2: null }
+                };
+              } else if (stage === 'stage3') {
+                messages[lastMsgIndex] = {
+                  ...messages[lastMsgIndex],
+                  stage3: event.data,
+                  loading: { ...messages[lastMsgIndex].loading, stage3: false }
+                };
+              }
+
               return { ...prev, messages };
             });
             break;
+          }
 
-          case 'stage2_start':
+          case 'title_updated':
             setCurrentConversation((prev) => {
               if (!prev || prev.id !== conversationId) return prev;
-              const messages = [...prev.messages];
-              const lastMsgIndex = messages.length - 1;
-              messages[lastMsgIndex] = {
-                ...messages[lastMsgIndex],
-                loading: { ...messages[lastMsgIndex].loading, stage2: true },
-                progress: {
-                  ...messages[lastMsgIndex].progress,
-                  stage2: { completed: 0, total: event.total ?? 0 }
-                }
-              };
-              return { ...prev, messages };
+              return { ...prev, title: event.title };
             });
-            break;
-
-          case 'stage2_progress':
-            setCurrentConversation((prev) => {
-              if (!prev || prev.id !== conversationId) return prev;
-              const messages = [...prev.messages];
-              const lastMsgIndex = messages.length - 1;
-              const current = messages[lastMsgIndex];
-              messages[lastMsgIndex] = {
-                ...current,
-                progress: {
-                  ...current.progress,
-                  stage2: {
-                    completed: event.completed ?? current.progress?.stage2?.completed ?? 0,
-                    total: event.total ?? current.progress?.stage2?.total ?? 0,
-                  }
-                }
-              };
-              return { ...prev, messages };
-            });
-            break;
-
-          case 'stage2_complete':
-            setCurrentConversation((prev) => {
-              if (!prev || prev.id !== conversationId) return prev;
-              const messages = [...prev.messages];
-              const lastMsgIndex = messages.length - 1;
-              messages[lastMsgIndex] = {
-                ...messages[lastMsgIndex],
-                stage2: event.data,
-                metadata: event.metadata,
-                loading: { ...messages[lastMsgIndex].loading, stage2: false },
-                progress: { ...messages[lastMsgIndex].progress, stage2: null }
-              };
-              return { ...prev, messages };
-            });
-            break;
-
-          case 'stage3_start':
-            setCurrentConversation((prev) => {
-              if (!prev || prev.id !== conversationId) return prev;
-              const messages = [...prev.messages];
-              const lastMsgIndex = messages.length - 1;
-              messages[lastMsgIndex] = {
-                ...messages[lastMsgIndex],
-                loading: { ...messages[lastMsgIndex].loading, stage3: true }
-              };
-              return { ...prev, messages };
-            });
-            break;
-
-          case 'stage3_complete':
-            setCurrentConversation((prev) => {
-              if (!prev || prev.id !== conversationId) return prev;
-              const messages = [...prev.messages];
-              const lastMsgIndex = messages.length - 1;
-              messages[lastMsgIndex] = {
-                ...messages[lastMsgIndex],
-                stage3: event.data,
-                loading: { ...messages[lastMsgIndex].loading, stage3: false }
-              };
-              return { ...prev, messages };
-            });
-            break;
-
-          case 'title_complete':
-            // Reload conversations to get updated title
             loadConversations();
             break;
 
-          case 'complete':
-            // Stream complete, reload conversations list
+          case 'run_completed':
             refreshConversationUnreadState(conversationId);
             setLoadingConversationId((prev) => (prev === conversationId ? null : prev));
             setPendingConversationIds((prev) => {

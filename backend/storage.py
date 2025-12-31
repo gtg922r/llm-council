@@ -1,11 +1,22 @@
-"""JSON-based storage for conversations."""
+"""JSON-based storage for conversations.
+
+Note: During the architecture refactor this module is kept as a compatibility
+shim for tests and existing imports. New code should prefer the repository and
+blob-store adapters under `backend/infrastructure/`.
+"""
 
 import json
 import os
 from datetime import datetime, timezone
 from typing import List, Dict, Any, Optional
 from pathlib import Path
-from .config import DATA_DIR
+from .config import DATA_DIR, DATA_BLOBS_DIR
+from .infrastructure.blob_store import LocalFileBlobStore
+
+
+def _get_blob_store() -> LocalFileBlobStore:
+    # Lazily bind to the current DATA_BLOBS_DIR so tests can monkeypatch it.
+    return LocalFileBlobStore(DATA_BLOBS_DIR)
 
 
 def ensure_data_dir():
@@ -135,7 +146,31 @@ def add_user_message(
         "content": content
     }
     if files is not None:
-        message["files"] = files
+        # Store large file contents out-of-line (blob store) and persist only
+        # a reference ID in the conversation JSON.
+        processed_files: list[dict[str, Any]] = []
+        for file in files:
+            name = file.get("name")
+            size = file.get("size")
+            if not name:
+                raise ValueError("File context must include a name.")
+
+            if "file_reference_id" in file:
+                processed_files.append(
+                    {"name": name, "file_reference_id": file["file_reference_id"], "size": size}
+                )
+                continue
+
+            if "content" in file:
+                reference_id = _get_blob_store().save_text(str(file["content"]))
+                processed_files.append(
+                    {"name": name, "file_reference_id": reference_id, "size": size}
+                )
+                continue
+
+            raise ValueError("File context must include either content or file_reference_id.")
+
+        message["files"] = processed_files
 
     conversation["messages"].append(message)
 
@@ -146,7 +181,8 @@ def add_assistant_message(
     conversation_id: str,
     stage1: List[Dict[str, Any]],
     stage2: List[Dict[str, Any]],
-    stage3: Dict[str, Any]
+    stage3: Dict[str, Any],
+    metadata: Optional[Dict[str, Any]] = None,
 ):
     """
     Add an assistant message with all 3 stages to a conversation.
@@ -165,7 +201,9 @@ def add_assistant_message(
         "role": "assistant",
         "stage1": stage1,
         "stage2": stage2,
-        "stage3": stage3
+        "stage3": stage3,
+        # Persisted metadata fixes "persistence amnesia" (rankings + label map).
+        "metadata": metadata or {},
     })
     conversation["has_unread"] = True
 
@@ -227,3 +265,8 @@ def delete_conversation(conversation_id: str):
     path = get_conversation_path(conversation_id)
     if os.path.exists(path):
         os.remove(path)
+
+
+def get_file_text(file_reference_id: str) -> str:
+    """Resolve a stored file attachment from the blob store."""
+    return _get_blob_store().get_text(file_reference_id)

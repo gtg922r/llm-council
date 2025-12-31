@@ -138,7 +138,7 @@ describe('App', () => {
 
   it('clears unread when the active conversation finishes a response', async () => {
     api.sendMessageStream.mockImplementationOnce(async (_id, _content, _files, onEvent) => {
-      onEvent('complete', { type: 'complete' });
+      onEvent('run_completed', { type: 'run_completed' });
     });
 
     render(<App />);
@@ -159,7 +159,7 @@ describe('App', () => {
   it('tracks pending conversations during streaming', async () => {
     let triggerComplete;
     api.sendMessageStream.mockImplementationOnce(async (_id, _content, _files, onEvent) => {
-      triggerComplete = () => onEvent('complete', { type: 'complete' });
+      triggerComplete = () => onEvent('run_completed', { type: 'run_completed' });
     });
 
     render(<App />);
@@ -209,7 +209,7 @@ describe('App', () => {
 
     let triggerComplete;
     api.sendMessageStream.mockImplementationOnce(async (_id, _content, _files, onEvent) => {
-      triggerComplete = () => onEvent('complete', { type: 'complete' });
+      triggerComplete = () => onEvent('run_completed', { type: 'run_completed' });
     });
 
     render(<App />);

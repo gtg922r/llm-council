@@ -23,8 +23,14 @@ CHAIRMAN_MODEL = "google/gemini-3-pro-preview"
 # OpenRouter API endpoint
 OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
 
-# Data directory for conversation storage
-DATA_DIR = "data/conversations"
+# Data directories
+# - Conversations: JSON metadata + message references
+# - Blobs: large file attachments stored out-of-line
+DATA_CONVERSATIONS_DIR = os.getenv("DATA_CONVERSATIONS_DIR", "data/conversations")
+DATA_BLOBS_DIR = os.getenv("DATA_BLOBS_DIR", "data/blobs")
+
+# Backwards-compatibility alias (older code/tests may still import DATA_DIR).
+DATA_DIR = DATA_CONVERSATIONS_DIR
 
 # Environment detection
 IS_CODESPACE = os.getenv("CODESPACES") == "true"

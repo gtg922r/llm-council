@@ -1,6 +1,12 @@
 import pytest
-import backend.main as main
-from backend.main import SendMessageRequest, FileContext, build_prompt_content
+
+from backend.application.council_service import CouncilOrchestrator
+from backend.application.prompt_builder import build_prompt_content
+from backend.domain.models import FileAttachment
+from backend.infrastructure.blob_store import LocalFileBlobStore
+from backend.infrastructure.json_repository import JsonConversationRepository
+from backend.main import FileContext, SendMessageRequest
+from backend.ports import LLMProvider
 from backend import storage
 
 
@@ -27,25 +33,36 @@ def test_file_context_size_optional():
 
 
 def test_add_user_message_stores_files(tmp_path, monkeypatch):
-    """Storage should persist files alongside user messages."""
-    monkeypatch.setattr(storage, "DATA_DIR", str(tmp_path))
+    """Storage should persist file references (not raw content)."""
+    conv_dir = tmp_path / "conversations"
+    blob_dir = tmp_path / "blobs"
+    monkeypatch.setattr(storage, "DATA_DIR", str(conv_dir))
+    monkeypatch.setattr(storage, "DATA_BLOBS_DIR", str(blob_dir))
     storage.create_conversation("conv-1")
     files = [{"name": "notes.txt", "content": "example", "size": 7}]
 
     storage.add_user_message("conv-1", "hello", files=files)
     conversation = storage.get_conversation("conv-1")
 
-    assert conversation["messages"][-1]["files"] == files
+    stored_files = conversation["messages"][-1]["files"]
+    assert stored_files[0]["name"] == "notes.txt"
+    assert stored_files[0]["size"] == 7
+    assert "content" not in stored_files[0]
+    assert "file_reference_id" in stored_files[0]
+    assert storage.get_file_text(stored_files[0]["file_reference_id"]) == "example"
 
 
-def test_build_prompt_content_appends_files():
+def test_build_prompt_content_appends_files(tmp_path):
     """Prompt builder should append file blocks after the user message."""
+    blob_store = LocalFileBlobStore(str(tmp_path / "blobs"))
+    ref1 = blob_store.save_text("example")
+    ref2 = blob_store.save_text("- item")
     files = [
-        FileContext(name="notes.txt", content="example", size=7),
-        FileContext(name="todo.md", content="- item", size=6),
+        FileAttachment(name="notes.txt", file_reference_id=ref1, size=7),
+        FileAttachment(name="todo.md", file_reference_id=ref2, size=6),
     ]
 
-    prompt = build_prompt_content("hello", files)
+    prompt = build_prompt_content(content="hello", files=files, blob_store=blob_store)
 
     assert prompt == (
         "hello\n\n"
@@ -58,23 +75,12 @@ def test_build_prompt_content_appends_files():
     )
 
 
-def test_build_prompt_content_accepts_dict_files():
-    """Prompt builder should accept file dicts from storage."""
-    files = [{"name": "notes.txt", "content": "example", "size": 7}]
-
-    prompt = build_prompt_content("hello", files)
-
-    assert prompt == (
-        "hello\n\n"
-        "--- FILE: notes.txt ---\n"
-        "example\n"
-        "--- END FILE: notes.txt ---"
-    )
-
-
 def test_add_user_message_omits_files_when_none(tmp_path, monkeypatch):
     """Storage should omit files when none are provided."""
-    monkeypatch.setattr(storage, "DATA_DIR", str(tmp_path))
+    conv_dir = tmp_path / "conversations"
+    blob_dir = tmp_path / "blobs"
+    monkeypatch.setattr(storage, "DATA_DIR", str(conv_dir))
+    monkeypatch.setattr(storage, "DATA_BLOBS_DIR", str(blob_dir))
     storage.create_conversation("conv-1")
 
     storage.add_user_message("conv-1", "hello")
@@ -83,44 +89,47 @@ def test_add_user_message_omits_files_when_none(tmp_path, monkeypatch):
     assert "files" not in conversation["messages"][-1]
 
 
-def test_build_prompt_content_requires_name_and_content():
-    """Prompt builder should reject incomplete file dicts."""
-    with pytest.raises(ValueError):
-        build_prompt_content("hello", [{"name": "notes.txt"}])
-
-
 @pytest.mark.asyncio
-async def test_send_message_uses_prompt_builder(monkeypatch):
-    """send_message should store raw content and send formatted prompt to models."""
-    captured = {}
+async def test_orchestrator_uses_blob_resolved_file_content(tmp_path):
+    """CouncilOrchestrator should build prompts from blob-stored file contents."""
 
-    def fake_get_conversation(_conversation_id):
-        return {"messages": [{"role": "user", "content": "prior"}]}
+    class RecordingLLM(LLMProvider):
+        def __init__(self):
+            self.calls: list[tuple[str, str]] = []  # (model, prompt)
 
-    def fake_add_user_message(_conversation_id, content, files=None):
-        captured["content"] = content
-        captured["files"] = files
+        async def chat(self, *, model: str, messages: list[dict[str, str]], timeout: float | None = None):
+            prompt = messages[0]["content"]
+            self.calls.append((model, prompt))
+            if model == "google/gemini-2.5-flash":
+                return {"content": "Mock Title"}
+            if model == "chairman":
+                return {"content": "final"}
+            # stage2 prompt includes the example "FINAL RANKING:" block
+            if "FINAL RANKING:" in prompt and "Now provide your evaluation" in prompt:
+                return {"content": "ok\n\nFINAL RANKING:\n1. Response A"}
+            return {"content": "stage1 response"}
 
-    def fake_add_assistant_message(_conversation_id, _stage1, _stage2, _stage3):
-        return None
-
-    async def fake_run_full_council(prompt_content):
-        captured["prompt"] = prompt_content
-        return [], [], {"response": "ok"}, {}
-
-    monkeypatch.setattr(main.storage, "get_conversation", fake_get_conversation)
-    monkeypatch.setattr(main.storage, "add_user_message", fake_add_user_message)
-    monkeypatch.setattr(main.storage, "add_assistant_message", fake_add_assistant_message)
-    monkeypatch.setattr(main, "run_full_council", fake_run_full_council)
-
-    request = SendMessageRequest(
-        content="hello",
-        files=[FileContext(name="notes.txt", content="example", size=7)],
+    repo = JsonConversationRepository(str(tmp_path / "conversations"))
+    blob_store = LocalFileBlobStore(str(tmp_path / "blobs"))
+    llm = RecordingLLM()
+    service = CouncilOrchestrator(
+        repo=repo,
+        llm=llm,
+        blob_store=blob_store,
+        council_models=["council-1"],
+        chairman_model="chairman",
     )
 
-    response = await main.send_message("conv-1", request)
+    repo.create("conv-1")
 
-    assert captured["content"] == "hello"
-    assert captured["files"] == [{"name": "notes.txt", "content": "example", "size": 7}]
-    assert captured["prompt"] == build_prompt_content("hello", request.files)
-    assert response["stage3"]["response"] == "ok"
+    async for _event in service.run(
+        conversation_id="conv-1",
+        content="hello",
+        files=[{"name": "notes.txt", "content": "example", "size": 7}],
+    ):
+        pass
+
+    stage1_prompts = [p for (m, p) in llm.calls if m == "council-1" and "Now provide your evaluation" not in p]
+    assert stage1_prompts, "Expected at least one Stage 1 prompt call"
+    assert "--- FILE: notes.txt ---" in stage1_prompts[0]
+    assert "example" in stage1_prompts[0]

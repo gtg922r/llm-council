@@ -1,7 +1,10 @@
 from fastapi.testclient import TestClient
 
 import backend.main as main
-from backend import storage
+from backend.application.council_service import CouncilOrchestrator
+from backend.infrastructure.blob_store import LocalFileBlobStore
+from backend.infrastructure.json_repository import JsonConversationRepository
+from backend.ports import LLMProvider
 
 
 def _collect_event_lines(response):
@@ -15,49 +18,74 @@ def _collect_event_lines(response):
     return lines
 
 
-def test_send_message_stream_emits_expected_events(tmp_path, monkeypatch):
-    """Streaming endpoint should emit stage events and store files."""
-    monkeypatch.setattr(storage, "DATA_DIR", str(tmp_path))
-    monkeypatch.setattr(main.storage, "DATA_DIR", str(tmp_path))
-    monkeypatch.setattr(main, "COUNCIL_MODELS", ["test-model"])
+def test_send_message_stream_emits_expected_events(tmp_path):
+    """Streaming endpoint should emit domain events and store messages."""
+    repo = JsonConversationRepository(str(tmp_path / "conversations"))
+    blob_store = LocalFileBlobStore(str(tmp_path / "blobs"))
 
-    async def fake_query_model(_model, _messages):
-        return {"content": "Mock response\n\nFINAL RANKING:\n1. Response A"}
+    class FakeLLM(LLMProvider):
+        async def chat(self, *, model: str, messages: list[dict[str, str]], timeout: float | None = None):
+            prompt = messages[0]["content"]
+            if model == "google/gemini-2.5-flash":
+                return {"content": "Mock Title"}
+            if model == "chairman":
+                return {"content": "final"}
+            if "Now provide your evaluation" in prompt:
+                return {"content": "Mock response\n\nFINAL RANKING:\n1. Response A"}
+            return {"content": "Mock response"}
 
-    async def fake_stage3(_prompt, _stage1, _stage2):
-        return {"response": "final"}
+    llm = FakeLLM()
+    service = CouncilOrchestrator(
+        repo=repo,
+        llm=llm,
+        blob_store=blob_store,
+        council_models=["test-model"],
+        chairman_model="chairman",
+    )
 
-    async def fake_title(_content):
-        return "Mock Title"
-
-    monkeypatch.setattr(main, "query_model", fake_query_model)
-    monkeypatch.setattr(main, "stage3_synthesize_final", fake_stage3)
-    monkeypatch.setattr(main, "generate_conversation_title", fake_title)
-    monkeypatch.setattr(main, "parse_ranking_from_text", lambda _text: ["Response A"])
-    monkeypatch.setattr(main, "calculate_aggregate_rankings", lambda *_args, **_kwargs: [])
+    previous_overrides = dict(main.app.dependency_overrides)
+    main.app.dependency_overrides[main.get_repo] = lambda: repo
+    main.app.dependency_overrides[main.get_blob_store] = lambda: blob_store
+    main.app.dependency_overrides[main.get_llm_provider] = lambda: llm
+    main.app.dependency_overrides[main.get_council_service] = lambda: service
 
     client = TestClient(main.app)
-    conv = client.post("/api/conversations", json={}).json()
+    try:
+        conv = client.post("/api/conversations", json={}).json()
 
-    payload = {
-        "content": "hello",
-        "files": [{"name": "notes.txt", "content": "example", "size": 7}],
-    }
+        payload = {
+            "content": "hello",
+            "files": [{"name": "notes.txt", "content": "example", "size": 7}],
+        }
 
-    with client.stream(
-        "POST",
-        f"/api/conversations/{conv['id']}/message/stream",
-        json=payload,
-    ) as response:
-        assert response.status_code == 200
-        lines = _collect_event_lines(response)
+        with client.stream(
+            "POST",
+            f"/api/conversations/{conv['id']}/message/stream",
+            json=payload,
+        ) as response:
+            assert response.status_code == 200
+            lines = _collect_event_lines(response)
 
-    data_lines = [line for line in lines if line.startswith("data: ")]
-    assert any('"type": "stage1_start"' in line for line in data_lines)
-    assert any('"type": "stage2_complete"' in line for line in data_lines)
-    assert any('"type": "stage3_complete"' in line for line in data_lines)
-    assert any('"type": "title_complete"' in line for line in data_lines)
-    assert any('"type": "complete"' in line for line in data_lines)
+        data_lines = [line for line in lines if line.startswith("data: ")]
+        assert any(
+            '"type":"stage_started"' in line or '"type": "stage_started"' in line
+            for line in data_lines
+        )
+        assert any(
+            '"type":"stage_completed"' in line or '"type": "stage_completed"' in line
+            for line in data_lines
+        )
+        assert any(
+            '"type":"title_updated"' in line or '"type": "title_updated"' in line
+            for line in data_lines
+        )
+        assert any(
+            '"type":"run_completed"' in line or '"type": "run_completed"' in line
+            for line in data_lines
+        )
 
-    conversation = storage.get_conversation(conv["id"])
-    assert conversation["messages"][-1]["role"] == "assistant"
+        conversation = repo.get(conv["id"])
+        assert conversation is not None
+        assert conversation.messages[-1].role == "assistant"
+    finally:
+        main.app.dependency_overrides = previous_overrides
