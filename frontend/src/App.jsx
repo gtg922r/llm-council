@@ -52,7 +52,8 @@ function App() {
             // If this conversation is currently pending, ensure we show a loading assistant message
             if (pendingConversationIds.has(conv.id)) {
               const messages = conv.messages || [];
-              const lastMessage = messages[messages.length - 1];
+              let lastMessage = messages[messages.length - 1];
+              
               if (lastMessage?.role !== 'assistant') {
                 messages.push({
                   role: 'assistant',
@@ -63,6 +64,17 @@ function App() {
                   progress: { stage1: null, stage2: null },
                   loading: { stage1: true, stage2: false, stage3: false },
                 });
+              } else {
+                // Determine loading state based on existing data from server
+                const hasS1 = lastMessage.stage1 && lastMessage.stage1.length > 0;
+                const hasS2 = lastMessage.stage2 && lastMessage.stage2.length > 0;
+                const hasS3 = lastMessage.stage3 && lastMessage.stage3.response;
+
+                lastMessage.loading = {
+                  stage1: !hasS1,
+                  stage2: hasS1 && !hasS2,
+                  stage3: hasS2 && !hasS3
+                };
               }
               conv.messages = messages;
             }

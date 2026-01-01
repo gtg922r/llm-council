@@ -112,6 +112,7 @@ class CouncilOrchestrator:
                 stage1_results.append(Stage1Result(model=model, response="Error", status="error"))
         
         yield StageCompleted(stage=1, data=[r.model_dump() for r in stage1_results])
+        self._update_saved_message(conversation_id, stage1=stage1_results)
         
         # --- Stage 2 ---
         yield StageStarted(stage=2, total=len(COUNCIL_MODELS))
@@ -197,6 +198,11 @@ Now provide your evaluation and ranking:"""
             "aggregate_rankings": [r.model_dump() for r in aggregate_rankings]
         }
         yield StageCompleted(stage=2, data=[r.model_dump() for r in stage2_results], metadata=metadata)
+        self._update_saved_message(
+            conversation_id, 
+            stage2=stage2_results, 
+            metadata=AssistantMetadata(label_to_model=label_to_model, aggregate_rankings=aggregate_rankings)
+        )
         
         # --- Stage 3 ---
         yield StageStarted(stage=3)
@@ -207,6 +213,7 @@ Now provide your evaluation and ranking:"""
             llm_provider=self.llm_provider
         )
         yield StageCompleted(stage=3, data=stage3_result)
+        self._update_saved_message(conversation_id, stage3=stage3_result)
         
         # Title handling
         if title_task:
@@ -217,20 +224,33 @@ Now provide your evaluation and ranking:"""
                 self.repo.save(conv)
             yield TitleGenerated(title=title)
             
-        # Save final assistant message
-        conv = self.repo.get(conversation_id)
-        if conv:
-            assistant_msg = AssistantMessage(
-                stage1=stage1_results,
-                stage2=stage2_results,
-                stage3=stage3_result,
-                metadata=AssistantMetadata(
-                    label_to_model=label_to_model,
-                    aggregate_rankings=aggregate_rankings
-                )
-            )
-            conv.messages.append(assistant_msg)
-            conv.has_unread = True
-            self.repo.save(conv)
-            
         yield RunCompleted()
+
+    def _update_saved_message(
+        self, 
+        conversation_id: str, 
+        stage1=None, 
+        stage2=None, 
+        stage3=None, 
+        metadata=None
+    ):
+        """Helper to update or create the assistant message in the repository."""
+        conv = self.repo.get(conversation_id)
+        if not conv:
+            return
+
+        # Find the last assistant message or create one
+        assistant_msg = None
+        if conv.messages and isinstance(conv.messages[-1], AssistantMessage):
+            assistant_msg = conv.messages[-1]
+        else:
+            assistant_msg = AssistantMessage()
+            conv.messages.append(assistant_msg)
+
+        if stage1 is not None: assistant_msg.stage1 = stage1
+        if stage2 is not None: assistant_msg.stage2 = stage2
+        if stage3 is not None: assistant_msg.stage3 = stage3
+        if metadata is not None: assistant_msg.metadata = metadata
+
+        conv.has_unread = True
+        self.repo.save(conv)
