@@ -41,6 +41,14 @@ function App() {
       api.getConversation(currentConversationId)
         .then((conv) => {
           if (isActive) {
+            // If this conversation is currently pending locally, 
+            // only overwrite if the server has MORE messages (meaning it's actually updated)
+            // or if the local state is empty.
+            if (pendingConversationIds.has(conv.id) && currentConversation?.messages?.length > conv.messages?.length) {
+              console.log('Skipping server update to preserve local streaming state');
+              return;
+            }
+
             // If this conversation is currently pending, ensure we show a loading assistant message
             if (pendingConversationIds.has(conv.id)) {
               const messages = conv.messages || [];
