@@ -12,10 +12,10 @@ describe('ChatInterface', () => {
   const mockConversationWithMessages = {
     id: '1',
     title: 'Test Conversation',
-    messages: [
-      { role: 'user', content: 'hello' },
-      { role: 'assistant', content: 'world', stage3: 'world' }
-    ]
+      messages: [
+        { role: 'user', content: 'hello' },
+        { role: 'assistant', stage3: { response: 'done' } }
+      ]
   };
 
   beforeAll(() => {
