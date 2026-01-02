@@ -40,21 +40,34 @@ function App() {
       let isActive = true;
       api.getConversation(currentConversationId)
         .then((conv) => {
-          if (isActive) {
-            // If this conversation is currently pending locally, 
-            // only overwrite if the server has MORE messages (meaning it's actually updated)
-            // or if the local state is empty.
-            if (pendingConversationIds.has(conv.id) && currentConversation?.messages?.length > conv.messages?.length) {
-              console.log('Skipping server update to preserve local streaming state');
-              return;
-            }
+          if (!isActive) return;
 
-            // If this conversation is currently pending, ensure we show a loading assistant message
-            if (pendingConversationIds.has(conv.id)) {
-              const messages = conv.messages || [];
-              let lastMessage = messages[messages.length - 1];
+          // If this conversation is currently pending locally, 
+          // only overwrite if the server has MORE data than we currently have.
+          const localLastMsg = currentConversation?.messages?.[currentConversation?.messages?.length - 1];
+          const serverLastMsg = conv.messages?.[conv.messages?.length - 1];
+          
+          const serverHasMoreData = 
+            !currentConversation || 
+            (conv.messages?.length > currentConversation?.messages?.length) ||
+            (serverLastMsg?.role === 'assistant' && (
+              ((serverLastMsg.stage1?.length || 0) > (localLastMsg?.stage1?.length || 0)) ||
+              ((serverLastMsg.stage2?.length || 0) > (localLastMsg?.stage2?.length || 0)) ||
+              (!!serverLastMsg.stage3?.response && !localLastMsg?.stage3?.response)
+            ));
+
+          let finalConv = { ...conv };
+          if (pendingConversationIds.has(conv.id) && currentConversation && !serverHasMoreData) {
+            finalConv = { ...currentConversation };
+          }
+
+          // Ensure we show correct loading state for pending conversations
+          if (pendingConversationIds.has(finalConv.id)) {
+            const messages = [...(finalConv.messages || [])];
+            if (messages.length > 0) {
+              let lastMessage = { ...messages[messages.length - 1] };
               
-              if (lastMessage?.role !== 'assistant') {
+              if (lastMessage.role !== 'assistant') {
                 messages.push({
                   role: 'assistant',
                   stage1: null,
@@ -65,10 +78,9 @@ function App() {
                   loading: { stage1: true, stage2: false, stage3: false },
                 });
               } else {
-                // Determine loading state based on existing data from server
-                const hasS1 = lastMessage.stage1 && lastMessage.stage1.length > 0;
-                const hasS2 = lastMessage.stage2 && lastMessage.stage2.length > 0;
-                const hasS3 = lastMessage.stage3 && lastMessage.stage3.response;
+                const hasS1 = !!(lastMessage.stage1 && lastMessage.stage1.length > 0);
+                const hasS2 = !!(lastMessage.stage2 && lastMessage.stage2.length > 0);
+                const hasS3 = !!(lastMessage.stage3 && (lastMessage.stage3.response || lastMessage.stage3.content));
 
                 lastMessage.loading = {
                   stage1: !hasS1,
@@ -76,10 +88,11 @@ function App() {
                   stage3: hasS2 && !hasS3
                 };
               }
-              conv.messages = messages;
+              messages[messages.length - 1] = lastMessage;
+              finalConv.messages = messages;
             }
-            setCurrentConversation(conv);
           }
+          setCurrentConversation(finalConv);
         })
         .catch((error) => {
           if (isActive) {

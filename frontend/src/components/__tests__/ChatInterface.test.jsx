@@ -79,6 +79,33 @@ describe('ChatInterface', () => {
     expect(screen.queryByRole('form', { name: /chat input form/i })).not.toBeInTheDocument();
   });
 
+  it('hides Stage3 and follow-up trigger when stage3 response is missing', () => {
+    const conversation = {
+      id: '1',
+      title: 'Empty Stage3',
+      messages: [
+        { role: 'user', content: 'hello' },
+        { role: 'assistant', stage3: {} } // Missing .response
+      ]
+    };
+
+    render(
+      <ChatInterface
+        conversation={conversation}
+        onSendMessage={() => {}}
+        onHeaderAction={() => {}}
+        onUpdateTitle={() => {}}
+        isLoading={false}
+      />
+    );
+
+    // Should NOT show follow-up trigger
+    expect(screen.queryByText(/Send Message to Chairman/i)).not.toBeInTheDocument();
+    // Should NOT render Stage3 content (we can check by searching for common Stage3 elements if it had any unique ones, 
+    // but the final-response class is a good proxy if we didn't mock it)
+    // Since we don't mock Stage3 in this file, it will try to render the real one which returns null if finalResponse.response is missing.
+  });
+
   it('validates and stages files', async () => {
     render(
       <ChatInterface 

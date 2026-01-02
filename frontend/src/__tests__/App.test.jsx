@@ -72,6 +72,7 @@ vi.mock('../components/ChatInterface', () => ({
     const lastMsg = conversation.messages[conversation.messages.length - 1];
     return (
       <div data-testid="chat-interface">
+        <h2>{conversation.title}</h2>
         <button
           type="button"
           onClick={() => onSendMessage('hello', undefined, fileToSend ? [fileToSend] : [])}
@@ -407,5 +408,67 @@ describe('App', () => {
     await act(async () => {
       triggerEvent('complete', { type: 'complete' });
     });
+  });
+
+  it('re-detects the correct loading stage when re-selecting a pending conversation', async () => {
+    // 1. Setup mock list with 2 items BEFORE render
+    api.listConversations.mockResolvedValue([
+      { id: 'conv-1', title: 'Pending' },
+      { id: 'conv-2', title: 'Other' }
+    ]);
+
+    // 2. Setup getConversation mock
+    api.getConversation.mockImplementation(async (id) => {
+      if (id === 'conv-1') {
+        return {
+          id: 'conv-1',
+          title: 'Pending Conv',
+          messages: [
+            { role: 'user', content: 'hello' },
+            { 
+              role: 'assistant', 
+              stage1: [{ model: 'm1', response: 'r1', status: 'success' }],
+              stage2: [],
+              stage3: {}
+            }
+          ],
+        };
+      }
+      return { id: 'conv-2', title: 'Other', messages: [] };
+    });
+
+    render(<App />);
+
+    // 3. Select conv-1 and make it pending
+    await waitFor(() => expect(screen.getByText('Select Conversation')).toBeInTheDocument());
+    fireEvent.click(screen.getByText('Select Conversation'));
+    
+    await waitFor(() => expect(screen.getByText('Send')).toBeInTheDocument());
+    
+    // Trigger send to make it pending locally
+    await act(async () => {
+      fireEvent.click(screen.getByText('Send'));
+    });
+    expect(screen.getByTestId('pending-count').textContent).toBe('1');
+
+    // 4. Switch away to conv-2
+    await act(async () => {
+      fireEvent.click(screen.getByText('Select Conversation 2'));
+    });
+    // Wait for the Other conversation to appear
+    await waitFor(() => expect(screen.getByText('Other')).toBeInTheDocument());
+    
+    // 5. Switch back to conv-1
+    await act(async () => {
+      fireEvent.click(screen.getByText('Select Conversation'));
+    });
+
+    // 6. Verify loading state: Stage 1 should be FALSE (done), Stage 2 should be TRUE (loading)
+    await waitFor(() => {
+      const s1 = screen.getByTestId('s1-loading');
+      const s2 = screen.getByTestId('s2-loading');
+      expect(s1.textContent).toBe('false');
+      expect(s2.textContent).toBe('true');
+    }, { timeout: 2000 });
   });
 });

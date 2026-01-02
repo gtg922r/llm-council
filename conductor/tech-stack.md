@@ -3,9 +3,14 @@
 ## Backend
 - **Language:** Python (>=3.10)
 - **Framework:** FastAPI
+- **Architecture:** Modular Hexagonal (Ports & Adapters)
 - **HTTP Client:** httpx (async) for communicating with OpenRouter
 - **Data Validation:** Pydantic
 - **Web Server:** Uvicorn
+
+## Data Storage
+- **Metadata:** Local JSON file persistence (`data/conversations/`)
+- **Large Files:** Content-Addressable Blob Store (`data/blobs/`) using SHA-256 hashes
 
 ## Frontend
 - **Language:** JavaScript (ES modules)
