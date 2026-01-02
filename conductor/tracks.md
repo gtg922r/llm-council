@@ -16,3 +16,8 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ## [ ] Track: Comprehensive architectural refactor to Modular Hexagonal (Ports & Adapters) architecture.
 *Link: [./conductor/tracks/architecture_refactor_20251231/](./conductor/tracks/architecture_refactor_20251231/)*
+
+---
+
+## [ ] Track: Council Speed Settings (Fast vs. Smart)
+*Link: [./conductor/tracks/council_speed_settings_20260102/](./conductor/tracks/council_speed_settings_20260102/)*
