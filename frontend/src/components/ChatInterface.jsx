@@ -178,7 +178,7 @@ export default function ChatInterface({
                         {msg.files.map((file, fIndex) => (
                           <div key={fIndex} className="file-chip">
                             <Paperclip size={14} />
-                            <span className="file-chip-name">{file.name}</span>
+                            <span className="file-chip-name">{file.filename || file.name}</span>
                           </div>
                         ))}
                       </div>
@@ -241,10 +241,10 @@ export default function ChatInterface({
                       <span>Running Stage 3: Final synthesis...</span>
                     </div>
                   )}
-                  {msg.stage3 && <Stage3 finalResponse={msg.stage3} />}
+                  {msg.stage3 && msg.stage3.response && <Stage3 finalResponse={msg.stage3} />}
 
                   {/* Follow-up Trigger */}
-                  {msg.stage3 && index === messages.length - 1 && !isLoading && !isInputManual && (
+                  {msg.stage3 && msg.stage3.response && index === messages.length - 1 && !isLoading && !isInputManual && (
                     <FollowUpInput 
                       onActivate={() => {
                         setInputMode('chairman');

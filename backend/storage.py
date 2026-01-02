@@ -3,9 +3,19 @@
 import json
 import os
 from datetime import datetime, timezone
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Union
 from pathlib import Path
 from .config import DATA_DIR
+from .infrastructure.blob_store import BlobStore
+from .domain.models import (
+    Conversation, 
+    UserMessage, 
+    AssistantMessage, 
+    AssistantMetadata,
+    Stage1Result,
+    Stage2Result,
+    Attachment
+)
 
 
 def ensure_data_dir():
@@ -30,22 +40,17 @@ def create_conversation(conversation_id: str) -> Dict[str, Any]:
     """
     ensure_data_dir()
 
-    conversation = {
-        "id": conversation_id,
-        "created_at": datetime.now(timezone.utc).isoformat(),
-        "title": "New Conversation",
-        "is_pinned": False,
-        "is_archived": False,
-        "has_unread": False,
-        "messages": []
-    }
+    conversation = Conversation(
+        id=conversation_id,
+        created_at=datetime.now(timezone.utc),
+        title="New Conversation",
+        messages=[]
+    )
 
     # Save to file
-    path = get_conversation_path(conversation_id)
-    with open(path, 'w') as f:
-        json.dump(conversation, f, indent=2)
+    save_conversation(conversation)
 
-    return conversation
+    return conversation.model_dump()
 
 
 def get_conversation(conversation_id: str) -> Optional[Dict[str, Any]]:
@@ -64,21 +69,39 @@ def get_conversation(conversation_id: str) -> Optional[Dict[str, Any]]:
         return None
 
     with open(path, 'r') as f:
-        return json.load(f)
+        data = json.load(f)
+        # Validate through Pydantic to ensure all fields (including metadata) are present
+        try:
+            conv = Conversation.model_validate(data)
+            return conv.model_dump(exclude_none=True)
+        except Exception as e:
+            # Fallback for legacy data if needed, or just return as is
+            # For this refactor, we want to ensure it matches the model
+            return data
 
 
-def save_conversation(conversation: Dict[str, Any]):
+def save_conversation(conversation: Union[Dict[str, Any], Conversation]):
     """
     Save a conversation to storage.
 
     Args:
-        conversation: Conversation dict to save
+        conversation: Conversation dict or object to save
     """
     ensure_data_dir()
 
-    path = get_conversation_path(conversation['id'])
+    if isinstance(conversation, Conversation):
+        conversation_id = conversation.id
+        data = conversation.model_dump(exclude_none=True)
+    else:
+        conversation_id = conversation['id']
+        data = conversation
+
+    # Custom JSON encoder to handle datetime if we were using raw dicts with datetime objects
+    # But Pydantic's model_dump handles it.
+    
+    path = get_conversation_path(conversation_id)
     with open(path, 'w') as f:
-        json.dump(conversation, f, indent=2)
+        json.dump(data, f, indent=2, default=str)
 
 
 def list_conversations() -> List[Dict[str, Any]]:
@@ -95,17 +118,23 @@ def list_conversations() -> List[Dict[str, Any]]:
         if filename.endswith('.json'):
             path = os.path.join(DATA_DIR, filename)
             with open(path, 'r') as f:
-                data = json.load(f)
-                # Return metadata only
-                conversations.append({
-                    "id": data["id"],
-                    "created_at": data["created_at"],
-                    "title": data.get("title", "New Conversation"),
-                    "is_pinned": data.get("is_pinned", False),
-                    "is_archived": data.get("is_archived", False),
-                    "has_unread": data.get("has_unread", False),
-                    "message_count": len(data["messages"])
-                })
+                try:
+                    data = json.load(f)
+                    # Use Pydantic to validate and handle defaults
+                    conv = Conversation.model_validate(data)
+                    # Return metadata only
+                    conversations.append({
+                        "id": conv.id,
+                        "created_at": conv.created_at.isoformat() if isinstance(conv.created_at, datetime) else conv.created_at,
+                        "title": conv.title,
+                        "is_pinned": conv.is_pinned,
+                        "is_archived": conv.is_archived,
+                        "has_unread": conv.has_unread,
+                        "message_count": len(conv.messages)
+                    })
+                except Exception:
+                    # Skip malformed files
+                    continue
 
     # Sort by creation time, newest first
     conversations.sort(key=lambda x: x["created_at"], reverse=True)
@@ -126,48 +155,78 @@ def add_user_message(
         content: User message content
         files: Optional list of file context dicts
     """
-    conversation = get_conversation(conversation_id)
-    if conversation is None:
+    data = get_conversation(conversation_id)
+    if data is None:
         raise ValueError(f"Conversation {conversation_id} not found")
 
-    message = {
-        "role": "user",
-        "content": content
-    }
-    if files is not None:
-        message["files"] = files
+    conversation = Conversation.model_validate(data)
+    
+    blob_store = BlobStore()
+    
+    attachments = []
+    if files:
+        for f in files:
+            # Save content to blob store if present
+            file_content = f.get("content", "")
+            ref_id = blob_store.save_text(file_content)
+            
+            attachments.append(Attachment(
+                filename=f.get("name") or f.get("filename", "unnamed"),
+                content_type=f.get("content_type", "text/plain"),
+                file_reference_id=ref_id,
+                size=f.get("size")
+            ))
 
-    conversation["messages"].append(message)
+    message = UserMessage(
+        content=content,
+        files=attachments
+    )
+    
+    conversation.messages.append(message)
 
     save_conversation(conversation)
 
 
 def add_assistant_message(
     conversation_id: str,
-    stage1: List[Dict[str, Any]],
-    stage2: List[Dict[str, Any]],
-    stage3: Dict[str, Any]
+    stage1: List[Union[Dict[str, Any], Stage1Result]],
+    stage2: List[Union[Dict[str, Any], Stage2Result]],
+    stage3: Dict[str, Any],
+    metadata: Optional[Union[Dict[str, Any], AssistantMetadata]] = None
 ):
     """
-    Add an assistant message with all 3 stages to a conversation.
+    Add an assistant message with all 3 stages and metadata to a conversation.
 
     Args:
         conversation_id: Conversation identifier
         stage1: List of individual model responses
         stage2: List of model rankings
         stage3: Final synthesized response
+        metadata: Optional metadata (label map, aggregate rankings)
     """
-    conversation = get_conversation(conversation_id)
-    if conversation is None:
+    data = get_conversation(conversation_id)
+    if data is None:
         raise ValueError(f"Conversation {conversation_id} not found")
 
-    conversation["messages"].append({
-        "role": "assistant",
-        "stage1": stage1,
-        "stage2": stage2,
-        "stage3": stage3
-    })
-    conversation["has_unread"] = True
+    conversation = Conversation.model_validate(data)
+
+    # Convert inputs to models if they are dicts
+    s1 = [Stage1Result.model_validate(i) if isinstance(i, dict) else i for i in stage1]
+    s2 = [Stage2Result.model_validate(i) if isinstance(i, dict) else i for i in stage2]
+    
+    meta = AssistantMetadata()
+    if metadata:
+        meta = AssistantMetadata.model_validate(metadata) if isinstance(metadata, dict) else metadata
+
+    message = AssistantMessage(
+        stage1=s1,
+        stage2=s2,
+        stage3=stage3,
+        metadata=meta
+    )
+
+    conversation.messages.append(message)
+    conversation.has_unread = True
 
     save_conversation(conversation)
 
@@ -180,11 +239,12 @@ def update_conversation_title(conversation_id: str, title: str):
         conversation_id: Conversation identifier
         title: New title for the conversation
     """
-    conversation = get_conversation(conversation_id)
-    if conversation is None:
+    data = get_conversation(conversation_id)
+    if data is None:
         raise ValueError(f"Conversation {conversation_id} not found")
 
-    conversation["title"] = title
+    conversation = Conversation.model_validate(data)
+    conversation.title = title
     save_conversation(conversation)
 
 
@@ -199,22 +259,21 @@ def duplicate_conversation(original_id: str, new_id: str) -> Dict[str, Any]:
     Returns:
         The new duplicated conversation
     """
-    original = get_conversation(original_id)
-    if original is None:
+    data = get_conversation(original_id)
+    if data is None:
         raise ValueError(f"Original conversation {original_id} not found")
 
-    new_conversation = {
-        "id": new_id,
-        "created_at": datetime.now(timezone.utc).isoformat(),
-        "title": f"{original.get('title', 'New Conversation')} (Copy)",
-        "is_pinned": False,
-        "is_archived": False,
-        "has_unread": False,
-        "messages": original["messages"].copy()
-    }
+    original = Conversation.model_validate(data)
+    
+    new_conversation = Conversation(
+        id=new_id,
+        created_at=datetime.now(timezone.utc),
+        title=f"{original.title} (Copy)",
+        messages=original.messages.copy()
+    )
 
     save_conversation(new_conversation)
-    return new_conversation
+    return new_conversation.model_dump()
 
 
 def delete_conversation(conversation_id: str):

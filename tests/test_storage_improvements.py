@@ -98,9 +98,9 @@ def test_add_assistant_message_sets_has_unread():
 
     add_assistant_message(
         conv_id,
-        stage1=[{"model": "test", "content": "one"}],
-        stage2=[{"model": "test", "content": "two"}],
-        stage3={"model": "test", "content": "three"},
+        stage1=[{"model": "test", "response": "one", "status": "success"}],
+        stage2=[{"model": "test", "ranking": "two", "parsed_ranking": [], "status": "success"}],
+        stage3={"model": "test", "response": "three"},
     )
 
     conversation = get_conversation(conv_id)

@@ -40,9 +40,59 @@ function App() {
       let isActive = true;
       api.getConversation(currentConversationId)
         .then((conv) => {
-          if (isActive) {
-            setCurrentConversation(conv);
+          if (!isActive) return;
+
+          // If this conversation is currently pending locally, 
+          // only overwrite if the server has MORE data than we currently have.
+          const localLastMsg = currentConversation?.messages?.[currentConversation?.messages?.length - 1];
+          const serverLastMsg = conv.messages?.[conv.messages?.length - 1];
+          
+          const serverHasMoreData = 
+            !currentConversation || 
+            (conv.messages?.length > currentConversation?.messages?.length) ||
+            (serverLastMsg?.role === 'assistant' && (
+              ((serverLastMsg.stage1?.length || 0) > (localLastMsg?.stage1?.length || 0)) ||
+              ((serverLastMsg.stage2?.length || 0) > (localLastMsg?.stage2?.length || 0)) ||
+              (!!serverLastMsg.stage3?.response && !localLastMsg?.stage3?.response)
+            ));
+
+          let finalConv = { ...conv };
+          if (pendingConversationIds.has(conv.id) && currentConversation && !serverHasMoreData) {
+            finalConv = { ...currentConversation };
           }
+
+          // Ensure we show correct loading state for pending conversations
+          if (pendingConversationIds.has(finalConv.id)) {
+            const messages = [...(finalConv.messages || [])];
+            if (messages.length > 0) {
+              let lastMessage = { ...messages[messages.length - 1] };
+              
+              if (lastMessage.role !== 'assistant') {
+                messages.push({
+                  role: 'assistant',
+                  stage1: null,
+                  stage2: null,
+                  stage3: null,
+                  metadata: null,
+                  progress: { stage1: null, stage2: null },
+                  loading: { stage1: true, stage2: false, stage3: false },
+                });
+              } else {
+                const hasS1 = !!(lastMessage.stage1 && lastMessage.stage1.length > 0);
+                const hasS2 = !!(lastMessage.stage2 && lastMessage.stage2.length > 0);
+                const hasS3 = !!(lastMessage.stage3 && (lastMessage.stage3.response || lastMessage.stage3.content));
+
+                lastMessage.loading = {
+                  stage1: !hasS1,
+                  stage2: hasS1 && !hasS2,
+                  stage3: hasS2 && !hasS3
+                };
+              }
+              messages[messages.length - 1] = lastMessage;
+              finalConv.messages = messages;
+            }
+          }
+          setCurrentConversation(finalConv);
         })
         .catch((error) => {
           if (isActive) {
@@ -77,8 +127,10 @@ function App() {
   };
 
   const handleSelectConversation = async (id) => {
-    setCurrentConversation(null);
-    setCurrentConversationId(id);
+    if (currentConversationId !== id) {
+      setCurrentConversation(null);
+      setCurrentConversationId(id);
+    }
     try {
       await api.markAsRead(id);
       loadConversations();
@@ -296,137 +348,124 @@ function App() {
 
       // Send message with streaming (Default Council flow)
       await api.sendMessageStream(currentConversationId, content, filesForRequest, (eventType, event) => {
+        const updateAssistantMessage = (prev, updater) => {
+          if (!prev || prev.id !== conversationId) return prev;
+          const messages = [...prev.messages];
+          
+          // Find the last assistant message that is either loading or was just added
+          let lastAssistantIndex = -1;
+          for (let i = messages.length - 1; i >= 0; i--) {
+            if (messages[i].role === 'assistant') {
+              lastAssistantIndex = i;
+              break;
+            }
+          }
+
+          if (lastAssistantIndex === -1) {
+            // If no assistant message found (e.g. re-loaded from server), add one
+            const newAssistantMsg = {
+              role: 'assistant',
+              stage1: null,
+              stage2: null,
+              stage3: null,
+              metadata: null,
+              progress: { stage1: null, stage2: null },
+              loading: { stage1: false, stage2: false, stage3: false },
+            };
+            messages.push(newAssistantMsg);
+            lastAssistantIndex = messages.length - 1;
+          }
+
+          messages[lastAssistantIndex] = updater(messages[lastAssistantIndex]);
+          return { ...prev, messages };
+        };
+
         switch (eventType) {
-          case 'stage1_start':
-            setCurrentConversation((prev) => {
-              if (!prev || prev.id !== conversationId) return prev;
-              const messages = [...prev.messages];
-              const lastMsgIndex = messages.length - 1;
-              messages[lastMsgIndex] = {
-                ...messages[lastMsgIndex],
-                loading: { ...messages[lastMsgIndex].loading, stage1: true },
-                progress: {
-                  ...messages[lastMsgIndex].progress,
-                  stage1: { completed: 0, total: event.total ?? 0 }
-                }
-              };
-              return { ...prev, messages };
-            });
-            break;
-
-          case 'stage1_progress':
-            setCurrentConversation((prev) => {
-              if (!prev || prev.id !== conversationId) return prev;
-              const messages = [...prev.messages];
-              const lastMsgIndex = messages.length - 1;
-              const current = messages[lastMsgIndex];
-              messages[lastMsgIndex] = {
-                ...current,
-                progress: {
-                  ...current.progress,
-                  stage1: {
-                    completed: event.completed ?? current.progress?.stage1?.completed ?? 0,
-                    total: event.total ?? current.progress?.stage1?.total ?? 0,
+          case 'stage_start':
+            setCurrentConversation((prev) => updateAssistantMessage(prev, (msg) => {
+              if (event.stage === 1) {
+                return {
+                  ...msg,
+                  loading: { stage1: true, stage2: false, stage3: false },
+                  progress: {
+                    ...msg.progress,
+                    stage1: { completed: 0, total: event.total ?? 0 }
                   }
-                }
-              };
-              return { ...prev, messages };
-            });
-            break;
-
-          case 'stage1_complete':
-            setCurrentConversation((prev) => {
-              if (!prev || prev.id !== conversationId) return prev;
-              const messages = [...prev.messages];
-              const lastMsgIndex = messages.length - 1;
-              messages[lastMsgIndex] = {
-                ...messages[lastMsgIndex],
-                stage1: event.data,
-                loading: { ...messages[lastMsgIndex].loading, stage1: false },
-                progress: { ...messages[lastMsgIndex].progress, stage1: null }
-              };
-              return { ...prev, messages };
-            });
-            break;
-
-          case 'stage2_start':
-            setCurrentConversation((prev) => {
-              if (!prev || prev.id !== conversationId) return prev;
-              const messages = [...prev.messages];
-              const lastMsgIndex = messages.length - 1;
-              messages[lastMsgIndex] = {
-                ...messages[lastMsgIndex],
-                loading: { ...messages[lastMsgIndex].loading, stage2: true },
-                progress: {
-                  ...messages[lastMsgIndex].progress,
-                  stage2: { completed: 0, total: event.total ?? 0 }
-                }
-              };
-              return { ...prev, messages };
-            });
-            break;
-
-          case 'stage2_progress':
-            setCurrentConversation((prev) => {
-              if (!prev || prev.id !== conversationId) return prev;
-              const messages = [...prev.messages];
-              const lastMsgIndex = messages.length - 1;
-              const current = messages[lastMsgIndex];
-              messages[lastMsgIndex] = {
-                ...current,
-                progress: {
-                  ...current.progress,
-                  stage2: {
-                    completed: event.completed ?? current.progress?.stage2?.completed ?? 0,
-                    total: event.total ?? current.progress?.stage2?.total ?? 0,
+                };
+              } else if (event.stage === 2) {
+                return {
+                  ...msg,
+                  loading: { stage1: false, stage2: true, stage3: false },
+                  progress: {
+                    ...msg.progress,
+                    stage2: { completed: 0, total: event.total ?? 0 }
                   }
-                }
-              };
-              return { ...prev, messages };
-            });
+                };
+              } else if (event.stage === 3) {
+                return {
+                  ...msg,
+                  loading: { stage1: false, stage2: false, stage3: true }
+                };
+              }
+              return msg;
+            }));
             break;
 
-          case 'stage2_complete':
-            setCurrentConversation((prev) => {
-              if (!prev || prev.id !== conversationId) return prev;
-              const messages = [...prev.messages];
-              const lastMsgIndex = messages.length - 1;
-              messages[lastMsgIndex] = {
-                ...messages[lastMsgIndex],
-                stage2: event.data,
-                metadata: event.metadata,
-                loading: { ...messages[lastMsgIndex].loading, stage2: false },
-                progress: { ...messages[lastMsgIndex].progress, stage2: null }
-              };
-              return { ...prev, messages };
-            });
+          case 'stage_progress':
+            setCurrentConversation((prev) => updateAssistantMessage(prev, (msg) => {
+              if (event.stage === 1) {
+                return {
+                  ...msg,
+                  progress: {
+                    ...msg.progress,
+                    stage1: {
+                      completed: event.completed ?? msg.progress?.stage1?.completed ?? 0,
+                      total: event.total ?? msg.progress?.stage1?.total ?? 0,
+                    }
+                  }
+                };
+              } else if (event.stage === 2) {
+                return {
+                  ...msg,
+                  progress: {
+                    ...msg.progress,
+                    stage2: {
+                      completed: event.completed ?? msg.progress?.stage2?.completed ?? 0,
+                      total: event.total ?? msg.progress?.stage2?.total ?? 0,
+                    }
+                  }
+                };
+              }
+              return msg;
+            }));
             break;
 
-          case 'stage3_start':
-            setCurrentConversation((prev) => {
-              if (!prev || prev.id !== conversationId) return prev;
-              const messages = [...prev.messages];
-              const lastMsgIndex = messages.length - 1;
-              messages[lastMsgIndex] = {
-                ...messages[lastMsgIndex],
-                loading: { ...messages[lastMsgIndex].loading, stage3: true }
-              };
-              return { ...prev, messages };
-            });
-            break;
-
-          case 'stage3_complete':
-            setCurrentConversation((prev) => {
-              if (!prev || prev.id !== conversationId) return prev;
-              const messages = [...prev.messages];
-              const lastMsgIndex = messages.length - 1;
-              messages[lastMsgIndex] = {
-                ...messages[lastMsgIndex],
-                stage3: event.data,
-                loading: { ...messages[lastMsgIndex].loading, stage3: false }
-              };
-              return { ...prev, messages };
-            });
+          case 'stage_complete':
+            setCurrentConversation((prev) => updateAssistantMessage(prev, (msg) => {
+              if (event.stage === 1) {
+                return {
+                  ...msg,
+                  stage1: event.data,
+                  loading: { ...msg.loading, stage1: false },
+                  progress: { ...msg.progress, stage1: null }
+                };
+              } else if (event.stage === 2) {
+                return {
+                  ...msg,
+                  stage2: event.data,
+                  metadata: event.metadata,
+                  loading: { ...msg.loading, stage2: false },
+                  progress: { ...msg.progress, stage2: null }
+                };
+              } else if (event.stage === 3) {
+                return {
+                  ...msg,
+                  stage3: event.data,
+                  loading: { ...msg.loading, stage3: false }
+                };
+              }
+              return msg;
+            }));
             break;
 
           case 'title_complete':

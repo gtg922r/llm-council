@@ -67,16 +67,28 @@ vi.mock('../components/Sidebar', () => ({
 }));
 
 vi.mock('../components/ChatInterface', () => ({
-  default: ({ conversation, onSendMessage }) => (
-    conversation ? (
-      <button
-        type="button"
-        onClick={() => onSendMessage('hello', undefined, fileToSend ? [fileToSend] : [])}
-      >
-        Send
-      </button>
-    ) : null
-  ),
+  default: ({ conversation, onSendMessage }) => {
+    if (!conversation) return null;
+    const lastMsg = conversation.messages[conversation.messages.length - 1];
+    return (
+      <div data-testid="chat-interface">
+        <h2>{conversation.title}</h2>
+        <button
+          type="button"
+          onClick={() => onSendMessage('hello', undefined, fileToSend ? [fileToSend] : [])}
+        >
+          Send
+        </button>
+        {lastMsg && (
+          <div data-testid="assistant-state">
+            <span data-testid="s1-loading">{String(lastMsg.loading?.stage1)}</span>
+            <span data-testid="s2-loading">{String(lastMsg.loading?.stage2)}</span>
+            <span data-testid="s3-loading">{String(lastMsg.loading?.stage3)}</span>
+          </div>
+        )}
+      </div>
+    );
+  },
 }));
 
 vi.mock('../components/DeleteConfirmationModal', () => ({
@@ -343,5 +355,120 @@ describe('App', () => {
     const markAsReadCalls = api.markAsRead.mock.calls.map(([id]) => id);
     expect(markAsReadCalls).toContain('conv-2');
     expect(api.markAsRead).toHaveBeenCalledTimes(callsBeforeComplete);
+  });
+
+  it('correctly handles the full sequence of stage events', async () => {
+    let triggerEvent;
+    api.sendMessageStream.mockImplementationOnce(async (_id, _content, _files, onEvent) => {
+      triggerEvent = (type, data) => onEvent(type, data);
+    });
+
+    render(<App />);
+
+    fireEvent.click(screen.getByText('New Conversation'));
+    await waitFor(() => expect(screen.getByText('Send')).toBeInTheDocument());
+    
+    // We need to trigger the send to initialize the mock implementation
+    await act(async () => {
+      fireEvent.click(screen.getByText('Send'));
+    });
+
+    // 1. Stage 1 Start
+    await act(async () => {
+      triggerEvent('stage_start', { type: 'stage_start', stage: 1, total: 3 });
+    });
+    expect(screen.getByTestId('s1-loading').textContent).toBe('true');
+
+    // 2. Stage 1 Complete
+    await act(async () => {
+      triggerEvent('stage_complete', { type: 'stage_complete', stage: 1, data: [] });
+    });
+    expect(screen.getByTestId('s1-loading').textContent).toBe('false');
+
+    // 3. Stage 2 Start
+    await act(async () => {
+      triggerEvent('stage_start', { type: 'stage_start', stage: 2, total: 3 });
+    });
+    expect(screen.getByTestId('s2-loading').textContent).toBe('true');
+
+    // 4. Stage 3 Start (skipping stage 2 complete to test resilience)
+    await act(async () => {
+      triggerEvent('stage_start', { type: 'stage_start', stage: 3 });
+    });
+    expect(screen.getByTestId('s2-loading').textContent).toBe('false');
+    expect(screen.getByTestId('s3-loading').textContent).toBe('true');
+
+    // 5. Stage 3 Complete
+    await act(async () => {
+      triggerEvent('stage_complete', { type: 'stage_complete', stage: 3, data: { response: 'done' } });
+    });
+    expect(screen.getByTestId('s3-loading').textContent).toBe('false');
+
+    // 6. Final Complete
+    await act(async () => {
+      triggerEvent('complete', { type: 'complete' });
+    });
+  });
+
+  it('re-detects the correct loading stage when re-selecting a pending conversation', async () => {
+    // 1. Setup mock list with 2 items BEFORE render
+    api.listConversations.mockResolvedValue([
+      { id: 'conv-1', title: 'Pending' },
+      { id: 'conv-2', title: 'Other' }
+    ]);
+
+    // 2. Setup getConversation mock
+    api.getConversation.mockImplementation(async (id) => {
+      if (id === 'conv-1') {
+        return {
+          id: 'conv-1',
+          title: 'Pending Conv',
+          messages: [
+            { role: 'user', content: 'hello' },
+            { 
+              role: 'assistant', 
+              stage1: [{ model: 'm1', response: 'r1', status: 'success' }],
+              stage2: [],
+              stage3: {}
+            }
+          ],
+        };
+      }
+      return { id: 'conv-2', title: 'Other', messages: [] };
+    });
+
+    render(<App />);
+
+    // 3. Select conv-1 and make it pending
+    await waitFor(() => expect(screen.getByText('Select Conversation')).toBeInTheDocument());
+    fireEvent.click(screen.getByText('Select Conversation'));
+    
+    await waitFor(() => expect(screen.getByText('Send')).toBeInTheDocument());
+    
+    // Trigger send to make it pending locally
+    await act(async () => {
+      fireEvent.click(screen.getByText('Send'));
+    });
+    expect(screen.getByTestId('pending-count').textContent).toBe('1');
+
+    // 4. Switch away to conv-2
+    await act(async () => {
+      fireEvent.click(screen.getByText('Select Conversation 2'));
+    });
+    // Wait for the Other conversation to appear
+    await waitFor(() => expect(screen.getByText('Other')).toBeInTheDocument());
+    
+    // 5. Switch back to conv-1
+    await act(async () => {
+      fireEvent.click(screen.getByText('Select Conversation'));
+    });
+
+    // 6. Verify loading state: Stage 1 should be FALSE (done), Stage 2 should be TRUE (loading)
+    await waitFor(() => {
+      const s1 = screen.getByTestId('s1-loading');
+      const s2 = screen.getByTestId('s2-loading');
+      expect(s1.textContent).toBe('false');
+      expect(s2.textContent).toBe('true');
+    }, { timeout: 2000 });
   });
 });
