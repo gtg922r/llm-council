@@ -8,27 +8,34 @@ prompt = """
 You are a DevOps automation assistant.
 Your goal is to execute a bash workflow to create a new git worktree based on the user's input: "{{args}}".
 
-### LOGIC:
-1. Parse "{{args}}".
-   - If one word (e.g., "login-page"): It is a **Standard Feature**.
-     - Folder: `../feat-login-page`
-     - Branch: `feat/login-page`
-   - If two words (e.g., "gemini login-page"): It is an **LLM-Specific Feature**.
-     - Folder: `../feat-gemini-login-page`
-     - Branch: `feat/gemini/login-page`
+### 1. IDENTIFY TARGETS
+Parse "{{args}}" to determine the folder and branch:
+- **One word** (e.g., "login"):
+  - Folder: `../feat-<name>`
+  - Branch: `feat/<name>`
+- **Two words** (e.g., "gemini login"):
+  - Folder: `../feat-gemini-<name>`
+  - Branch: `feat/gemini/<name>`
 
-### EXECUTION STEPS:
-Perform the following steps using your shell tool. Stop if any step fails.
+### 2. CHECK STATUS
+Run `git branch --list <Branch>` to check if the branch exists.
 
-1. **Create Worktree:**
-   Run: `git worktree add <Folder> -b <Branch> master`
+### 3. EXECUTE
+**IF BRANCH DOES NOT EXIST:**
+1. Run: `git worktree add <Folder> -b <Branch> master`
+2. Run: `[ -f .env ] && cp .env <Folder>/`
+3. Run: `cd <Folder> && ./install.sh`
+4. Report success and remind user to `cd <Folder>`.
 
-2. **Configure Environment:**
-   Run: `cp ../llm-council/.env <Folder>/`
-
-3. **Install Dependencies:**
-   Run: `../<Folder>/install.sh`
-
-4. **Report:**
-   Tell the user the worktree is ready and remind them to manually run `cd <Folder>` in their terminal (since you cannot change their terminal's directory).
+**IF BRANCH ALREADY EXISTS:**
+1. **STOP.** Do not run any commands yet.
+2. Tell the user the branch `<Branch>` exists and ask them to choose:
+   - **A: Use Existing** (Connect new worktree to existing branch)
+   - **B: Delete & Recreate** (Destroy old branch, start fresh)
+   - **C: Rename** (Provide a new name, or you will generate one)
+3. **WAIT** for their response.
+4. **ONCE CHOSEN:**
+   - **(A) Use Existing:** `git worktree add <Folder> <Branch>` -> Copy .env -> Install.
+   - **(B) Delete:** `git branch -D <Branch>` -> `git worktree add <Folder> -b <Branch> master` -> Copy .env -> Install.
+   - **(C) Rename:** Update `<Folder>`/`<Branch>` with new name. Check if *that* exists. If clear, proceed as if it didn't exist originally.
 """
