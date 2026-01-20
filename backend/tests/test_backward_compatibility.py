@@ -26,7 +26,7 @@ def test_backward_compatibility_with_legacy_messages(tmp_path, monkeypatch):
     from backend.application.council_service import StageCompleted, RunCompleted
     from backend.domain.models import AssistantMessage
     class MockOrchestrator:
-        async def run_council(self, conversation_id, content, attachments=None, is_first_message=False):
+        async def run_council(self, conversation_id, content, attachments=None, is_first_message=False, model_mode="smart"):
             # Simulate orchestrator saving the result
             conv = repo.get(conversation_id)
             conv.messages.append(AssistantMessage(

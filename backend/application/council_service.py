@@ -29,7 +29,7 @@ from .prompts import (
     create_label_to_model_mapping
 )
 from .prompt_builder import build_prompt_content
-from ..config import COUNCIL_MODELS, CHAIRMAN_MODEL
+from ..config import COUNCIL_MODELS, CHAIRMAN_MODEL, get_models_for_mode
 
 
 # Domain Events
@@ -105,7 +105,8 @@ class CouncilOrchestrator:
         conversation_id: str, 
         user_query: str,
         attachments: Optional[List[Attachment]] = None,
-        is_first_message: bool = False
+        is_first_message: bool = False,
+        model_mode: str = "smart"
     ) -> AsyncGenerator[Union[StageStarted, StageProgress, StageCompleted, TitleGenerated, RunCompleted], None]:
         """
         Run the full 3-stage council process and yield domain events.
@@ -115,10 +116,14 @@ class CouncilOrchestrator:
             user_query: The user's query text
             attachments: Optional list of file attachments
             is_first_message: Whether this is the first message (triggers title generation)
+            model_mode: Either 'fast' or 'smart' to select model tier
             
         Yields:
             Domain events as each stage progresses and completes
         """
+        # Get models based on mode
+        council_models, chairman_model = get_models_for_mode(model_mode)
+        
         # Build full prompt content (including files)
         prompt_content = build_prompt_content(
             user_query, 
@@ -134,7 +139,7 @@ class CouncilOrchestrator:
             )
             
         # --- Stage 1: Collect Individual Responses ---
-        yield StageStarted(stage=1, total=len(COUNCIL_MODELS))
+        yield StageStarted(stage=1, total=len(council_models))
         
         # Run stage 1 with progress updates
         messages = [{"role": "user", "content": prompt_content}]
@@ -145,17 +150,17 @@ class CouncilOrchestrator:
         async def run_model_task(model):
             return model, await self.llm_provider.chat(model, messages)
         
-        tasks = [run_model_task(model) for model in COUNCIL_MODELS]
+        tasks = [run_model_task(model) for model in council_models]
         
         for coro in asyncio.as_completed(tasks):
             model, response = await coro
             stage1_responses[model] = response
             completed += 1
-            yield StageProgress(stage=1, completed=completed, total=len(COUNCIL_MODELS))
+            yield StageProgress(stage=1, completed=completed, total=len(council_models))
         
         # Format results
         stage1_results = []
-        for model in COUNCIL_MODELS:
+        for model in council_models:
             response = stage1_responses.get(model)
             if response is not None:
                 stage1_results.append(Stage1Result(
@@ -190,7 +195,7 @@ class CouncilOrchestrator:
             return
         
         # --- Stage 2: Collect Rankings ---
-        yield StageStarted(stage=2, total=len(COUNCIL_MODELS))
+        yield StageStarted(stage=2, total=len(council_models))
         
         # Create label mapping
         label_to_model = create_label_to_model_mapping(stage1_results)
@@ -206,17 +211,17 @@ class CouncilOrchestrator:
         async def run_ranking_task(model):
             return model, await self.llm_provider.chat(model, ranking_messages)
         
-        ranking_tasks = [run_ranking_task(model) for model in COUNCIL_MODELS]
+        ranking_tasks = [run_ranking_task(model) for model in council_models]
         
         for coro in asyncio.as_completed(ranking_tasks):
             model, response = await coro
             stage2_responses[model] = response
             completed += 1
-            yield StageProgress(stage=2, completed=completed, total=len(COUNCIL_MODELS))
+            yield StageProgress(stage=2, completed=completed, total=len(council_models))
         
         # Format results
         stage2_results = []
-        for model in COUNCIL_MODELS:
+        for model in council_models:
             response = stage2_responses.get(model)
             if response is not None:
                 full_text = response.get('content', '')
@@ -259,7 +264,8 @@ class CouncilOrchestrator:
         stage3_result = await self._run_stage3(
             prompt_content,
             stage1_results,
-            stage2_results
+            stage2_results,
+            chairman_model=chairman_model
         )
         
         yield StageCompleted(stage=3, data=stage3_result)
@@ -280,7 +286,8 @@ class CouncilOrchestrator:
         self,
         conversation_id: str,
         followup_query: str,
-        attachments: Optional[List[Attachment]] = None
+        attachments: Optional[List[Attachment]] = None,
+        model_mode: str = "smart"
     ) -> Dict[str, Any]:
         """
         Handle a follow-up question to the Chairman.
@@ -289,14 +296,17 @@ class CouncilOrchestrator:
             conversation_id: ID of the conversation
             followup_query: The user's follow-up question
             attachments: Optional list of file attachments
+            model_mode: Either 'fast' or 'smart' to select model tier
             
         Returns:
             Dict with 'model' and 'response' keys
         """
+        _, chairman_model = get_models_for_mode(model_mode)
+        
         conversation = self.repo.get(conversation_id)
         if not conversation:
             return {
-                "model": CHAIRMAN_MODEL,
+                "model": chairman_model,
                 "response": "Error: Conversation not found."
             }
         
@@ -309,7 +319,7 @@ class CouncilOrchestrator:
         
         if not last_assistant_msg:
             return {
-                "model": CHAIRMAN_MODEL,
+                "model": chairman_model,
                 "response": "Error: No previous council response found for follow-up."
             }
         
@@ -339,16 +349,16 @@ class CouncilOrchestrator:
         )
         
         messages = [{"role": "user", "content": chairman_prompt}]
-        response = await self.llm_provider.chat(CHAIRMAN_MODEL, messages)
+        response = await self.llm_provider.chat(chairman_model, messages)
         
         if response is None:
             return {
-                "model": CHAIRMAN_MODEL,
+                "model": chairman_model,
                 "response": "Error: Unable to generate follow-up response."
             }
         
         return {
-            "model": CHAIRMAN_MODEL,
+            "model": chairman_model,
             "response": response.get('content', '')
         }
 
@@ -434,7 +444,8 @@ class CouncilOrchestrator:
         self,
         prompt_content: str,
         stage1_results: List[Stage1Result],
-        stage2_results: List[Stage2Result]
+        stage2_results: List[Stage2Result],
+        chairman_model: str = CHAIRMAN_MODEL
     ) -> Dict[str, Any]:
         """
         Stage 3: Chairman synthesizes final response.
@@ -446,16 +457,16 @@ class CouncilOrchestrator:
         )
         
         messages = [{"role": "user", "content": chairman_prompt}]
-        response = await self.llm_provider.chat(CHAIRMAN_MODEL, messages)
+        response = await self.llm_provider.chat(chairman_model, messages)
         
         if response is None:
             return {
-                "model": CHAIRMAN_MODEL,
+                "model": chairman_model,
                 "response": "Error: Unable to generate final synthesis."
             }
         
         return {
-            "model": CHAIRMAN_MODEL,
+            "model": chairman_model,
             "response": response.get('content', '')
         }
 

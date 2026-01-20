@@ -1,0 +1,38 @@
+.model-mode-toggle {
+  display: inline-flex;
+  gap: 6px;
+  padding: 6px;
+  border-radius: 999px;
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border, #e0e0e0);
+}
+
+.model-mode-toggle-button {
+  border: none;
+  background: transparent;
+  color: var(--color-muted, #666);
+  padding: 6px 12px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.model-mode-toggle-button:hover {
+  background: var(--color-elevation-2, rgba(0, 0, 0, 0.06));
+  color: var(--color-text, #333);
+}
+
+.model-mode-toggle-button.active {
+  background: var(--color-accent-soft, rgba(74, 144, 226, 0.12));
+  color: var(--color-accent, #4a90e2);
+}
+
+.model-mode-label {
+  font-size: 12px;
+}

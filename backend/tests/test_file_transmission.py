@@ -123,7 +123,7 @@ async def test_send_message_uses_prompt_builder(monkeypatch):
         return None
 
     from backend.application.council_service import StageCompleted, RunCompleted
-    async def fake_run_council(conversation_id, content, attachments=None, is_first_message=False):
+    async def fake_run_council(conversation_id, content, attachments=None, is_first_message=False, model_mode="smart"):
         captured["prompt_from_orchestrator"] = build_prompt_content(content, attachments, blob_store=mock_blob)
         yield StageCompleted(stage=3, data={"response": "ok"})
         yield RunCompleted()
