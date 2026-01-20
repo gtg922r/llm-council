@@ -346,8 +346,6 @@ function App() {
         }
       }
 
-      // Use non-streaming endpoint (more reliable over proxied connections)
-      // TODO: Re-enable streaming when proxy issues are resolved
       const USE_STREAMING = true;
       
       if (!USE_STREAMING) {

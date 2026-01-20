@@ -64,8 +64,6 @@ def test_send_message_stream_emits_expected_events(tmp_path, monkeypatch):
     import json
     data_lines = [line for line in lines if line.startswith("data: ")]
     events = [json.loads(line[6:]) for line in data_lines]
-    for e in events:
-        print(f"STREAM EVENT: {e}")
 
     assert any(e.get("type") == "stage_start" and e.get("stage") == 1 for e in events)
     assert any(e.get("type") == "stage_complete" and e.get("stage") == 1 for e in events)
