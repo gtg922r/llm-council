@@ -284,6 +284,9 @@ async def send_message_stream(conversation_id: str, request: SendMessageRequest)
 
     async def event_generator():
         try:
+            # Send initial ping to establish connection
+            yield ": ping\n\n"
+            
             # Process file attachments
             attachments = []
             if request.files:
@@ -322,6 +325,8 @@ async def send_message_stream(conversation_id: str, request: SendMessageRequest)
         headers={
             "Cache-Control": "no-cache",
             "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",  # Disable nginx/proxy buffering
+            "Transfer-Encoding": "chunked",
         }
     )
 

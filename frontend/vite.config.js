@@ -16,6 +16,15 @@ export default defineConfig({
         target: 'http://localhost:8001',
         changeOrigin: true,
         secure: false,
+        // SSE-specific configuration
+        configure: (proxy, _options) => {
+          proxy.on('proxyReq', (proxyReq, req, _res) => {
+            // For streaming endpoints, set headers to prevent buffering
+            if (req.url.includes('/stream')) {
+              proxyReq.setHeader('X-Accel-Buffering', 'no');
+            }
+          });
+        },
       }
     }
   }

@@ -346,7 +346,46 @@ function App() {
         }
       }
 
-      // Send message with streaming (Default Council flow)
+      // Use non-streaming endpoint (more reliable over proxied connections)
+      // TODO: Re-enable streaming when proxy issues are resolved
+      const USE_STREAMING = true;
+      
+      if (!USE_STREAMING) {
+        // Non-streaming: single request, wait for complete response
+        const result = await api.sendMessage(conversationId, content, filesForRequest);
+        
+        // Update conversation with results
+        setCurrentConversation((prev) => {
+          if (!prev || prev.id !== conversationId) return prev;
+          const messages = [...prev.messages];
+          let lastAssistantIndex = messages.length - 1;
+          if (messages[lastAssistantIndex]?.role !== 'assistant') {
+            messages.push({ role: 'assistant' });
+            lastAssistantIndex = messages.length - 1;
+          }
+          messages[lastAssistantIndex] = {
+            ...messages[lastAssistantIndex],
+            stage1: result.stage1,
+            stage2: result.stage2,
+            stage3: result.stage3,
+            metadata: result.metadata,
+            loading: { stage1: false, stage2: false, stage3: false },
+          };
+          return { ...prev, messages };
+        });
+        
+        // Refresh conversation list
+        await refreshConversationUnreadState(conversationId);
+        setLoadingConversationId((prev) => (prev === conversationId ? null : prev));
+        setPendingConversationIds((prev) => {
+          const next = new Set(prev);
+          next.delete(conversationId);
+          return next;
+        });
+        return;
+      }
+      
+      // Streaming path (currently disabled due to proxy issues)
       await api.sendMessageStream(currentConversationId, content, filesForRequest, (eventType, event) => {
         const updateAssistantMessage = (prev, updater) => {
           if (!prev || prev.id !== conversationId) return prev;
@@ -499,7 +538,58 @@ function App() {
         }
       });
     } catch (error) {
-      console.error('Failed to send message:', error);
+      console.error('Failed to send message (stream):', error);
+      
+      // If streaming failed due to network issues, try non-streaming fallback
+      if (error.message?.includes('network') || error.name === 'TypeError') {
+        console.log('Attempting non-streaming fallback...');
+        try {
+          // Rebuild files for request (in case filesForRequest wasn't set)
+          const fallbackFiles = await Promise.all(
+            files.map(async (file) => ({
+              name: file.name,
+              content: await readFileContent(file),
+              size: file.size,
+            }))
+          );
+          // Use non-streaming endpoint
+          const result = await api.sendMessage(conversationId, content, fallbackFiles);
+          
+          // Update conversation with results
+          setCurrentConversation((prev) => {
+            if (!prev || prev.id !== conversationId) return prev;
+            const messages = [...prev.messages];
+            // Find or create assistant message
+            let lastAssistantIndex = messages.length - 1;
+            if (messages[lastAssistantIndex]?.role !== 'assistant') {
+              messages.push({ role: 'assistant' });
+              lastAssistantIndex = messages.length - 1;
+            }
+            messages[lastAssistantIndex] = {
+              ...messages[lastAssistantIndex],
+              stage1: result.stage1,
+              stage2: result.stage2,
+              stage3: result.stage3,
+              metadata: result.metadata,
+              loading: { stage1: false, stage2: false, stage3: false },
+            };
+            return { ...prev, messages };
+          });
+          
+          // Refresh conversation list
+          await refreshConversationUnreadState(conversationId);
+          setLoadingConversationId((prev) => (prev === conversationId ? null : prev));
+          setPendingConversationIds((prev) => {
+            const next = new Set(prev);
+            next.delete(conversationId);
+            return next;
+          });
+          return; // Success via fallback
+        } catch (fallbackError) {
+          console.error('Fallback also failed:', fallbackError);
+        }
+      }
+      
       // Remove optimistic messages on error
       setCurrentConversation((prev) => {
         if (!prev || prev.id !== conversationId) return prev;
