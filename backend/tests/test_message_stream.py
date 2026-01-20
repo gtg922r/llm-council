@@ -35,7 +35,10 @@ def test_send_message_stream_emits_expected_events(tmp_path, monkeypatch):
     monkeypatch.setattr(main, "conversation_repo", repo)
     monkeypatch.setattr(main, "blob_store", store)
     monkeypatch.setattr(main, "llm_provider", MockLLM())
-    monkeypatch.setattr(main, "COUNCIL_MODELS", ["test-model"])
+    
+    # Patch COUNCIL_MODELS in the council_service module where it's imported
+    from backend.application import council_service
+    monkeypatch.setattr(council_service, "COUNCIL_MODELS", ["test-model"])
     
     # Update orchestrator to use the new instances
     monkeypatch.setattr(main.orchestrator, "repo", repo)
@@ -61,8 +64,6 @@ def test_send_message_stream_emits_expected_events(tmp_path, monkeypatch):
     import json
     data_lines = [line for line in lines if line.startswith("data: ")]
     events = [json.loads(line[6:]) for line in data_lines]
-    for e in events:
-        print(f"STREAM EVENT: {e}")
 
     assert any(e.get("type") == "stage_start" and e.get("stage") == 1 for e in events)
     assert any(e.get("type") == "stage_complete" and e.get("stage") == 1 for e in events)

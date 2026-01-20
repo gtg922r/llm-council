@@ -1,103 +1,155 @@
-"""Tests for backend/council.py resilience."""
+"""Tests for council resilience and error handling."""
 
-import asyncio
 import unittest
-from unittest.mock import patch, MagicMock
-from backend.council import stage1_collect_responses, stage2_collect_rankings, stage3_synthesize_final, run_full_council, CHAIRMAN_MODEL
-from backend.config import COUNCIL_MODELS
+from unittest.mock import MagicMock
+from datetime import datetime
+
+from backend.application.council_service import CouncilOrchestrator, StageCompleted
+from backend.domain.models import Conversation
+from backend.config import COUNCIL_MODELS, CHAIRMAN_MODEL
+from backend.ports import LLMProvider, ConversationRepository
+
 
 class TestCouncilResilience(unittest.IsolatedAsyncioTestCase):
+    """Test resilience of the council orchestrator."""
 
-    async def test_stage1_handles_exceptions(self):
-        """Test Stage 1 handles exceptions from llm_provider."""
-        from backend.ports import LLMProvider
-        class ErrorLLM(LLMProvider):
+    def _create_mock_repo(self):
+        """Create a mock repository."""
+        mock_repo = MagicMock(spec=ConversationRepository)
+        mock_repo.get.return_value = Conversation(id="test-1", created_at=datetime.now())
+        return mock_repo
+
+    async def test_stage1_handles_partial_failures(self):
+        """Test Stage 1 continues when some models fail."""
+        
+        class PartialFailLLM(LLMProvider):
             async def chat(self, model, messages, **kwargs):
+                # First model fails, others succeed
                 if model == COUNCIL_MODELS[0]:
-                    raise RuntimeError("Unexpected error")
+                    return None
                 return {'content': f"Response from {model}"}
+            
             async def stream_chat(self, model, messages, **kwargs):
                 yield {}
-            async def chat_parallel(self, models, messages, **kwargs):
-                # Simulate the error during parallel execution
-                results = {}
-                for m in models:
-                    try:
-                        results[m] = await self.chat(m, messages)
-                    except Exception:
-                        results[m] = None
-                return results
 
-        results = await stage1_collect_responses("Test query", llm_provider=ErrorLLM())
+        orchestrator = CouncilOrchestrator(
+            llm_provider=PartialFailLLM(),
+            conversation_repo=self._create_mock_repo()
+        )
         
-        self.assertEqual(len(results), len(COUNCIL_MODELS))
-        error_results = [r for r in results if r.status == "error"]
+        events = []
+        async for event in orchestrator.run_council("test-1", "Test query"):
+            events.append(event)
+        
+        # Find stage 1 completion
+        stage1_events = [e for e in events if isinstance(e, StageCompleted) and e.stage == 1]
+        self.assertEqual(len(stage1_events), 1)
+        
+        # Should have results for all models
+        stage1_data = stage1_events[0].data
+        self.assertEqual(len(stage1_data), len(COUNCIL_MODELS))
+        
+        # First model should have error status
+        error_results = [r for r in stage1_data if r['status'] == 'error']
+        self.assertEqual(len(error_results), 1)
+        
+        # Should still complete all stages
+        stage3_events = [e for e in events if isinstance(e, StageCompleted) and e.stage == 3]
+        self.assertEqual(len(stage3_events), 1)
+
+    async def test_stage2_handles_partial_failures(self):
+        """Test Stage 2 continues when some ranking models fail."""
+        call_count = {}
+        
+        class PartialFailStage2LLM(LLMProvider):
+            async def chat(self, model, messages, **kwargs):
+                call_count[model] = call_count.get(model, 0) + 1
+                # First call is stage 1, second is stage 2
+                if call_count.get(model, 0) == 2 and model == COUNCIL_MODELS[0]:
+                    return None  # Fail on stage 2
+                return {'content': "Response\n\nFINAL RANKING:\n1. Response A"}
+            
+            async def stream_chat(self, model, messages, **kwargs):
+                yield {}
+
+        orchestrator = CouncilOrchestrator(
+            llm_provider=PartialFailStage2LLM(),
+            conversation_repo=self._create_mock_repo()
+        )
+        
+        events = []
+        async for event in orchestrator.run_council("test-1", "Test query"):
+            events.append(event)
+        
+        # Find stage 2 completion
+        stage2_events = [e for e in events if isinstance(e, StageCompleted) and e.stage == 2]
+        self.assertEqual(len(stage2_events), 1)
+        
+        stage2_data = stage2_events[0].data
+        error_results = [r for r in stage2_data if r['status'] == 'error']
         self.assertEqual(len(error_results), 1)
 
-    async def test_stage2_handles_exceptions(self):
-        """Test Stage 2 handles exceptions from llm_provider."""
-        from backend.domain.models import Stage1Result
-        from backend.ports import LLMProvider
-        stage1_results = [
-            Stage1Result(model=m, response=f"Response {m}", status="success")
-            for m in COUNCIL_MODELS
-        ]
+    async def test_stage3_handles_chairman_failure(self):
+        """Test Stage 3 returns error message when chairman fails."""
+        call_count = [0]
         
-        class ErrorLLM(LLMProvider):
+        class ChairmanFailLLM(LLMProvider):
             async def chat(self, model, messages, **kwargs):
-                if model == COUNCIL_MODELS[0]:
-                    raise RuntimeError("Stage 2 error")
-                return {'content': "Ranking text\n\nFINAL RANKING:\n1. Response A"}
-            async def stream_chat(self, model, messages, **kwargs):
-                yield {}
-            async def chat_parallel(self, models, messages, **kwargs):
-                results = {}
-                for m in models:
-                    try:
-                        results[m] = await self.chat(m, messages)
-                    except Exception:
-                        results[m] = None
-                return results
-        
-        results, mapping = await stage2_collect_rankings("Test query", stage1_results, llm_provider=ErrorLLM())
-        
-        self.assertEqual(len(results), len(COUNCIL_MODELS))
-        error_results = [r for r in results if r.status == "error"]
-        self.assertEqual(len(error_results), 1)
-
-    async def test_stage3_handles_failure(self):
-        """Test Stage 3 handles chairman failure."""
-        from backend.ports import LLMProvider
-        class FailLLM(LLMProvider):
-            async def chat(self, model, messages, **kwargs):
-                return None
+                call_count[0] += 1
+                # Stages 1 and 2 succeed, stage 3 (chairman) fails
+                # With N council models, we have N calls for stage 1, N for stage 2
+                total_stage1_2_calls = len(COUNCIL_MODELS) * 2
+                if call_count[0] > total_stage1_2_calls:
+                    return None  # Chairman fails
+                return {'content': "Response\n\nFINAL RANKING:\n1. Response A"}
+            
             async def stream_chat(self, model, messages, **kwargs):
                 yield {}
 
-        from backend.council import stage3_synthesize_final, CHAIRMAN_MODEL
-        result = await stage3_synthesize_final("Test query", [], [], llm_provider=FailLLM())
+        orchestrator = CouncilOrchestrator(
+            llm_provider=ChairmanFailLLM(),
+            conversation_repo=self._create_mock_repo()
+        )
         
-        self.assertIn("Error", result['response'])
-        self.assertEqual(result['model'], CHAIRMAN_MODEL)
+        events = []
+        async for event in orchestrator.run_council("test-1", "Test query"):
+            events.append(event)
+        
+        # Find stage 3 completion
+        stage3_events = [e for e in events if isinstance(e, StageCompleted) and e.stage == 3]
+        self.assertEqual(len(stage3_events), 1)
+        
+        stage3_data = stage3_events[0].data
+        self.assertEqual(stage3_data['model'], CHAIRMAN_MODEL)
+        self.assertIn("Error", stage3_data['response'])
 
-    async def test_run_full_council_all_fail(self):
-        """Test run_full_council when all models fail in Stage 1."""
-        from backend.ports import LLMProvider
+    async def test_all_stage1_failures_returns_error(self):
+        """Test that all Stage 1 failures returns error in Stage 3."""
+        
         class AllFailLLM(LLMProvider):
             async def chat(self, model, messages, **kwargs):
-                return None
+                return None  # All models fail
+            
             async def stream_chat(self, model, messages, **kwargs):
                 yield {}
-            async def chat_parallel(self, models, messages, **kwargs):
-                return {m: None for m in models}
+
+        orchestrator = CouncilOrchestrator(
+            llm_provider=AllFailLLM(),
+            conversation_repo=self._create_mock_repo()
+        )
         
-        from backend.council import run_full_council, CouncilRun
-        result = await run_full_council("Test query", llm_provider=AllFailLLM())
+        events = []
+        async for event in orchestrator.run_council("test-1", "Test query"):
+            events.append(event)
         
-        self.assertIsInstance(result, CouncilRun)
-        self.assertEqual(len(result.stage1_results), len(COUNCIL_MODELS))
-        self.assertEqual(result.stage3_result['model'], "error")
-        self.assertIn("All models failed", result.stage3_result['response'])
+        # Should still complete with error
+        stage3_events = [e for e in events if isinstance(e, StageCompleted) and e.stage == 3]
+        self.assertEqual(len(stage3_events), 1)
+        
+        stage3_data = stage3_events[0].data
+        self.assertEqual(stage3_data['model'], "error")
+        self.assertIn("All models failed", stage3_data['response'])
+
 
 if __name__ == "__main__":
     unittest.main()
