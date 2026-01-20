@@ -135,7 +135,41 @@ class CouncilOrchestrator:
             
         # --- Stage 1: Collect Individual Responses ---
         yield StageStarted(stage=1, total=len(COUNCIL_MODELS))
-        stage1_results = await self._run_stage1(prompt_content)
+        
+        # Run stage 1 with progress updates
+        messages = [{"role": "user", "content": prompt_content}]
+        stage1_responses = {}
+        completed = 0
+        
+        # Create tasks with model tracking
+        async def run_model_task(model):
+            return model, await self.llm_provider.chat(model, messages)
+        
+        tasks = [run_model_task(model) for model in COUNCIL_MODELS]
+        
+        for coro in asyncio.as_completed(tasks):
+            model, response = await coro
+            stage1_responses[model] = response
+            completed += 1
+            yield StageProgress(stage=1, completed=completed, total=len(COUNCIL_MODELS))
+        
+        # Format results
+        stage1_results = []
+        for model in COUNCIL_MODELS:
+            response = stage1_responses.get(model)
+            if response is not None:
+                stage1_results.append(Stage1Result(
+                    model=model,
+                    response=response.get('content', ''),
+                    status="success"
+                ))
+            else:
+                stage1_results.append(Stage1Result(
+                    model=model,
+                    response="Error: Failed to get response from this model.",
+                    status="error"
+                ))
+        
         yield StageCompleted(
             stage=1, 
             data=[r.model_dump() for r in stage1_results]
@@ -157,10 +191,48 @@ class CouncilOrchestrator:
         
         # --- Stage 2: Collect Rankings ---
         yield StageStarted(stage=2, total=len(COUNCIL_MODELS))
-        stage2_results, label_to_model = await self._run_stage2(
-            prompt_content, 
-            stage1_results
-        )
+        
+        # Create label mapping
+        label_to_model = create_label_to_model_mapping(stage1_results)
+        
+        # Build ranking prompt
+        ranking_prompt = build_ranking_prompt(prompt_content, stage1_results)
+        ranking_messages = [{"role": "user", "content": ranking_prompt}]
+        
+        # Run stage 2 with progress updates
+        stage2_responses = {}
+        completed = 0
+        
+        async def run_ranking_task(model):
+            return model, await self.llm_provider.chat(model, ranking_messages)
+        
+        ranking_tasks = [run_ranking_task(model) for model in COUNCIL_MODELS]
+        
+        for coro in asyncio.as_completed(ranking_tasks):
+            model, response = await coro
+            stage2_responses[model] = response
+            completed += 1
+            yield StageProgress(stage=2, completed=completed, total=len(COUNCIL_MODELS))
+        
+        # Format results
+        stage2_results = []
+        for model in COUNCIL_MODELS:
+            response = stage2_responses.get(model)
+            if response is not None:
+                full_text = response.get('content', '')
+                stage2_results.append(Stage2Result(
+                    model=model,
+                    ranking=full_text,
+                    parsed_ranking=parse_ranking_from_text(full_text),
+                    status="success"
+                ))
+            else:
+                stage2_results.append(Stage2Result(
+                    model=model,
+                    ranking="Error: Failed to get ranking from this model.",
+                    parsed_ranking=[],
+                    status="error"
+                ))
         
         aggregate_rankings = calculate_aggregate_rankings(stage2_results, label_to_model)
         metadata = {

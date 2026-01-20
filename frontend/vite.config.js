@@ -10,6 +10,7 @@ export default defineConfig({
     setupFiles: './src/test/setup.js',
   },
   server: {
+    allowedHosts: ['symposia.exe.xyz'],
     proxy: {
       '/api': {
         target: 'http://localhost:8001',
