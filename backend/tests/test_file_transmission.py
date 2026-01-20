@@ -3,7 +3,8 @@ from unittest.mock import MagicMock
 from backend import storage, main
 from datetime import datetime
 from backend.domain.models import Conversation as ConversationModel, UserMessage as UserMessageModel
-from backend.main import SendMessageRequest, FileContext, build_prompt_content
+from backend.main import SendMessageRequest, FileContext
+from backend.application.prompt_builder import build_prompt_content
 from backend import storage
 
 

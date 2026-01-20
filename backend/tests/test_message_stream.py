@@ -35,7 +35,10 @@ def test_send_message_stream_emits_expected_events(tmp_path, monkeypatch):
     monkeypatch.setattr(main, "conversation_repo", repo)
     monkeypatch.setattr(main, "blob_store", store)
     monkeypatch.setattr(main, "llm_provider", MockLLM())
-    monkeypatch.setattr(main, "COUNCIL_MODELS", ["test-model"])
+    
+    # Patch COUNCIL_MODELS in the council_service module where it's imported
+    from backend.application import council_service
+    monkeypatch.setattr(council_service, "COUNCIL_MODELS", ["test-model"])
     
     # Update orchestrator to use the new instances
     monkeypatch.setattr(main.orchestrator, "repo", repo)

@@ -1,4 +1,8 @@
-"""FastAPI backend for LLM Council."""
+"""FastAPI backend for LLM Council.
+
+This is the Interface Layer - responsible only for HTTP requests/responses
+and calling the Application layer (CouncilOrchestrator).
+"""
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -8,39 +12,22 @@ from typing import List, Dict, Any
 from datetime import datetime
 import uuid
 import json
-import asyncio
 
 from . import config
-from .config import COUNCIL_MODELS
 from .infrastructure.blob_store import BlobStore
 from .infrastructure.json_repository import JsonConversationRepository
 from .infrastructure.openrouter_adapter import OpenRouterAdapter
 from .application.council_service import CouncilOrchestrator
-from .application.prompt_builder import build_prompt_content
 from .domain.models import (
     Attachment, 
     Conversation as ConversationModel, 
     UserMessage as UserMessageModel, 
     AssistantMessage as AssistantMessageModel,
-    AssistantMetadata
 )
-from .council import (
-    run_full_council,
-    generate_conversation_title,
-    stage1_collect_responses,
-    stage2_collect_rankings,
-    stage3_synthesize_final,
-    calculate_aggregate_rankings,
-    chairman_followup,
-    parse_ranking_from_text,
-    Stage1Result,
-    Stage2Result
-)
-from .openrouter import query_model
 
 app = FastAPI(title="LLM Council API")
 
-# Infrastructure Adapters
+# Infrastructure Adapters (Dependency Injection)
 conversation_repo = JsonConversationRepository(data_dir=config.DATA_DIR)
 llm_provider = OpenRouterAdapter(api_key=config.OPENROUTER_API_KEY)
 blob_store = BlobStore()
@@ -54,10 +41,8 @@ orchestrator = CouncilOrchestrator(
 
 # Configure CORS origins based on environment
 if config.IS_CODESPACE or config.DEBUG_MODE:
-    # Relaxed CORS for Codespaces/Development
     allow_origins = ["*"]
 else:
-    # Strict CORS for production
     allow_origins = ["http://localhost:5173", "http://localhost:3000"]
 
 app.add_middleware(
@@ -69,6 +54,7 @@ app.add_middleware(
 )
 
 
+# Request/Response Models
 class CreateConversationRequest(BaseModel):
     """Request to create a new conversation."""
     pass
@@ -85,7 +71,7 @@ class SendMessageRequest(BaseModel):
     """Request to send a message in a conversation."""
     content: str
     files: List[FileContext] = Field(default_factory=list)
-    target_model: str | None = None # e.g., "chairman" for follow-up
+    target_model: str | None = None  # e.g., "chairman" for follow-up
 
 
 class ConversationMetadata(BaseModel):
@@ -211,18 +197,19 @@ async def send_message(conversation_id: str, request: SendMessageRequest):
     # Check if this is the first message
     is_first_message = len(conversation.messages) == 0
 
-    # Add user message
+    # Process file attachments
     attachments = []
     if request.files:
         for f in request.files:
             ref_id = blob_store.save_text(f.content)
             attachments.append(Attachment(
                 filename=f.name,
-                content_type="text/plain", # Default
+                content_type="text/plain",
                 file_reference_id=ref_id,
                 size=f.size
             ))
             
+    # Add user message to conversation
     user_msg = UserMessageModel(
         content=request.content,
         files=attachments
@@ -230,50 +217,32 @@ async def send_message(conversation_id: str, request: SendMessageRequest):
     conversation.messages.append(user_msg)
     conversation_repo.save(conversation)
     
-    # Check for Follow-up (Target: Chairman)
+    # Handle Chairman Follow-up
     if request.target_model == "chairman":
-        last_assistant_msg = None
-        for msg in reversed(conversation.messages):
-            if isinstance(msg, AssistantMessageModel) and msg.stage3:
-                last_assistant_msg = msg
-                break
+        stage3_result = await orchestrator.chairman_followup(
+            conversation_id=conversation_id,
+            followup_query=request.content,
+            attachments=attachments
+        )
         
-        if last_assistant_msg:
-            original_query = "Unknown (Context from previous turn)"
-            try:
-                idx = conversation.messages.index(last_assistant_msg)
-                if idx > 0 and isinstance(conversation.messages[idx-1], UserMessageModel):
-                    original_query = conversation.messages[idx-1].content or "Unknown"
-            except ValueError:
-                pass
+        # Save the assistant message
+        assistant_msg = AssistantMessageModel(
+            stage1=[],
+            stage2=[],
+            stage3=stage3_result
+        )
+        conversation.messages.append(assistant_msg)
+        conversation.has_unread = True
+        conversation_repo.save(conversation)
 
-            prompt_content = build_prompt_content(request.content, attachments)
-            stage3_result = await chairman_followup(
-                original_query=original_query,
-                stage1_results=last_assistant_msg.stage1,
-                stage2_results=last_assistant_msg.stage2,
-                stage3_response=last_assistant_msg.stage3.get("response", ""),
-                followup_query=prompt_content,
-                llm_provider=llm_provider
-            )
+        return {
+            "stage1": [],
+            "stage2": [],
+            "stage3": stage3_result,
+            "metadata": {}
+        }
 
-            assistant_msg = AssistantMessageModel(
-                stage1=[],
-                stage2=[],
-                stage3=stage3_result
-            )
-            conversation.messages.append(assistant_msg)
-            conversation.has_unread = True
-            conversation_repo.save(conversation)
-
-            return {
-                "stage1": [],
-                "stage2": [],
-                "stage3": stage3_result,
-                "metadata": {}
-            }
-
-    # Run the 3-stage council process using Orchestrator
+    # Run the full 3-stage council process
     final_result = {
         "stage1": [],
         "stage2": [],
@@ -315,7 +284,7 @@ async def send_message_stream(conversation_id: str, request: SendMessageRequest)
 
     async def event_generator():
         try:
-            # Add user message
+            # Process file attachments
             attachments = []
             if request.files:
                 for f in request.files:
@@ -327,6 +296,7 @@ async def send_message_stream(conversation_id: str, request: SendMessageRequest)
                         size=f.size
                     ))
             
+            # Add user message
             user_msg = UserMessageModel(
                 content=request.content,
                 files=attachments
@@ -334,7 +304,7 @@ async def send_message_stream(conversation_id: str, request: SendMessageRequest)
             conversation.messages.append(user_msg)
             conversation_repo.save(conversation)
             
-            # Use Orchestrator
+            # Stream events from orchestrator
             async for event in orchestrator.run_council(
                 conversation_id, 
                 request.content,
@@ -344,17 +314,7 @@ async def send_message_stream(conversation_id: str, request: SendMessageRequest)
                 yield f"data: {event.model_dump_json()}\n\n"
 
         except Exception as e:
-            # Send error event
             yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
-
-    return StreamingResponse(
-        event_generator(),
-        media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-        }
-    )
 
     return StreamingResponse(
         event_generator(),
