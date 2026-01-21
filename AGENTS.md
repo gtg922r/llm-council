@@ -121,8 +121,9 @@ The Stage 2 prompt is specific to ensure parseable output:
 All backend modules use relative imports (e.g., `from .config import ...`). Run as `python -m backend.main`.
 
 ### Port Configuration
-- Backend: 8001
-- Frontend: 5173 (Vite default)
+- **Production**: Port 8000 (single server serves both API and frontend)
+- **Development Backend**: Port 8001
+- **Development Frontend**: Port 5173 (Vite dev server with proxy to backend)
 
 ### Testing
 Tests mock at the **port level**, not internal functions:
@@ -157,13 +158,61 @@ Return: Domain events → HTTP response
 Frontend: Display with tabs + validation UI
 ```
 
+## Production Deployment
+
+### Location
+- **Directory**: `/home/exedev/symposia`
+- **URL**: https://symposia.exe.xyz:8000/
+- **Health Check**: https://symposia.exe.xyz:8000/api/health
+
+### Systemd Service
+The production instance runs as a systemd service called `symposia`.
+
+```bash
+# Service management
+sudo systemctl status symposia    # Check status
+sudo systemctl restart symposia   # Restart service
+sudo systemctl stop symposia      # Stop service
+journalctl -u symposia -f         # View logs (follow)
+journalctl -u symposia -n 100     # View last 100 log lines
+```
+
+### Service Configuration
+- Service file: `/etc/systemd/system/symposia.service`
+- Source: `~/symposia/symposia.service`
+- Runs uvicorn directly from venv: `/home/exedev/symposia/.venv/bin/uvicorn`
+
+### Deploying Changes
+```bash
+cd ~/symposia
+
+# Backend changes only:
+sudo systemctl restart symposia
+
+# Frontend changes:
+cd frontend && npm run build && cd ..
+sudo systemctl restart symposia
+
+# After updating service file:
+sudo cp symposia.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl restart symposia
+```
+
+### Production Architecture
+In production, the FastAPI backend serves both:
+1. API endpoints at `/api/*`
+2. Static frontend files from `frontend/dist/`
+3. SPA catch-all route serves `index.html` for client-side routing
+
 ## Development Workflows
 
-### Running the Backend
+### Running Locally (Development)
 ```bash
 ./install.sh
 ./start.sh
 ```
+This runs backend on port 8001 and Vite dev server on port 5173 with hot reload.
 
 ### Running Tests
 ```bash
