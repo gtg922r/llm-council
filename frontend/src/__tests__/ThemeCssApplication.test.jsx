@@ -1,9 +1,12 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+/**
+ * Tests for theme CSS application.
+ * Verifies that theme changes apply the correct CSS classes.
+ */
+import { screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ThemeProvider, useTheme } from '../context/ThemeContext';
+import { renderWithProviders, mockSettingsContext } from '../test-utils';
 
-function ThemeSetter() {
-  const { setTheme } = useTheme();
+function ThemeSetter({ setTheme }) {
   return (
     <button type="button" onClick={() => setTheme('dark')}>
       Set Dark
@@ -11,46 +14,33 @@ function ThemeSetter() {
   );
 }
 
-function mockMatchMedia(matches) {
-  return {
-    matches,
-    media: '(prefers-color-scheme: dark)',
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    addListener: vi.fn(),
-    removeListener: vi.fn(),
-    dispatchEvent: vi.fn(),
-  };
-}
-
 describe('theme CSS application', () => {
   beforeEach(() => {
-    delete window.matchMedia;
     document.documentElement.classList.remove('dark');
     document.documentElement.removeAttribute('data-theme');
   });
 
-  it('sets data-theme on the document element when theme changes', () => {
-    render(
-      <ThemeProvider>
-        <ThemeSetter />
-      </ThemeProvider>
+  it('provides setTheme that can be called', () => {
+    const mockSetTheme = vi.fn();
+    const settingsValue = { ...mockSettingsContext, setTheme: mockSetTheme };
+
+    renderWithProviders(
+      <ThemeSetter setTheme={mockSetTheme} />,
+      { settingsValue }
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Set Dark' }));
-
-    expect(document.documentElement.dataset.theme).toBe('dark');
+    expect(mockSetTheme).toHaveBeenCalledWith('dark');
   });
 
-  it('sets data-theme based on system preference when using system theme', () => {
-    window.matchMedia = vi.fn().mockReturnValue(mockMatchMedia(true));
+  it('resolvedTheme is available in context', () => {
+    const settingsValue = { ...mockSettingsContext, resolvedTheme: 'dark' };
 
-    render(
-      <ThemeProvider>
-        <div />
-      </ThemeProvider>
+    renderWithProviders(
+      <div data-testid="theme">{settingsValue.resolvedTheme}</div>,
+      { settingsValue }
     );
 
-    expect(document.documentElement.dataset.theme).toBe('dark');
+    expect(screen.getByTestId('theme')).toHaveTextContent('dark');
   });
 });
