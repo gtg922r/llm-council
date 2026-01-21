@@ -14,7 +14,7 @@ import CollapsibleSection from './CollapsibleSection';
 import EditableTitle from './EditableTitle';
 import FollowUpInput from './FollowUpInput';
 import ChatInput from './ChatInput';
-import UserMenu from './UserMenu';
+
 import './ChatInterface.css';
 
 export default function ChatInterface({
@@ -160,7 +160,6 @@ export default function ChatInterface({
               </button>
             </div>
           )}
-          <UserMenu />
         </div>
       </div>
       <div className="messages-container">

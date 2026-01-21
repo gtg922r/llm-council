@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 import ModelModeToggle from './ModelModeToggle';
+import UserMenu from './UserMenu';
 import './Sidebar.css';
 
 export default function Sidebar({
@@ -54,6 +55,7 @@ export default function Sidebar({
     <div className="sidebar">
       <div className="sidebar-header">
         <div className="sidebar-header-top">
+          <UserMenu />
           <h1>LLM Council</h1>
           <div className="sidebar-settings" ref={settingsRef}>
             <button
