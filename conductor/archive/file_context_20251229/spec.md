@@ -1,7 +1,7 @@
 # Track Spec: Unified Input & File Context
 
 ## Overview
-Enhance the LLM Council user experience by allowing users to provide text-based files as context for their queries. This track also involves unifying the message input component across the main conversation and Chairman follow-ups to ensure feature parity and design consistency.
+Enhance the Symposia user experience by allowing users to provide text-based files as context for their queries. This track also involves unifying the message input component across the main conversation and Chairman follow-ups to ensure feature parity and design consistency.
 
 ## Functional Requirements
 1.  **Unified Input Component:**

@@ -1,4 +1,4 @@
-"""Pure prompt templates for the LLM Council.
+"""Pure prompt templates for Symposia.
 
 This module contains only string building functions - no async, no network calls.
 Follows the principle of keeping prompt logic separate from orchestration.
@@ -86,7 +86,7 @@ def build_chairman_synthesis_prompt(
         status_info = "" if result.status == "success" else f" [STATUS: {result.status.upper()}]"
         stage2_text += f"Model: {result.model}{status_info}\nRanking: {result.ranking}\n\n"
 
-    return f"""You are the Chairman of an LLM Council. Multiple AI models have provided responses to a user's question, and then ranked each other's responses.
+    return f"""You are the Chairman of Symposia, an AI Council. Multiple AI models have provided responses to a user's question, and then ranked each other's responses.
 
 Original Question: {user_query}
 
@@ -135,7 +135,7 @@ def build_chairman_followup_prompt(
         status_info = "" if result.status == "success" else f" [STATUS: {result.status.upper()}]"
         stage2_text += f"Model: {result.model}{status_info}\nRanking: {result.ranking}\n\n"
 
-    return f"""You are the Chairman of an LLM Council. You have previously synthesized a response based on the council's input. The user now has a follow-up question.
+    return f"""You are the Chairman of Symposia, an AI Council. You have previously synthesized a response based on the council's input. The user now has a follow-up question.
 
 Original Question: {original_query}
 

@@ -1,7 +1,7 @@
 """Council Orchestrator - the single source of truth for council workflow.
 
 This module contains the CouncilOrchestrator which coordinates all stages
-of the LLM Council process. It uses dependency injection for all external
+of the Symposia council process. It uses dependency injection for all external
 interactions (LLM calls, storage) making it fully testable.
 """
 
@@ -80,7 +80,7 @@ class RunCompleted(CouncilEvent):
 
 class CouncilOrchestrator:
     """
-    Service to orchestrate the multi-stage LLM Council process.
+    Service to orchestrate the multi-stage Symposia council process.
     
     This is the single source of truth for all council workflow logic.
     All LLM interactions go through the injected LLMProvider.

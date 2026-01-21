@@ -1,4 +1,4 @@
-"""FastAPI backend for LLM Council.
+"""FastAPI backend for Symposia.
 
 This is the Interface Layer - responsible only for HTTP requests/responses
 and calling the Application layer (CouncilOrchestrator).
@@ -29,7 +29,7 @@ from .domain.models import (
     AssistantMessage as AssistantMessageModel,
 )
 
-app = FastAPI(title="LLM Council API")
+app = FastAPI(title="Symposia API")
 
 # Infrastructure Adapters (Dependency Injection)
 conversation_repo = FirestoreConversationRepository()
@@ -107,7 +107,7 @@ class UpdateConversationRequest(BaseModel):
 @app.get("/")
 async def root():
     """Health check endpoint (unauthenticated)."""
-    return {"status": "ok", "service": "LLM Council API"}
+    return {"status": "ok", "service": "Symposia API"}
 
 
 @app.get("/api/conversations", response_model=List[ConversationMetadata])

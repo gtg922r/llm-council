@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# LLM Council - Start script
+# Symposia - Start script
 
-echo "Starting LLM Council..."
+echo "Starting Symposia..."
 echo "  Backend:  http://localhost:8001"
 echo "  Frontend: http://localhost:5173"
 echo ""

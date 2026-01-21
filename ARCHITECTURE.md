@@ -2,7 +2,7 @@
 
 ## 1. High-Level Overview
 
-**LLM Council** is a collaborative AI decision-support system that leverages multiple Large Language Models (LLMs) to provide diverse perspectives on a user's query. It employs a "council" of AI agents—each with a distinct persona or specialty—to deliberate, rank responses, and synthesize a final consensus, mimicking a human board meeting.
+**Symposia** is a collaborative AI decision-support system that leverages multiple Large Language Models (LLMs) to provide diverse perspectives on a user's query. It employs a "council" of AI agents—each with a distinct persona or specialty—to deliberate, rank responses, and synthesize a final consensus, mimicking a human board meeting.
 
 ```mermaid
 graph TD
@@ -56,7 +56,7 @@ This project adheres to **Hexagonal Architecture** to decouple the core business
 ## 4. Codebase Structure (Annotated)
 
 ```text
-/workspaces/llm-council/
+/workspaces/symposia/
 ├── backend/
 │   ├── application/       # Orchestration logic & use cases (The "What")
 │   │   ├── council_service.py # Core logic running the council process

@@ -1,7 +1,7 @@
 # Specification: UI Improvements & Conversation Management
 
 ## Overview
-This track focuses on enhancing the user interface and conversation management capabilities of the LLM Council application. Key features include archiving, pinning, and duplicating conversations, as well as improving the density of the chat interface by collapsing intermediate processing stages.
+This track focuses on enhancing the user interface and conversation management capabilities of the Symposia application. Key features include archiving, pinning, and duplicating conversations, as well as improving the density of the chat interface by collapsing intermediate processing stages.
 
 ## Functional Requirements
 

@@ -110,7 +110,7 @@ export default function ChatInterface({
     return (
       <div className="chat-interface">
         <div className="empty-state">
-          <h2>Welcome to LLM Council</h2>
+          <h2>Welcome to Symposia</h2>
           <p>Create a new conversation to get started</p>
         </div>
       </div>
@@ -166,7 +166,7 @@ export default function ChatInterface({
         {messages.length === 0 ? (
           <div className="empty-state">
             <h2>Start a conversation</h2>
-            <p>Ask a question to consult the LLM Council</p>
+            <p>Ask a question to consult the AI Council</p>
           </div>
         ) : (
           messages.map((msg, index) => (
@@ -193,7 +193,7 @@ export default function ChatInterface({
               ) : (
                 <div className="assistant-message">
                   <div className="message-label">
-                    {msg.stage3 && (!msg.stage1 || msg.stage1.length === 0) ? 'Chairman' : 'LLM Council'}
+                    {msg.stage3 && (!msg.stage1 || msg.stage1.length === 0) ? 'Chairman' : 'Symposia'}
                   </div>
 
                   {/* Stage 1 */}

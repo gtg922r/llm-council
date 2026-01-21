@@ -1,7 +1,7 @@
 # Spec: Dark Mode Support
 
 ## Overview
-Add a high-quality, elegant dark mode to the LLM Council application. The implementation will prioritize user comfort, modern aesthetics (Material-inspired dark grays), and seamless integration with system settings while providing manual overrides.
+Add a high-quality, elegant dark mode to the Symposia application. The implementation will prioritize user comfort, modern aesthetics (Material-inspired dark grays), and seamless integration with system settings while providing manual overrides.
 
 ## Functional Requirements
 - **System Detection:** Automatically detect and apply the user's system/browser color scheme preference (`prefers-color-scheme`) on initial load.

@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# LLM Council - Install/Setup script
+# Symposia - Install/Setup script
 
 set -e  # Exit on error
 
-echo "Setting up LLM Council..."
+echo "Setting up Symposia..."
 echo "========================="
 
 echo "[1/2] Installing Backend dependencies (uv)..."

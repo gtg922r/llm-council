@@ -70,5 +70,5 @@
 ## Firebase Project Setup
 
 Project: `pyronic-apps`
-Database: `llm-council` (to be created)
+Database: `symposia` (to be created)
 Auth: Google provider (already configured)

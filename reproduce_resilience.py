@@ -1,4 +1,4 @@
-"""Reproduction script for LLM Council error handling."""
+"""Reproduction script for Symposia error handling."""
 
 import asyncio
 import unittest

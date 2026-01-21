@@ -1,5 +1,5 @@
 /**
- * API client for the LLM Council backend.
+ * API client for the Symposia backend.
  * All requests include Firebase auth tokens.
  */
 

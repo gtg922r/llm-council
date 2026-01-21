@@ -56,7 +56,7 @@ export default function Sidebar({
       <div className="sidebar-header">
         <div className="sidebar-header-top">
           <UserMenu />
-          <h1>LLM Council</h1>
+          <h1>Symposia</h1>
           <div className="sidebar-settings" ref={settingsRef}>
             <button
               type="button"

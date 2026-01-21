@@ -15,7 +15,7 @@ class OpenRouterAdapter(LLMProvider):
         """Send a chat completion request to OpenRouter."""
         headers = {
             "Authorization": f"Bearer {self.api_key}",
-            "HTTP-Referer": "https://github.com/mshumer/llm-council",
+            "HTTP-Referer": "https://github.com/symposia-ai/symposia",
             "Content-Type": "application/json",
         }
         

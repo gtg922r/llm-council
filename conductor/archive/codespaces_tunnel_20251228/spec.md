@@ -24,4 +24,4 @@ Enable seamless communication between the React frontend and FastAPI backend whe
 
 ## Out of Scope
 - Implementing a production-grade reverse proxy (like Nginx).
-- Changing the core logic of the LLM Council stages.
+- Changing the core logic of the Symposia council stages.

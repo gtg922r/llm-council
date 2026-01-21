@@ -1,7 +1,7 @@
 # Track Spec: Council Resilience & Error Handling
 
 ## Goal
-Enhance the reliability of the LLM Council by implementing robust error handling for external API interactions. The system should gracefully handle timeouts, rate limits, and service failures from OpenRouter/LLM providers without crashing the entire application or stalling the user experience.
+Enhance the reliability of Symposia by implementing robust error handling for external API interactions. The system should gracefully handle timeouts, rate limits, and service failures from OpenRouter/LLM providers without crashing the entire application or stalling the user experience.
 
 ## Core Requirements
 1.  **Individual Model Failures:** If a single model fails (timeout, 5xx error, etc.) during Stage 1 (Initial Opinions) or Stage 2 (Review), the process should continue with the remaining models.

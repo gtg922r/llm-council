@@ -1,5 +1,5 @@
 # Initial Concept
-LLM Council: A local web app that uses OpenRouter to send queries to multiple LLMs, has them review and rank each other's work, and then uses a Chairman LLM to produce a final response.
+Symposia: A local web app that uses OpenRouter to send queries to multiple LLMs, has them review and rank each other's work, and then uses a Chairman LLM to produce a final response.
 
 # Product Guide
 
@@ -9,7 +9,7 @@ LLM Council: A local web app that uses OpenRouter to send queries to multiple LL
 - **Software Developers:** Engineers needing multiple opinions on complex software architectural questions and technical trade-offs.
 
 ## Value Proposition
-The LLM Council solves the problem of "single-model bias" for challenging questions that require reasoning, taste, or experience. It helps users:
+Symposia solves the problem of "single-model bias" for challenging questions that require reasoning, taste, or experience. It helps users:
 - **Navigate Ambiguity:** Explore different valid approaches to the same problem.
 - **Expand Brainstorming:** Use multiple models to increase the creative "surface area."
 - **Identify Alignment:** Look for consensus among different models in high-uncertainty scenarios.

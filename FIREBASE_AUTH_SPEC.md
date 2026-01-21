@@ -2,7 +2,7 @@
 
 ## Overview
 
-Add Google Account authentication via Firebase to LLM Council, replacing local storage with cloud-based Firestore for all user data. This enables users to access their conversations from any device while securing the application to authorized users only.
+Add Google Account authentication via Firebase to Symposia, replacing local storage with cloud-based Firestore for all user data. This enables users to access their conversations from any device while securing the application to authorized users only.
 
 ## Goals
 
@@ -61,9 +61,9 @@ Add Google Account authentication via Firebase to LLM Council, replacing local s
 ┌─────────────────────────────────────────────────────────────┐
 │                                                             │
 │                                                             │
-│                    [LLM Council Logo]                       │
+│                    [Symposia Logo]                          │
 │                                                             │
-│                   "LLM Council"                             │
+│                      "Symposia"                             │
 │           "Collaborative AI Deliberation"                   │
 │                                                             │
 │              ┌─────────────────────────┐                    │
@@ -183,8 +183,8 @@ All API endpoints must verify Firebase ID tokens:
 
 | Key | Replacement |
 |-----|-------------|
-| `llm-council-theme` | Firestore `/users/{uid}/settings.theme` |
-| `llm-council-model-mode` | Firestore `/users/{uid}/settings.modelMode` |
+| `symposia-theme` | Firestore `/users/{uid}/settings.theme` |
+| `symposia-model-mode` | Firestore `/users/{uid}/settings.modelMode` |
 
 ## Error Handling
 

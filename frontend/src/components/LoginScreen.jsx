@@ -24,7 +24,7 @@ export default function LoginScreen() {
     <div className="login-screen">
       <div className="login-container">
         <div className="login-header">
-          <h1 className="login-title">LLM Council</h1>
+          <h1 className="login-title">Symposia</h1>
           <p className="login-subtitle">Collaborative AI Deliberation</p>
         </div>
 

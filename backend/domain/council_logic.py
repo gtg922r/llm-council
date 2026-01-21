@@ -1,4 +1,4 @@
-"""Pure domain logic for the LLM Council.
+"""Pure domain logic for Symposia.
 
 This module contains only pure functions - no async, no network calls, no I/O.
 These functions handle text parsing and calculations.

@@ -1,7 +1,7 @@
 # Specification: Council Speed Settings (Fast vs. Smart)
 
 ## Overview
-Introduce a new setting in the application's settings (gear icon) that allows users to toggle between two tiers of LLM Council members: **Smart** (High-quality, higher latency) and **Fast** (Lower latency, efficient). This setting will dictate which models are used for the 3-stage orchestration process.
+Introduce a new setting in the application's settings (gear icon) that allows users to toggle between two tiers of Symposia council members: **Smart** (High-quality, higher latency) and **Fast** (Lower latency, efficient). This setting will dictate which models are used for the 3-stage orchestration process.
 
 ## Functional Requirements
 ### 1. Model Group Definitions

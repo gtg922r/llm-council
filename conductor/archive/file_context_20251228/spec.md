@@ -1,7 +1,7 @@
 # Track Spec: Drag & Drop File Context
 
 ## Goal
-Enable users to provide additional context to the LLM Council by dragging and dropping text-based files (or using a file picker) into the chat interface. The content of these files should be included in the context sent to each model, allowing them to answer questions based on the provided documents/code.
+Enable users to provide additional context to Symposia by dragging and dropping text-based files (or using a file picker) into the chat interface. The content of these files should be included in the context sent to each model, allowing them to answer questions based on the provided documents/code.
 
 ## Functional Requirements
 1.  **File Input:**
@@ -43,7 +43,7 @@ Enable users to provide additional context to the LLM Council by dragging and dr
 -   [ ] Non-text files or files >1MB trigger an alert and are not added.
 -   [ ] Sending the message clears the file chips.
 -   [ ] The final message sent to the backend includes the file content formatted with clear delimiters.
--   [ ] The LLM Council responses reflect knowledge of the file content.
+-   [ ] The Symposia responses reflect knowledge of the file content.
 
 ## Out of Scope
 -   PDF parsing or OCR for images.

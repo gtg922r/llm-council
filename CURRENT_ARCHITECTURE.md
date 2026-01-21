@@ -7,7 +7,7 @@
 
 ## Architecture Overview
 
-The LLM Council backend now follows a clean **Hexagonal Architecture** (Ports & Adapters) pattern. This decouples business logic from infrastructure, enabling testability and future portability.
+The Symposia backend now follows a clean **Hexagonal Architecture** (Ports & Adapters) pattern. This decouples business logic from infrastructure, enabling testability and future portability.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐

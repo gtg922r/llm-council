@@ -1,10 +1,10 @@
-# AGENTS.md - Technical Notes for LLM Council
+# AGENTS.md - Technical Notes for Symposia
 
 This file contains technical details, architectural decisions, and important implementation notes for future development sessions.
 
 ## Project Overview
 
-LLM Council is a 3-stage deliberation system where multiple LLMs collaboratively answer user questions. The key innovation is anonymized peer review in Stage 2, preventing models from playing favorites.
+Symposia is a 3-stage deliberation system where multiple LLMs collaboratively answer user questions. The key innovation is anonymized peer review in Stage 2, preventing models from playing favorites.
 
 ## Architecture
 
@@ -176,7 +176,7 @@ python -m pytest backend/tests tests/ -v
 git worktree add ../feat-new-ability -b feat/new-ability master
 cd ../feat-new-ability
 ./install.sh
-cp ../llm-council/.env .
+cp ../symposia/.env .
 ```
 
 ## Common Gotchas
