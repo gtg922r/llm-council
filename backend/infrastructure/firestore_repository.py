@@ -49,30 +49,35 @@ class FirestoreConversationRepository(ConversationRepository):
             }
         elif isinstance(message, AssistantMessage):
             # Convert stage results to dicts - they may be Pydantic models or already dicts
-            stage1 = None
+            # Always store as list/dict, never None
+            stage1 = []
             if message.stage1:
                 stage1 = [
                     s.model_dump() if hasattr(s, 'model_dump') else s 
                     for s in message.stage1
                 ]
             
-            stage2 = None
+            stage2 = []
             if message.stage2:
                 stage2 = [
                     s.model_dump() if hasattr(s, 'model_dump') else s 
                     for s in message.stage2
                 ]
             
-            stage3 = None
+            stage3 = {}
             if message.stage3:
                 stage3 = message.stage3.model_dump() if hasattr(message.stage3, 'model_dump') else message.stage3
+            
+            metadata = {}
+            if message.metadata:
+                metadata = message.metadata.model_dump() if hasattr(message.metadata, 'model_dump') else message.metadata
             
             return {
                 'role': 'assistant',
                 'stage1': stage1,
                 'stage2': stage2,
                 'stage3': stage3,
-                'metadata': message.metadata.model_dump() if message.metadata else None
+                'metadata': metadata
             }
         else:
             # Fallback for dict messages
@@ -88,11 +93,12 @@ class FirestoreConversationRepository(ConversationRepository):
                     files=msg_dict.get('files', [])
                 ))
             elif msg_dict.get('role') == 'assistant':
+                # Ensure we don't pass None where lists/dicts are expected
                 messages.append(AssistantMessage(
-                    stage1=msg_dict.get('stage1'),
-                    stage2=msg_dict.get('stage2'),
-                    stage3=msg_dict.get('stage3'),
-                    metadata=msg_dict.get('metadata')
+                    stage1=msg_dict.get('stage1') or [],
+                    stage2=msg_dict.get('stage2') or [],
+                    stage3=msg_dict.get('stage3') or {},
+                    metadata=msg_dict.get('metadata') or {}
                 ))
         
         created_at = doc_dict.get('created_at')
