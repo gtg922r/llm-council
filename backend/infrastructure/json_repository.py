@@ -7,7 +7,12 @@ from ..ports import ConversationRepository
 from ..domain.models import Conversation
 
 class JsonConversationRepository(ConversationRepository):
-    """JSON-based implementation of ConversationRepository."""
+    """JSON-based implementation of ConversationRepository.
+    
+    Note: user_id parameter is accepted but ignored - this implementation
+    stores all conversations in a single directory. Kept for interface
+    compatibility and testing purposes.
+    """
     
     def __init__(self, data_dir: str = "data/conversations"):
         self.data_dir = Path(data_dir)
@@ -21,7 +26,7 @@ class JsonConversationRepository(ConversationRepository):
         """Get the file path for a conversation."""
         return self.data_dir / f"{conversation_id}.json"
         
-    def get(self, conversation_id: str) -> Optional[Conversation]:
+    def get(self, conversation_id: str, user_id: str = "") -> Optional[Conversation]:
         """Retrieve a conversation by ID."""
         path = self.get_path(conversation_id)
         if not path.exists():
@@ -35,7 +40,7 @@ class JsonConversationRepository(ConversationRepository):
                 # Handle or log validation error
                 return None
                 
-    def save(self, conversation: Conversation) -> None:
+    def save(self, conversation: Conversation, user_id: str = "") -> None:
         """Save a conversation."""
         path = self.get_path(conversation.id)
         data = conversation.model_dump(exclude_none=True)
@@ -45,7 +50,7 @@ class JsonConversationRepository(ConversationRepository):
         with open(path, 'w', encoding='utf-8') as f:
             json.dump(data, f, indent=2, default=str)
             
-    def list(self) -> List[Dict[str, Any]]:
+    def list(self, user_id: str = "") -> List[Dict[str, Any]]:
         """List all conversations (metadata only)."""
         conversations = []
         if not self.data_dir.exists():
@@ -75,7 +80,7 @@ class JsonConversationRepository(ConversationRepository):
         conversations.sort(key=lambda x: x["created_at"], reverse=True)
         return conversations
         
-    def delete(self, conversation_id: str) -> None:
+    def delete(self, conversation_id: str, user_id: str = "") -> None:
         """Delete a conversation."""
         path = self.get_path(conversation_id)
         if path.exists():

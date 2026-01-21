@@ -1,4 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+
+// Mock Firebase auth
+vi.mock('../firebase', () => ({
+  auth: { currentUser: { getIdToken: async () => 'mock-token' } },
+  db: {},
+  googleProvider: {}
+}));
+
 import { api } from '../api';
 
 describe('api client', () => {
@@ -25,6 +33,7 @@ describe('api client', () => {
     expect(body).toEqual({
       content: 'hi',
       target_model: 'chairman',
+      model_mode: 'smart',
       files,
     });
   });
@@ -58,6 +67,7 @@ describe('api client', () => {
     expect(body).toEqual({
       content: 'hi',
       target_model: null,
+      model_mode: 'smart',
       files,
     });
   });

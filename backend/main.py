@@ -2,9 +2,11 @@
 
 This is the Interface Layer - responsible only for HTTP requests/responses
 and calling the Application layer (CouncilOrchestrator).
+
+All endpoints require Firebase authentication.
 """
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
@@ -12,11 +14,13 @@ from typing import List, Dict, Any
 from datetime import datetime
 import uuid
 import json
+import os
 
 from . import config
 from .infrastructure.blob_store import BlobStore
-from .infrastructure.json_repository import JsonConversationRepository
+from .infrastructure.firestore_repository import FirestoreConversationRepository
 from .infrastructure.openrouter_adapter import OpenRouterAdapter
+from .infrastructure.firebase_auth import get_current_user, AuthenticatedUser
 from .application.council_service import CouncilOrchestrator
 from .domain.models import (
     Attachment, 
@@ -28,7 +32,7 @@ from .domain.models import (
 app = FastAPI(title="LLM Council API")
 
 # Infrastructure Adapters (Dependency Injection)
-conversation_repo = JsonConversationRepository(data_dir=config.DATA_DIR)
+conversation_repo = FirestoreConversationRepository()
 llm_provider = OpenRouterAdapter(api_key=config.OPENROUTER_API_KEY)
 blob_store = BlobStore()
 
@@ -39,15 +43,10 @@ orchestrator = CouncilOrchestrator(
     blob_store=blob_store
 )
 
-# Configure CORS origins based on environment
-if config.IS_CODESPACE or config.DEBUG_MODE:
-    allow_origins = ["*"]
-else:
-    allow_origins = ["http://localhost:5173", "http://localhost:3000"]
-
+# Configure CORS - allow all origins for now (auth handled by Firebase tokens)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allow_origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -107,18 +106,21 @@ class UpdateConversationRequest(BaseModel):
 
 @app.get("/")
 async def root():
-    """Health check endpoint."""
+    """Health check endpoint (unauthenticated)."""
     return {"status": "ok", "service": "LLM Council API"}
 
 
 @app.get("/api/conversations", response_model=List[ConversationMetadata])
-async def list_conversations():
-    """List all conversations (metadata only)."""
-    return conversation_repo.list()
+async def list_conversations(user: AuthenticatedUser = Depends(get_current_user)):
+    """List all conversations for the authenticated user."""
+    return conversation_repo.list(user.uid)
 
 
 @app.post("/api/conversations", response_model=Conversation)
-async def create_conversation(request: CreateConversationRequest):
+async def create_conversation(
+    request: CreateConversationRequest,
+    user: AuthenticatedUser = Depends(get_current_user)
+):
     """Create a new conversation."""
     conversation_id = str(uuid.uuid4())
     conversation = ConversationModel(
@@ -126,23 +128,30 @@ async def create_conversation(request: CreateConversationRequest):
         created_at=datetime.now(),
         title="New Conversation"
     )
-    conversation_repo.save(conversation)
+    conversation_repo.save(conversation, user.uid)
     return conversation.model_dump()
 
 
 @app.get("/api/conversations/{conversation_id}", response_model=Conversation)
-async def get_conversation(conversation_id: str):
-    """Get a specific conversation with all its messages."""
-    conversation = conversation_repo.get(conversation_id)
+async def get_conversation(
+    conversation_id: str,
+    user: AuthenticatedUser = Depends(get_current_user)
+):
+    """Get a specific conversation."""
+    conversation = conversation_repo.get(conversation_id, user.uid)
     if conversation is None:
         raise HTTPException(status_code=404, detail="Conversation not found")
     return conversation.model_dump()
 
 
 @app.patch("/api/conversations/{conversation_id}", response_model=Conversation)
-async def update_conversation(conversation_id: str, request: UpdateConversationRequest):
-    """Update conversation metadata (title, pinned, archived)."""
-    conversation = conversation_repo.get(conversation_id)
+async def update_conversation(
+    conversation_id: str,
+    request: UpdateConversationRequest,
+    user: AuthenticatedUser = Depends(get_current_user)
+):
+    """Update conversation metadata."""
+    conversation = conversation_repo.get(conversation_id, user.uid)
     if conversation is None:
         raise HTTPException(status_code=404, detail="Conversation not found")
     
@@ -155,21 +164,27 @@ async def update_conversation(conversation_id: str, request: UpdateConversationR
     if request.has_unread is not None:
         conversation.has_unread = request.has_unread
         
-    conversation_repo.save(conversation)
+    conversation_repo.save(conversation, user.uid)
     return conversation.model_dump()
 
 
 @app.delete("/api/conversations/{conversation_id}")
-async def delete_conversation(conversation_id: str):
-    """Permanently delete a conversation."""
-    conversation_repo.delete(conversation_id)
+async def delete_conversation(
+    conversation_id: str,
+    user: AuthenticatedUser = Depends(get_current_user)
+):
+    """Delete a conversation."""
+    conversation_repo.delete(conversation_id, user.uid)
     return {"status": "success"}
 
 
 @app.post("/api/conversations/{conversation_id}/duplicate", response_model=Conversation)
-async def duplicate_conversation(conversation_id: str):
+async def duplicate_conversation(
+    conversation_id: str,
+    user: AuthenticatedUser = Depends(get_current_user)
+):
     """Duplicate a conversation."""
-    original = conversation_repo.get(conversation_id)
+    original = conversation_repo.get(conversation_id, user.uid)
     if original is None:
         raise HTTPException(status_code=404, detail="Conversation not found")
         
@@ -180,22 +195,21 @@ async def duplicate_conversation(conversation_id: str):
         title=f"{original.title} (Copy)",
         messages=original.messages.copy()
     )
-    conversation_repo.save(new_conv)
+    conversation_repo.save(new_conv, user.uid)
     return new_conv.model_dump()
 
 
 @app.post("/api/conversations/{conversation_id}/message")
-async def send_message(conversation_id: str, request: SendMessageRequest):
-    """
-    Send a message and run the 3-stage council process.
-    Returns the complete response with all stages.
-    """
-    # Check if conversation exists
-    conversation = conversation_repo.get(conversation_id)
+async def send_message(
+    conversation_id: str,
+    request: SendMessageRequest,
+    user: AuthenticatedUser = Depends(get_current_user)
+):
+    """Send a message and run the council process."""
+    conversation = conversation_repo.get(conversation_id, user.uid)
     if conversation is None:
         raise HTTPException(status_code=404, detail="Conversation not found")
 
-    # Check if this is the first message
     is_first_message = len(conversation.messages) == 0
 
     # Process file attachments
@@ -210,13 +224,13 @@ async def send_message(conversation_id: str, request: SendMessageRequest):
                 size=f.size
             ))
             
-    # Add user message to conversation
+    # Add user message
     user_msg = UserMessageModel(
         content=request.content,
         files=attachments
     )
     conversation.messages.append(user_msg)
-    conversation_repo.save(conversation)
+    conversation_repo.save(conversation, user.uid)
     
     # Handle Chairman Follow-up
     if request.target_model == "chairman":
@@ -224,10 +238,10 @@ async def send_message(conversation_id: str, request: SendMessageRequest):
             conversation_id=conversation_id,
             followup_query=request.content,
             attachments=attachments,
-            model_mode=request.model_mode
+            model_mode=request.model_mode,
+            user_id=user.uid
         )
         
-        # Save the assistant message
         assistant_msg = AssistantMessageModel(
             stage1=[],
             stage2=[],
@@ -235,7 +249,7 @@ async def send_message(conversation_id: str, request: SendMessageRequest):
         )
         conversation.messages.append(assistant_msg)
         conversation.has_unread = True
-        conversation_repo.save(conversation)
+        conversation_repo.save(conversation, user.uid)
 
         return {
             "stage1": [],
@@ -244,7 +258,7 @@ async def send_message(conversation_id: str, request: SendMessageRequest):
             "metadata": {}
         }
 
-    # Run the full 3-stage council process
+    # Run full council process
     final_result = {
         "stage1": [],
         "stage2": [],
@@ -257,7 +271,8 @@ async def send_message(conversation_id: str, request: SendMessageRequest):
         request.content,
         attachments=attachments,
         is_first_message=is_first_message,
-        model_mode=request.model_mode
+        model_mode=request.model_mode,
+        user_id=user.uid
     ):
         if event.type == "stage_complete":
             if event.stage == 1:
@@ -272,25 +287,24 @@ async def send_message(conversation_id: str, request: SendMessageRequest):
 
 
 @app.post("/api/conversations/{conversation_id}/message/stream")
-async def send_message_stream(conversation_id: str, request: SendMessageRequest):
-    """
-    Send a message and stream the 3-stage council process.
-    Returns Server-Sent Events as each stage completes.
-    """
-    # Check if conversation exists
-    conversation = conversation_repo.get(conversation_id)
+async def send_message_stream(
+    conversation_id: str,
+    request: SendMessageRequest,
+    user: AuthenticatedUser = Depends(get_current_user)
+):
+    """Send a message with streaming response."""
+    conversation = conversation_repo.get(conversation_id, user.uid)
     if conversation is None:
         raise HTTPException(status_code=404, detail="Conversation not found")
 
-    # Check if this is the first message
     is_first_message = len(conversation.messages) == 0
+    user_uid = user.uid  # Capture for closure
 
     async def event_generator():
         try:
-            # Send initial ping to establish connection
             yield ": ping\n\n"
             
-            # Process file attachments
+            # Process attachments
             attachments = []
             if request.files:
                 for f in request.files:
@@ -308,15 +322,16 @@ async def send_message_stream(conversation_id: str, request: SendMessageRequest)
                 files=attachments
             )
             conversation.messages.append(user_msg)
-            conversation_repo.save(conversation)
+            conversation_repo.save(conversation, user_uid)
             
-            # Stream events from orchestrator
+            # Stream events
             async for event in orchestrator.run_council(
                 conversation_id, 
                 request.content,
                 attachments=attachments,
                 is_first_message=is_first_message,
-                model_mode=request.model_mode
+                model_mode=request.model_mode,
+                user_id=user_uid
             ):
                 yield f"data: {event.model_dump_json()}\n\n"
 
@@ -329,7 +344,7 @@ async def send_message_stream(conversation_id: str, request: SendMessageRequest)
         headers={
             "Cache-Control": "no-cache",
             "Connection": "keep-alive",
-            "X-Accel-Buffering": "no",  # Disable nginx/proxy buffering
+            "X-Accel-Buffering": "no",
             "Transfer-Encoding": "chunked",
         }
     )

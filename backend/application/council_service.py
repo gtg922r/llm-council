@@ -106,7 +106,8 @@ class CouncilOrchestrator:
         user_query: str,
         attachments: Optional[List[Attachment]] = None,
         is_first_message: bool = False,
-        model_mode: str = "smart"
+        model_mode: str = "smart",
+        user_id: str = ""
     ) -> AsyncGenerator[Union[StageStarted, StageProgress, StageCompleted, TitleGenerated, RunCompleted], None]:
         """
         Run the full 3-stage council process and yield domain events.
@@ -117,6 +118,7 @@ class CouncilOrchestrator:
             attachments: Optional list of file attachments
             is_first_message: Whether this is the first message (triggers title generation)
             model_mode: Either 'fast' or 'smart' to select model tier
+            user_id: The authenticated user's ID for data isolation
             
         Yields:
             Domain events as each stage progresses and completes
@@ -179,7 +181,7 @@ class CouncilOrchestrator:
             stage=1, 
             data=[r.model_dump() for r in stage1_results]
         )
-        self._update_saved_message(conversation_id, stage1=stage1_results)
+        self._update_saved_message(conversation_id, user_id, stage1=stage1_results)
         
         # Check if we have any successful responses
         successful_stage1 = [r for r in stage1_results if r.status == "success"]
@@ -252,6 +254,7 @@ class CouncilOrchestrator:
         )
         self._update_saved_message(
             conversation_id, 
+            user_id,
             stage2=stage2_results, 
             metadata=AssistantMetadata(
                 label_to_model=label_to_model, 
@@ -269,15 +272,15 @@ class CouncilOrchestrator:
         )
         
         yield StageCompleted(stage=3, data=stage3_result)
-        self._update_saved_message(conversation_id, stage3=stage3_result)
+        self._update_saved_message(conversation_id, user_id, stage3=stage3_result)
         
         # Handle title generation result
         if title_task:
             title = await title_task
-            conv = self.repo.get(conversation_id)
+            conv = self.repo.get(conversation_id, user_id)
             if conv:
                 conv.title = title
-                self.repo.save(conv)
+                self.repo.save(conv, user_id)
             yield TitleGenerated(title=title)
             
         yield RunCompleted()
@@ -287,7 +290,8 @@ class CouncilOrchestrator:
         conversation_id: str,
         followup_query: str,
         attachments: Optional[List[Attachment]] = None,
-        model_mode: str = "smart"
+        model_mode: str = "smart",
+        user_id: str = ""
     ) -> Dict[str, Any]:
         """
         Handle a follow-up question to the Chairman.
@@ -303,7 +307,7 @@ class CouncilOrchestrator:
         """
         _, chairman_model = get_models_for_mode(model_mode)
         
-        conversation = self.repo.get(conversation_id)
+        conversation = self.repo.get(conversation_id, user_id)
         if not conversation:
             return {
                 "model": chairman_model,
@@ -497,14 +501,15 @@ class CouncilOrchestrator:
 
     def _update_saved_message(
         self, 
-        conversation_id: str, 
+        conversation_id: str,
+        user_id: str,
         stage1: Optional[List[Stage1Result]] = None, 
         stage2: Optional[List[Stage2Result]] = None, 
         stage3: Optional[Dict[str, Any]] = None, 
         metadata: Optional[AssistantMetadata] = None
     ) -> None:
         """Helper to update or create the assistant message in the repository."""
-        conv = self.repo.get(conversation_id)
+        conv = self.repo.get(conversation_id, user_id)
         if not conv:
             return
 
@@ -526,4 +531,4 @@ class CouncilOrchestrator:
             assistant_msg.metadata = metadata
 
         conv.has_unread = True
-        self.repo.save(conv)
+        self.repo.save(conv, user_id)

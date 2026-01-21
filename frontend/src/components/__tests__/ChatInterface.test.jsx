@@ -1,4 +1,5 @@
-import { render, screen, act, fireEvent } from '@testing-library/react';
+import { screen, act, fireEvent } from '@testing-library/react';
+import { renderWithProviders } from '../../test-utils';
 import { describe, it, expect, vi, beforeAll } from 'vitest';
 import ChatInterface from '../ChatInterface';
 
@@ -23,7 +24,7 @@ describe('ChatInterface', () => {
   });
 
   it('renders correctly with new conversation', () => {
-    render(
+    renderWithProviders(
       <ChatInterface 
         conversation={mockConversation} 
         onSendMessage={vi.fn()}
@@ -36,7 +37,7 @@ describe('ChatInterface', () => {
   });
 
   it('hides input when loading', () => {
-    render(
+    renderWithProviders(
       <ChatInterface 
         conversation={mockConversation} 
         onSendMessage={vi.fn()}
@@ -53,7 +54,7 @@ describe('ChatInterface', () => {
       id: '1',
       messages: [{ role: 'user', content: 'hello' }]
     };
-    render(
+    renderWithProviders(
       <ChatInterface 
         conversation={convWithUserLast} 
         onSendMessage={vi.fn()}
@@ -66,7 +67,7 @@ describe('ChatInterface', () => {
   });
 
   it('shows follow-up trigger after council response', () => {
-    render(
+    renderWithProviders(
       <ChatInterface 
         conversation={mockConversationWithMessages} 
         onSendMessage={vi.fn()}
@@ -89,7 +90,7 @@ describe('ChatInterface', () => {
       ]
     };
 
-    render(
+    renderWithProviders(
       <ChatInterface
         conversation={conversation}
         onSendMessage={() => {}}
@@ -107,7 +108,7 @@ describe('ChatInterface', () => {
   });
 
   it('validates and stages files', async () => {
-    render(
+    renderWithProviders(
       <ChatInterface 
         conversation={mockConversation} 
         onSendMessage={vi.fn()}
@@ -143,7 +144,7 @@ describe('ChatInterface', () => {
 
   it('transmits staged files during message submission', async () => {
     const onSendMessage = vi.fn();
-    render(
+    renderWithProviders(
       <ChatInterface 
         conversation={mockConversation} 
         onSendMessage={onSendMessage}
@@ -196,7 +197,7 @@ describe('ChatInterface', () => {
       ]
     };
 
-    render(
+    renderWithProviders(
       <ChatInterface 
         conversation={conversationWithFiles} 
         onSendMessage={vi.fn()}

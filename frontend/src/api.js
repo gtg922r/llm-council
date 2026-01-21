@@ -1,17 +1,66 @@
 /**
  * API client for the LLM Council backend.
+ * All requests include Firebase auth tokens.
  */
+
+import { auth } from './firebase';
 
 const API_BASE = '';
 
+/**
+ * Get the current user's ID token for API authentication.
+ * @returns {Promise<string|null>}
+ */
+async function getAuthToken() {
+  const user = auth.currentUser;
+  if (!user) return null;
+  try {
+    return await user.getIdToken();
+  } catch (err) {
+    console.error('Failed to get auth token:', err);
+    return null;
+  }
+}
+
+/**
+ * Create headers with auth token.
+ * @param {Object} additionalHeaders - Additional headers to include
+ * @returns {Promise<Object>}
+ */
+async function getAuthHeaders(additionalHeaders = {}) {
+  const token = await getAuthToken();
+  const headers = { ...additionalHeaders };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+}
+
+/**
+ * Handle response errors, including auth errors.
+ * @param {Response} response
+ * @param {string} errorMessage
+ */
+function handleResponseError(response, errorMessage) {
+  if (response.status === 401) {
+    // Token expired or invalid - could trigger re-auth here
+    throw new Error('Authentication required. Please sign in again.');
+  }
+  if (response.status === 403) {
+    throw new Error('Access denied.');
+  }
+  throw new Error(errorMessage);
+}
+
 export const api = {
   /**
-   * List all conversations.
+   * List all conversations for the current user.
    */
   async listConversations() {
-    const response = await fetch(`${API_BASE}/api/conversations`);
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${API_BASE}/api/conversations`, { headers });
     if (!response.ok) {
-      throw new Error('Failed to list conversations');
+      handleResponseError(response, 'Failed to list conversations');
     }
     return response.json();
   },
@@ -20,15 +69,14 @@ export const api = {
    * Create a new conversation.
    */
   async createConversation() {
+    const headers = await getAuthHeaders({ 'Content-Type': 'application/json' });
     const response = await fetch(`${API_BASE}/api/conversations`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify({}),
     });
     if (!response.ok) {
-      throw new Error('Failed to create conversation');
+      handleResponseError(response, 'Failed to create conversation');
     }
     return response.json();
   },
@@ -37,73 +85,70 @@ export const api = {
    * Get a specific conversation.
    */
   async getConversation(conversationId) {
+    const headers = await getAuthHeaders();
     const response = await fetch(
-      `${API_BASE}/api/conversations/${conversationId}`
+      `${API_BASE}/api/conversations/${conversationId}`,
+      { headers }
     );
     if (!response.ok) {
-      throw new Error('Failed to get conversation');
+      handleResponseError(response, 'Failed to get conversation');
     }
     return response.json();
   },
 
   /**
    * Send a message in a conversation.
-   * @param {string} conversationId - The conversation ID
-   * @param {string} content - The message content
-   * @param {Array} files - Array of file objects
-   * @param {string|null} targetModel - Target model (e.g., 'chairman' for follow-up)
-   * @param {string} modelMode - Model mode: 'fast' or 'smart'
    */
   async sendMessage(conversationId, content, files = [], targetModel = null, modelMode = 'smart') {
+    const headers = await getAuthHeaders({ 'Content-Type': 'application/json' });
     const response = await fetch(
       `${API_BASE}/api/conversations/${conversationId}/message`,
       {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify({ content, files, target_model: targetModel, model_mode: modelMode }),
       }
     );
     if (!response.ok) {
-      throw new Error('Failed to send message');
+      handleResponseError(response, 'Failed to send message');
     }
     return response.json();
   },
 
   /**
-   * Update conversation metadata (title, pinned, archived).
+   * Update conversation metadata.
    */
   async updateConversation(conversationId, updates) {
+    const headers = await getAuthHeaders({ 'Content-Type': 'application/json' });
     const response = await fetch(`${API_BASE}/api/conversations/${conversationId}`, {
       method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify(updates),
     });
     if (!response.ok) {
-      throw new Error('Failed to update conversation');
+      handleResponseError(response, 'Failed to update conversation');
     }
     return response.json();
   },
 
   /**
-   * Mark a conversation as read by clearing has_unread.
+   * Mark a conversation as read.
    */
   async markAsRead(conversationId) {
     return api.updateConversation(conversationId, { has_unread: false });
   },
 
   /**
-   * Permanently delete a conversation.
+   * Delete a conversation.
    */
   async deleteConversation(conversationId) {
+    const headers = await getAuthHeaders();
     const response = await fetch(`${API_BASE}/api/conversations/${conversationId}`, {
       method: 'DELETE',
+      headers,
     });
     if (!response.ok) {
-      throw new Error('Failed to delete conversation');
+      handleResponseError(response, 'Failed to delete conversation');
     }
     return response.json();
   },
@@ -112,39 +157,33 @@ export const api = {
    * Duplicate a conversation.
    */
   async duplicateConversation(conversationId) {
+    const headers = await getAuthHeaders();
     const response = await fetch(`${API_BASE}/api/conversations/${conversationId}/duplicate`, {
       method: 'POST',
+      headers,
     });
     if (!response.ok) {
-      throw new Error('Failed to duplicate conversation');
+      handleResponseError(response, 'Failed to duplicate conversation');
     }
     return response.json();
   },
 
   /**
-   * Send a message and receive streaming updates.
-   * @param {string} conversationId - The conversation ID
-   * @param {string} content - The message content
-   * @param {Array} files - Array of file objects
-   * @param {function} onEvent - Callback function for each event: (eventType, data) => void
-   * @param {string|null} targetModel - Target model (e.g., 'chairman' for follow-up)
-   * @param {string} modelMode - Model mode: 'fast' or 'smart'
-   * @returns {Promise<void>}
+   * Send a message with streaming response.
    */
   async sendMessageStream(conversationId, content, files, onEvent, targetModel = null, modelMode = 'smart') {
+    const headers = await getAuthHeaders({ 'Content-Type': 'application/json' });
     const response = await fetch(
       `${API_BASE}/api/conversations/${conversationId}/message/stream`,
       {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify({ content, files, target_model: targetModel, model_mode: modelMode }),
       }
     );
 
     if (!response.ok) {
-      throw new Error('Failed to send message');
+      handleResponseError(response, 'Failed to send message');
     }
 
     const reader = response.body.getReader();
