@@ -3,7 +3,7 @@
  */
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, initializeFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
   projectId: "pyronic-apps",
@@ -19,7 +19,8 @@ const app = initializeApp(firebaseConfig);
 
 // Initialize services
 export const auth = getAuth(app);
-export const db = getFirestore(app);
+// Use the 'symposia' database instead of default
+export const db = initializeFirestore(app, {}, 'symposia');
 export const googleProvider = new GoogleAuthProvider();
 
 export default app;
