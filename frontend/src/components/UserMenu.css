@@ -1,13 +1,15 @@
 .user-menu {
   position: relative;
+  display: flex;
+  align-items: center;
 }
 
 .user-menu-trigger {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 28px;
+  height: 28px;
   padding: 0;
   background: transparent;
   border: none;
@@ -21,15 +23,15 @@
 }
 
 .user-avatar {
-  width: 36px;
-  height: 36px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   object-fit: cover;
 }
 
 .user-avatar-placeholder {
-  width: 36px;
-  height: 36px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   background: var(--bg-tertiary);
   display: flex;
