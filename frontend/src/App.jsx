@@ -4,9 +4,11 @@ import ChatInterface from './components/ChatInterface';
 import DeleteConfirmationModal from './components/DeleteConfirmationModal';
 import { api } from './api';
 import { ThemeProvider } from './context/ThemeContext';
+import { ModelModeProvider, useModelMode } from './context/ModelModeContext';
 import './App.css';
 
-function App() {
+function AppContent() {
+  const { mode: modelMode } = useModelMode();
   const [conversations, setConversations] = useState([]);
   const [currentConversationId, setCurrentConversationId] = useState(null);
   const [currentConversation, setCurrentConversation] = useState(null);
@@ -319,7 +321,8 @@ function App() {
             currentConversationId,
             content,
             filesForRequest,
-            'chairman'
+            'chairman',
+            modelMode
           );
           setCurrentConversation((prev) => {
             if (!prev || prev.id !== conversationId) return prev;
@@ -350,7 +353,7 @@ function App() {
       
       if (!USE_STREAMING) {
         // Non-streaming: single request, wait for complete response
-        const result = await api.sendMessage(conversationId, content, filesForRequest);
+        const result = await api.sendMessage(conversationId, content, filesForRequest, null, modelMode);
         
         // Update conversation with results
         setCurrentConversation((prev) => {
@@ -383,7 +386,7 @@ function App() {
         return;
       }
       
-      // Streaming path (currently disabled due to proxy issues)
+      // Streaming path
       await api.sendMessageStream(currentConversationId, content, filesForRequest, (eventType, event) => {
         const updateAssistantMessage = (prev, updater) => {
           if (!prev || prev.id !== conversationId) return prev;
@@ -534,7 +537,7 @@ function App() {
           default:
             console.log('Unknown event type:', eventType);
         }
-      });
+      }, null, modelMode);
     } catch (error) {
       console.error('Failed to send message (stream):', error);
       
@@ -551,7 +554,7 @@ function App() {
             }))
           );
           // Use non-streaming endpoint
-          const result = await api.sendMessage(conversationId, content, fallbackFiles);
+          const result = await api.sendMessage(conversationId, content, fallbackFiles, null, modelMode);
           
           // Update conversation with results
           setCurrentConversation((prev) => {
@@ -605,8 +608,7 @@ function App() {
   const isLoading = loadingConversationId === currentConversationId;
 
   return (
-    <ThemeProvider>
-      <div className="app">
+    <div className="app">
         <Sidebar
           conversations={conversations}
           currentConversationId={currentConversationId}
@@ -625,16 +627,25 @@ function App() {
           onUpdateTitle={handleUpdateTitle}
           isLoading={isLoading}
         />
-        <DeleteConfirmationModal
-          isOpen={deleteModalConfig.isOpen}
-          onClose={() => setDeleteModalConfig({ ...deleteModalConfig, isOpen: false })}
-          onConfirm={handleConfirmDelete}
-          title={deleteModalConfig.type === 'bulk' ? "Delete All Archived" : undefined}
-          message={deleteModalConfig.type === 'bulk' 
-            ? `Are you sure you want to delete all ${conversations.filter(c => c.is_archived).length} archived conversations?` 
-            : undefined}
-        />
-      </div>
+      <DeleteConfirmationModal
+        isOpen={deleteModalConfig.isOpen}
+        onClose={() => setDeleteModalConfig({ ...deleteModalConfig, isOpen: false })}
+        onConfirm={handleConfirmDelete}
+        title={deleteModalConfig.type === 'bulk' ? "Delete All Archived" : undefined}
+        message={deleteModalConfig.type === 'bulk' 
+          ? `Are you sure you want to delete all ${conversations.filter(c => c.is_archived).length} archived conversations?` 
+          : undefined}
+      />
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <ThemeProvider>
+      <ModelModeProvider>
+        <AppContent />
+      </ModelModeProvider>
     </ThemeProvider>
   );
 }

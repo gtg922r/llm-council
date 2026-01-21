@@ -72,6 +72,7 @@ class SendMessageRequest(BaseModel):
     content: str
     files: List[FileContext] = Field(default_factory=list)
     target_model: str | None = None  # e.g., "chairman" for follow-up
+    model_mode: str = "smart"  # "fast" or "smart"
 
 
 class ConversationMetadata(BaseModel):
@@ -222,7 +223,8 @@ async def send_message(conversation_id: str, request: SendMessageRequest):
         stage3_result = await orchestrator.chairman_followup(
             conversation_id=conversation_id,
             followup_query=request.content,
-            attachments=attachments
+            attachments=attachments,
+            model_mode=request.model_mode
         )
         
         # Save the assistant message
@@ -254,7 +256,8 @@ async def send_message(conversation_id: str, request: SendMessageRequest):
         conversation_id, 
         request.content,
         attachments=attachments,
-        is_first_message=is_first_message
+        is_first_message=is_first_message,
+        model_mode=request.model_mode
     ):
         if event.type == "stage_complete":
             if event.stage == 1:
@@ -312,7 +315,8 @@ async def send_message_stream(conversation_id: str, request: SendMessageRequest)
                 conversation_id, 
                 request.content,
                 attachments=attachments,
-                is_first_message=is_first_message
+                is_first_message=is_first_message,
+                model_mode=request.model_mode
             ):
                 yield f"data: {event.model_dump_json()}\n\n"
 

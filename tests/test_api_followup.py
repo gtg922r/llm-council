@@ -48,7 +48,7 @@ class TestApiFollowup(unittest.TestCase):
                     mock_blob.save_text.return_value = "ref123"
                     
                     # Mock chairman followup
-                    async def mock_followup(conversation_id, followup_query, attachments=None):
+                    async def mock_followup(conversation_id, followup_query, attachments=None, model_mode="smart"):
                         return {
                             "model": "Chairman",
                             "response": "Follow-up answer"
@@ -91,7 +91,7 @@ class TestApiFollowup(unittest.TestCase):
                     mock_repo.save.return_value = None
                     
                     # Mock run_council
-                    async def mock_run_council(conv_id, content, attachments=None, is_first_message=False):
+                    async def mock_run_council(conv_id, content, attachments=None, is_first_message=False, model_mode="smart"):
                         yield StageCompleted(stage=1, data=[{"model": "A", "response": "R", "status": "success"}])
                         yield StageCompleted(stage=2, data=[], metadata={"label_to_model": {}, "aggregate_rankings": []})
                         yield StageCompleted(stage=3, data={"model": "C", "response": "Final"})

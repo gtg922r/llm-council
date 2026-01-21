@@ -22,7 +22,7 @@ def test_send_message_end_to_end_with_files(tmp_path, monkeypatch):
     captured = {}
 
     from backend.application.council_service import StageCompleted, RunCompleted
-    async def fake_run_council(conversation_id, content, attachments=None, is_first_message=False):
+    async def fake_run_council(conversation_id, content, attachments=None, is_first_message=False, model_mode="smart"):
         captured["prompt"] = build_prompt_content(content, attachments)
         yield StageCompleted(stage=3, data={"response": "ok"})
         yield RunCompleted()

@@ -10,6 +10,7 @@ import {
   Settings
 } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
+import ModelModeToggle from './ModelModeToggle';
 import './Sidebar.css';
 
 export default function Sidebar({
@@ -67,6 +68,10 @@ export default function Sidebar({
             </button>
             {isSettingsOpen && (
               <div className="sidebar-settings-popover" role="dialog" aria-label="Settings">
+                <div className="sidebar-settings-section">
+                  <div className="sidebar-settings-label">Mode</div>
+                  <ModelModeToggle />
+                </div>
                 <div className="sidebar-settings-section">
                   <div className="sidebar-settings-label">Theme</div>
                   <ThemeToggle />
