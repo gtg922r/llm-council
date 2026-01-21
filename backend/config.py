@@ -20,12 +20,12 @@ SMART_CHAIRMAN_MODEL = "google/gemini-3-pro-preview"
 
 # Fast mode: Quick, cost-effective models
 FAST_COUNCIL_MODELS = [
-    "google/gemini-2.5-flash-lite-preview-06-17",
+    "google/gemini-2.5-flash-lite",
     "anthropic/claude-3.5-haiku",
     "openai/gpt-4.1-nano",
     "meta-llama/llama-4-scout",
 ]
-FAST_CHAIRMAN_MODEL = "google/gemini-2.5-flash-lite-preview-06-17"
+FAST_CHAIRMAN_MODEL = "google/gemini-2.5-flash-lite"
 
 # Default models (backwards compatibility)
 COUNCIL_MODELS = SMART_COUNCIL_MODELS
