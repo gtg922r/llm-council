@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useIsMobile } from './hooks/useMediaQuery';
 import Sidebar from './components/Sidebar';
 import ChatInterface from './components/ChatInterface';
 import DeleteConfirmationModal from './components/DeleteConfirmationModal';
@@ -23,6 +24,17 @@ function AppContent() {
     id: null 
   });
   const currentConversationIdRef = useRef(null);
+
+  // Mobile responsive state
+  const isMobile = useIsMobile(768);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  // Close sidebar when switching to desktop
+  useEffect(() => {
+    if (!isMobile) {
+      setIsSidebarOpen(false);
+    }
+  }, [isMobile]);
 
   const loadConversations = useCallback(async () => {
     try {
@@ -128,6 +140,10 @@ function AppContent() {
       ]));
       setCurrentConversation(newConv);
       setCurrentConversationId(newConv.id);
+      // Close sidebar on mobile after creating
+      if (isMobile) {
+        setIsSidebarOpen(false);
+      }
     } catch (error) {
       console.error('Failed to create conversation:', error);
     }
@@ -137,6 +153,10 @@ function AppContent() {
     if (currentConversationId !== id) {
       setCurrentConversation(null);
       setCurrentConversationId(id);
+    }
+    // Close sidebar on mobile after selecting
+    if (isMobile) {
+      setIsSidebarOpen(false);
     }
     try {
       await api.markAsRead(id);
@@ -627,7 +647,7 @@ function AppContent() {
   }
 
   return (
-    <div className="app">
+    <div className={`app ${isMobile ? 'app-mobile' : ''}`}>
         <Sidebar
           conversations={conversations}
           currentConversationId={currentConversationId}
@@ -638,6 +658,9 @@ function AppContent() {
           onToggleArchive={handleToggleArchive}
           onDeleteConversation={handleDeleteConversation}
           onBulkDelete={handleBulkDelete}
+          isMobile={isMobile}
+          isOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
         />
         <ChatInterface
           conversation={currentConversation}
@@ -645,6 +668,8 @@ function AppContent() {
           onHeaderAction={handleHeaderAction}
           onUpdateTitle={handleUpdateTitle}
           isLoading={isLoading}
+          isMobile={isMobile}
+          onMenuClick={() => setIsSidebarOpen(true)}
         />
       <DeleteConfirmationModal
         isOpen={deleteModalConfig.isOpen}

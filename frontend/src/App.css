@@ -34,3 +34,16 @@
     transform: rotate(360deg);
   }
 }
+
+/* ============================================
+   Mobile Layout
+   ============================================ */
+
+.app.app-mobile {
+  /* On mobile, the sidebar is positioned fixed via its own CSS,
+     so the main content takes full width */
+}
+
+.app.app-mobile .chat-interface {
+  width: 100%;
+}

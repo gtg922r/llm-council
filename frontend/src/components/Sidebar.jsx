@@ -7,7 +7,8 @@ import {
   RefreshCw, 
   ChevronDown, 
   ChevronRight,
-  Settings
+  Settings,
+  X
 } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 import ModelModeToggle from './ModelModeToggle';
@@ -24,6 +25,9 @@ export default function Sidebar({
   onToggleArchive,
   onDeleteConversation,
   onBulkDelete,
+  isMobile = false,
+  isOpen = false,
+  onClose,
 }) {
   const [isArchiveExpanded, setIsArchiveExpanded] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -51,12 +55,39 @@ export default function Sidebar({
   const activeConversations = sortedConversations.filter((conv) => !conv.is_archived);
   const archivedConversations = sortedConversations.filter((conv) => conv.is_archived);
 
+  // Build class names for mobile state
+  const sidebarClasses = [
+    'sidebar',
+    isMobile ? 'sidebar-mobile' : '',
+    isMobile && isOpen ? 'sidebar-mobile-open' : '',
+  ].filter(Boolean).join(' ');
+
   return (
-    <div className="sidebar">
-      <div className="sidebar-header">
-        <div className="sidebar-header-top">
-          <UserMenu />
-          <h1>Symposia</h1>
+    <>
+      {/* Mobile overlay/backdrop */}
+      {isMobile && (
+        <div 
+          className={`sidebar-overlay ${isOpen ? 'sidebar-overlay-visible' : ''}`}
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
+      
+      <div className={sidebarClasses}>
+        <div className="sidebar-header">
+          <div className="sidebar-header-top">
+            {isMobile && (
+              <button
+                type="button"
+                className="sidebar-close-button"
+                onClick={onClose}
+                aria-label="Close sidebar"
+              >
+                <X size={20} />
+              </button>
+            )}
+            {!isMobile && <UserMenu />}
+            <h1>Symposia</h1>
           <div className="sidebar-settings" ref={settingsRef}>
             <button
               type="button"
@@ -211,6 +242,7 @@ export default function Sidebar({
           )}
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }

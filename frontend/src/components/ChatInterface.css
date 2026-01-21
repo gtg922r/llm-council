@@ -13,6 +13,43 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
+}
+
+.chat-header-empty {
+  justify-content: flex-start;
+}
+
+.empty-header-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-text, #333);
+}
+
+/* Hamburger menu button for mobile */
+.hamburger-button {
+  background: none;
+  border: none;
+  color: var(--color-muted, #666);
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
+  flex-shrink: 0;
+  margin-left: -8px;
+}
+
+.hamburger-button:hover {
+  background: var(--color-accent-soft, rgba(74, 144, 226, 0.12));
+  color: var(--color-accent, #4a90e2);
+}
+
+.hamburger-button:active {
+  transform: scale(0.95);
 }
 
 /* h2 style removed to allow EditableTitle to control styling */
@@ -187,5 +224,38 @@
 @keyframes spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+/* ============================================
+   Mobile Responsive Styles
+   ============================================ */
+
+@media (max-width: 768px) {
+  .chat-header {
+    padding: 12px 16px;
+  }
+
+  .messages-container {
+    padding: 16px;
+  }
+
+  .user-message .message-content {
+    max-width: 95%;
+  }
+
+  .stage-loading {
+    flex-wrap: wrap;
+    padding: 12px;
+  }
+
+  .stage-loading span {
+    font-size: 13px;
+  }
+
+  .stage-progress {
+    width: 100%;
+    margin-left: 32px;
+    margin-top: 4px;
   }
 }

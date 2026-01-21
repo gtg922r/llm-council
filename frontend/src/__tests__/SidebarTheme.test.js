@@ -33,7 +33,7 @@ describe('sidebar theme accents', () => {
   });
 
   it('adds mobile-friendly sizing for indicators and actions', () => {
-    expect(css).toContain('@media (max-width: 720px)');
+    expect(css).toContain('@media (max-width: 768px)');
     expect(css).toContain('.conversation-unread-dot');
     expect(css).toContain('width: 12px');
     expect(css).toContain('.action-btn');

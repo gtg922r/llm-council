@@ -5,7 +5,8 @@ import {
   Copy,
   Archive,
   Trash2,
-  Paperclip
+  Paperclip,
+  Menu
 } from 'lucide-react';
 import Stage1 from './Stage1';
 import Stage2 from './Stage2';
@@ -23,6 +24,8 @@ export default function ChatInterface({
   onHeaderAction,
   onUpdateTitle,
   isLoading,
+  isMobile = false,
+  onMenuClick,
 }) {
   const [showMenu, setShowMenu] = useState(false);
   const [inputMode, setInputMode] = useState('council'); // 'council' or 'chairman'
@@ -109,6 +112,19 @@ export default function ChatInterface({
   if (!conversation) {
     return (
       <div className="chat-interface">
+        {isMobile && (
+          <div className="chat-header chat-header-empty">
+            <button
+              type="button"
+              className="hamburger-button"
+              onClick={onMenuClick}
+              aria-label="Open navigation menu"
+            >
+              <Menu size={22} />
+            </button>
+            <span className="empty-header-title">Symposia</span>
+          </div>
+        )}
         <div className="empty-state">
           <h2>Welcome to Symposia</h2>
           <p>Create a new conversation to get started</p>
@@ -133,6 +149,16 @@ export default function ChatInterface({
   return (
     <div className="chat-interface">
       <div className="chat-header">
+        {isMobile && (
+          <button
+            type="button"
+            className="hamburger-button"
+            onClick={onMenuClick}
+            aria-label="Open navigation menu"
+          >
+            <Menu size={22} />
+          </button>
+        )}
         <div className="title-wrapper" style={{ flex: 1, minWidth: 0, marginRight: 16 }}>
           <EditableTitle 
             title={conversation.title} 
