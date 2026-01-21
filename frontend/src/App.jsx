@@ -33,10 +33,12 @@ function AppContent() {
     }
   }, []);
 
-  // Load conversations on mount
+  // Load conversations when authenticated
   useEffect(() => {
-    loadConversations();
-  }, [loadConversations]);
+    if (isAuthenticated) {
+      loadConversations();
+    }
+  }, [loadConversations, isAuthenticated]);
 
   // Load conversation details when selected
   useEffect(() => {
