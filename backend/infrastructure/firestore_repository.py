@@ -48,11 +48,30 @@ class FirestoreConversationRepository(ConversationRepository):
                 'files': [f.model_dump() for f in message.files] if message.files else []
             }
         elif isinstance(message, AssistantMessage):
+            # Convert stage results to dicts - they may be Pydantic models or already dicts
+            stage1 = None
+            if message.stage1:
+                stage1 = [
+                    s.model_dump() if hasattr(s, 'model_dump') else s 
+                    for s in message.stage1
+                ]
+            
+            stage2 = None
+            if message.stage2:
+                stage2 = [
+                    s.model_dump() if hasattr(s, 'model_dump') else s 
+                    for s in message.stage2
+                ]
+            
+            stage3 = None
+            if message.stage3:
+                stage3 = message.stage3.model_dump() if hasattr(message.stage3, 'model_dump') else message.stage3
+            
             return {
                 'role': 'assistant',
-                'stage1': message.stage1,
-                'stage2': message.stage2,
-                'stage3': message.stage3,
+                'stage1': stage1,
+                'stage2': stage2,
+                'stage3': stage3,
                 'metadata': message.metadata.model_dump() if message.metadata else None
             }
         else:
