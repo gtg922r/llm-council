@@ -1,20 +1,11 @@
-import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
+import { screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
 import ThemeToggle from '../ThemeToggle';
-import { ThemeProvider, useTheme } from '../../context/ThemeContext';
-
-function ThemeProbe() {
-  const { theme } = useTheme();
-  return <div data-testid="theme">{theme}</div>;
-}
+import { renderWithProviders, mockSettingsContext } from '../../test-utils';
 
 describe('ThemeToggle', () => {
   it('renders light, dark, and system controls', () => {
-    render(
-      <ThemeProvider>
-        <ThemeToggle />
-      </ThemeProvider>
-    );
+    renderWithProviders(<ThemeToggle />);
 
     expect(screen.getByRole('button', { name: /light mode/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /dark mode/i })).toBeInTheDocument();
@@ -22,22 +13,22 @@ describe('ThemeToggle', () => {
   });
 
   it('defaults to system and toggles to dark', () => {
-    render(
-      <ThemeProvider>
-        <ThemeToggle />
-        <ThemeProbe />
-      </ThemeProvider>
-    );
+    const mockSetTheme = vi.fn();
+    const settingsValue = { 
+      ...mockSettingsContext, 
+      theme: 'system',
+      setTheme: mockSetTheme 
+    };
+    
+    renderWithProviders(<ThemeToggle />, { settingsValue });
 
     const systemButton = screen.getByRole('button', { name: /system mode/i });
     const darkButton = screen.getByRole('button', { name: /dark mode/i });
 
     expect(systemButton).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByTestId('theme')).toHaveTextContent('system');
 
     fireEvent.click(darkButton);
 
-    expect(darkButton).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByTestId('theme')).toHaveTextContent('dark');
+    expect(mockSetTheme).toHaveBeenCalledWith('dark');
   });
 });

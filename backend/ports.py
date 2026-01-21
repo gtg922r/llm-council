@@ -3,26 +3,29 @@ from typing import List, Dict, Any, Optional, AsyncGenerator
 from .domain.models import Conversation
 
 class ConversationRepository(ABC):
-    """Port for conversation persistence."""
+    """Port for conversation persistence.
+    
+    All methods require a user_id parameter for multi-tenant data isolation.
+    """
     
     @abstractmethod
-    def get(self, conversation_id: str) -> Optional[Conversation]:
-        """Retrieve a conversation by ID."""
+    def get(self, conversation_id: str, user_id: str) -> Optional[Conversation]:
+        """Retrieve a conversation by ID for a specific user."""
         pass
         
     @abstractmethod
-    def save(self, conversation: Conversation) -> None:
-        """Save a conversation."""
+    def save(self, conversation: Conversation, user_id: str) -> None:
+        """Save a conversation for a specific user."""
         pass
         
     @abstractmethod
-    def list(self) -> List[Dict[str, Any]]:
-        """List all conversations (metadata only)."""
+    def list(self, user_id: str) -> List[Dict[str, Any]]:
+        """List all conversations for a specific user (metadata only)."""
         pass
         
     @abstractmethod
-    def delete(self, conversation_id: str) -> None:
-        """Delete a conversation."""
+    def delete(self, conversation_id: str, user_id: str) -> None:
+        """Delete a conversation for a specific user."""
         pass
 
 class LLMProvider(ABC):

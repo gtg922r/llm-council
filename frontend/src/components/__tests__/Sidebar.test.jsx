@@ -1,8 +1,8 @@
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
+import { renderWithProviders } from '../../test-utils';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi } from 'vitest';
 import Sidebar from '../Sidebar';
-import { ThemeProvider } from '../../context/ThemeContext';
 
 const baseProps = {
   conversations: [],
@@ -18,10 +18,8 @@ const baseProps = {
 describe('Sidebar', () => {
   it('renders the settings button and reveals the theme toggle', async () => {
     const user = userEvent.setup();
-    render(
-      <ThemeProvider>
-        <Sidebar {...baseProps} />
-      </ThemeProvider>
+    renderWithProviders(
+      <Sidebar {...baseProps} />
     );
 
     expect(screen.getByRole('button', { name: /open settings/i })).toBeInTheDocument();
@@ -54,14 +52,12 @@ describe('Sidebar', () => {
       },
     ];
 
-    render(
-      <ThemeProvider>
-        <Sidebar
-          {...baseProps}
-          conversations={conversations}
-          currentConversationId="conv-active"
-        />
-      </ThemeProvider>
+    renderWithProviders(
+      <Sidebar
+        {...baseProps}
+        conversations={conversations}
+        currentConversationId="conv-active"
+      />
     );
 
     expect(screen.queryByLabelText('Unread conversation')).toBeInTheDocument();
@@ -81,14 +77,12 @@ describe('Sidebar', () => {
       },
     ];
 
-    render(
-      <ThemeProvider>
-        <Sidebar
-          {...baseProps}
-          conversations={conversations}
-          pendingConversationIds={new Set(['conv-pending'])}
-        />
-      </ThemeProvider>
+    renderWithProviders(
+      <Sidebar
+        {...baseProps}
+        conversations={conversations}
+        pendingConversationIds={new Set(['conv-pending'])}
+      />
     );
 
     expect(screen.getByLabelText('Pending conversation')).toBeInTheDocument();

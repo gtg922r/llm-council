@@ -2,13 +2,16 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import Sidebar from './components/Sidebar';
 import ChatInterface from './components/ChatInterface';
 import DeleteConfirmationModal from './components/DeleteConfirmationModal';
+import LoginScreen from './components/LoginScreen';
+import UserMenu from './components/UserMenu';
 import { api } from './api';
-import { ThemeProvider } from './context/ThemeContext';
-import { ModelModeProvider, useModelMode } from './context/ModelModeContext';
+import { SettingsProvider, useSettings } from './context/SettingsContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import './App.css';
 
 function AppContent() {
-  const { mode: modelMode } = useModelMode();
+  const { mode: modelMode } = useSettings();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [conversations, setConversations] = useState([]);
   const [currentConversationId, setCurrentConversationId] = useState(null);
   const [currentConversation, setCurrentConversation] = useState(null);
@@ -30,10 +33,12 @@ function AppContent() {
     }
   }, []);
 
-  // Load conversations on mount
+  // Load conversations when authenticated
   useEffect(() => {
-    loadConversations();
-  }, [loadConversations]);
+    if (isAuthenticated) {
+      loadConversations();
+    }
+  }, [loadConversations, isAuthenticated]);
 
   // Load conversation details when selected
   useEffect(() => {
@@ -607,6 +612,20 @@ function AppContent() {
 
   const isLoading = loadingConversationId === currentConversationId;
 
+  // Show loading state while checking auth
+  if (authLoading) {
+    return (
+      <div className="app app-loading">
+        <div className="loading-spinner" />
+      </div>
+    );
+  }
+
+  // Show login screen if not authenticated
+  if (!isAuthenticated) {
+    return <LoginScreen />;
+  }
+
   return (
     <div className="app">
         <Sidebar
@@ -642,11 +661,11 @@ function AppContent() {
 
 function App() {
   return (
-    <ThemeProvider>
-      <ModelModeProvider>
+    <AuthProvider>
+      <SettingsProvider>
         <AppContent />
-      </ModelModeProvider>
-    </ThemeProvider>
+      </SettingsProvider>
+    </AuthProvider>
   );
 }
 

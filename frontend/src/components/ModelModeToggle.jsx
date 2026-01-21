@@ -1,5 +1,5 @@
 import { Zap, Brain } from 'lucide-react';
-import { useModelMode } from '../context/ModelModeContext';
+import { useModelMode } from '../context/SettingsContext';
 import './ModelModeToggle.css';
 
 const options = [

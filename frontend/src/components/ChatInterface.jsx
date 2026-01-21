@@ -14,6 +14,7 @@ import CollapsibleSection from './CollapsibleSection';
 import EditableTitle from './EditableTitle';
 import FollowUpInput from './FollowUpInput';
 import ChatInput from './ChatInput';
+
 import './ChatInterface.css';
 
 export default function ChatInterface({
@@ -138,7 +139,8 @@ export default function ChatInterface({
             onSave={(newTitle) => onUpdateTitle(conversation.id, newTitle)} 
           />
         </div>
-        <div className="header-actions" ref={menuRef}>          <button 
+        <div className="header-actions" ref={menuRef}>
+          <button 
             className="menu-toggle"
             onClick={() => setShowMenu(!showMenu)}
             title="Conversation Options"

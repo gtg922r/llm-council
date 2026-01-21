@@ -22,4 +22,7 @@ temp/
 # Frontend
 frontend/node_modules/
 frontend/dist/
-frontend/.vite/
+
+# Firebase service account (secret)
+firebase-service-account.json
+*-firebase-adminsdk-*.json

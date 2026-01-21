@@ -104,6 +104,46 @@ vi.mock('../components/DeleteConfirmationModal', () => ({
 }));
 
 import App from '../App';
+
+// Mock Firebase
+vi.mock('../firebase', () => ({
+  auth: { currentUser: { getIdToken: async () => 'mock-token' } },
+  db: {},
+  googleProvider: {}
+}));
+
+// Mock AuthContext to always return authenticated
+vi.mock('../context/AuthContext', () => ({
+  AuthProvider: ({ children }) => children,
+  useAuth: () => ({
+    user: { uid: 'test-user', email: 'test@test.com', displayName: 'Test' },
+    authState: 'authenticated',
+    isAuthenticated: true,
+    isLoading: false,
+    error: null,
+    signInWithGoogle: vi.fn(),
+    signOut: vi.fn(),
+    getIdToken: async () => 'mock-token'
+  }),
+  AuthState: { AUTHENTICATED: 'authenticated', LOADING: 'loading', UNAUTHENTICATED: 'unauthenticated' },
+  AuthContext: { Provider: ({ children }) => children }
+}));
+
+// Mock SettingsContext
+vi.mock('../context/SettingsContext', () => ({
+  SettingsProvider: ({ children }) => children,
+  useSettings: () => ({
+    theme: 'system',
+    resolvedTheme: 'light',
+    setTheme: vi.fn(),
+    mode: 'smart',
+    setMode: vi.fn(),
+    isLoading: false
+  }),
+  useTheme: () => ({ theme: 'system', resolvedTheme: 'light', setTheme: vi.fn() }),
+  useModelMode: () => ({ mode: 'smart', setMode: vi.fn() }),
+  SettingsContext: { Provider: ({ children }) => children }
+}));
 import { api } from '../api';
 
 describe('App', () => {
