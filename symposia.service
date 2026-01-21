@@ -1,0 +1,24 @@
+[Unit]
+Description=Symposia - AI Council Application
+After=network.target
+
+[Service]
+Type=simple
+User=exedev
+WorkingDirectory=/home/exedev/symposia
+EnvironmentFile=/home/exedev/symposia/.env
+ExecStart=/home/exedev/symposia/.venv/bin/uvicorn backend.main:app --host 0.0.0.0 --port 8000
+Restart=always
+RestartSec=5
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=symposia
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

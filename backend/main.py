@@ -6,9 +6,12 @@ and calling the Application layer (CouncilOrchestrator).
 All endpoints require Firebase authentication.
 """
 
-from fastapi import FastAPI, HTTPException, Depends
+from pathlib import Path
+
+from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, FileResponse, HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any
 from datetime import datetime
@@ -104,8 +107,8 @@ class UpdateConversationRequest(BaseModel):
     has_unread: bool | None = None
 
 
-@app.get("/")
-async def root():
+@app.get("/api/health")
+async def health_check():
     """Health check endpoint (unauthenticated)."""
     return {"status": "ok", "service": "Symposia API"}
 
@@ -348,6 +351,29 @@ async def send_message_stream(
             "Transfer-Encoding": "chunked",
         }
     )
+
+
+# Serve frontend static files in production
+# The frontend build output is in frontend/dist/
+FRONTEND_DIR = Path(__file__).parent.parent / "frontend" / "dist"
+
+if FRONTEND_DIR.exists():
+    # Serve static assets (JS, CSS, etc.)
+    app.mount("/assets", StaticFiles(directory=FRONTEND_DIR / "assets"), name="static")
+    
+    # Serve other static files like vite.svg
+    @app.get("/vite.svg")
+    async def serve_vite_svg():
+        return FileResponse(FRONTEND_DIR / "vite.svg")
+    
+    # Catch-all route for SPA - must be last
+    @app.get("/{full_path:path}")
+    async def serve_spa(request: Request, full_path: str):
+        # Don't serve index.html for API routes
+        if full_path.startswith("api/"):
+            raise HTTPException(status_code=404, detail="Not found")
+        # Serve index.html for all other routes (SPA routing)
+        return FileResponse(FRONTEND_DIR / "index.html")
 
 
 if __name__ == "__main__":
