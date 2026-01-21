@@ -505,8 +505,7 @@ MIT License — see [LICENSE](LICENSE) for details.
 
 ## Acknowledgments
 
-- **[Andrej Karpathy](https://twitter.com/karpathy)** — Original concept inspiration from [reading books with LLMs](https://x.com/karpathy/status/1990577951671509438)
-- **[Ryan Gerstenkorn](https://github.com/gtg922r)** — Original author of the [llm-council](https://github.com/gtg922r/llm-council) repository
+- **[Andrej Karpathy](https://twitter.com/karpathy)** — Original author of the [llm-council](https://github.com/karpathy/llm-council) repository
 - **[OpenRouter](https://openrouter.ai/)** — Unified LLM API access
 - **[Firebase](https://firebase.google.com/)** — Authentication and database
 
