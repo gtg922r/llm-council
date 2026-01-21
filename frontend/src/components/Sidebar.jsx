@@ -7,8 +7,7 @@ import {
   RefreshCw, 
   ChevronDown, 
   ChevronRight,
-  Settings,
-  X
+  Settings
 } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 import ModelModeToggle from './ModelModeToggle';
@@ -76,17 +75,7 @@ export default function Sidebar({
       <div className={sidebarClasses}>
         <div className="sidebar-header">
           <div className="sidebar-header-top">
-            {isMobile && (
-              <button
-                type="button"
-                className="sidebar-close-button"
-                onClick={onClose}
-                aria-label="Close sidebar"
-              >
-                <X size={20} />
-              </button>
-            )}
-            {!isMobile && <UserMenu />}
+            <UserMenu />
             <h1>Symposia</h1>
           <div className="sidebar-settings" ref={settingsRef}>
             <button

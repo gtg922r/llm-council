@@ -348,27 +348,6 @@
     10px 0 15px -3px rgba(0, 0, 0, 0.1);
 }
 
-/* Close button in mobile sidebar header */
-.sidebar-close-button {
-  background: none;
-  border: none;
-  color: var(--color-muted, #666);
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: background 0.2s ease, color 0.2s ease;
-  flex-shrink: 0;
-}
-
-.sidebar-close-button:hover {
-  background: var(--color-accent-soft, rgba(74, 144, 226, 0.12));
-  color: var(--color-accent, #4a90e2);
-}
-
 /* Mobile-specific adjustments */
 @media (max-width: 768px) {
   .item-actions {
