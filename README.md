@@ -86,9 +86,37 @@ npm run dev
 
 Then open http://localhost:5173 in your browser.
 
+## Production Deployment
+
+Symposia can be deployed as a single service that serves both the API and frontend.
+
+### Build and Deploy
+
+```bash
+# Build frontend
+cd frontend && npm run build && cd ..
+
+# Run production server (serves both API and static frontend)
+uv run uvicorn backend.main:app --host 0.0.0.0 --port 8000
+```
+
+### Systemd Service
+
+A systemd service file is included for production deployment:
+
+```bash
+sudo cp symposia.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable symposia
+sudo systemctl start symposia
+```
+
+See `AGENTS.md` for detailed deployment documentation.
+
 ## Tech Stack
 
 - **Backend:** FastAPI (Python 3.10+), async httpx, OpenRouter API
 - **Frontend:** React + Vite, react-markdown for rendering
-- **Storage:** JSON files in `data/conversations/`
+- **Storage:** Firestore (cloud) or JSON files (local)
+- **Auth:** Firebase Authentication (Google Sign-in)
 - **Package Management:** uv for Python, npm for JavaScript
