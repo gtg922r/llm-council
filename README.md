@@ -497,12 +497,6 @@ git commit -am "feat: add my feature"
 
 ---
 
-## License
-
-MIT License — see [LICENSE](LICENSE) for details.
-
----
-
 ## Acknowledgments
 
 - **[Andrej Karpathy](https://twitter.com/karpathy)** — Original author of the [llm-council](https://github.com/karpathy/llm-council) repository
