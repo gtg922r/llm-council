@@ -6,7 +6,10 @@ import {
   Archive,
   Trash2,
   Paperclip,
-  Menu
+  Menu,
+  Plus,
+  Pin,
+  MessageSquare
 } from 'lucide-react';
 import Stage1 from './Stage1';
 import Stage2 from './Stage2';
@@ -20,9 +23,12 @@ import './ChatInterface.css';
 
 export default function ChatInterface({
   conversation,
+  conversations = [],
   onSendMessage,
   onHeaderAction,
   onUpdateTitle,
+  onNewConversation,
+  onSelectConversation,
   isLoading,
   isMobile = false,
   onMenuClick,
@@ -110,6 +116,11 @@ export default function ChatInterface({
   };
 
   if (!conversation) {
+    const pinnedConversations = conversations.filter(c => c.is_pinned && !c.is_archived);
+    const recentConversations = conversations
+      .filter(c => !c.is_pinned && !c.is_archived)
+      .slice(0, 3);
+
     return (
       <div className="chat-interface">
         {isMobile && (
@@ -128,6 +139,41 @@ export default function ChatInterface({
         <div className="empty-state">
           <h2>Welcome to Symposia</h2>
           <p>Create a new conversation to get started</p>
+          
+          <button 
+            className="empty-state-new-btn" 
+            onClick={onNewConversation}
+          >
+            <Plus size={18} /> New Conversation
+          </button>
+
+          {(pinnedConversations.length > 0 || recentConversations.length > 0) && (
+            <div className="empty-state-recent">
+              <h3>Recent Conversations</h3>
+              <div className="recent-list">
+                {pinnedConversations.map(conv => (
+                  <button 
+                    key={conv.id} 
+                    className="recent-item pinned"
+                    onClick={() => onSelectConversation(conv.id)}
+                  >
+                    <Pin size={14} fill="currentColor" />
+                    <span className="recent-item-title">{conv.title || 'New Conversation'}</span>
+                  </button>
+                ))}
+                {recentConversations.map(conv => (
+                  <button 
+                    key={conv.id} 
+                    className="recent-item"
+                    onClick={() => onSelectConversation(conv.id)}
+                  >
+                    <MessageSquare size={14} />
+                    <span className="recent-item-title">{conv.title || 'New Conversation'}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
