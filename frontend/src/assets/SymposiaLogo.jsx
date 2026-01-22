@@ -1,15 +1,16 @@
 export default function SymposiaLogo({ size = 80, className = '' }) {
-  // 8 circles evenly distributed around a central hexagon
-  // with solid connecting arcs (with gaps) and radial lines
-  
-  const cx = 50; // center x
-  const cy = 50; // center y
-  const hexRadius = 18; // radius of hexagon
-  const circleRadius = 5.5; // radius of outer circles
-  const orbitRadius = 38; // distance from center to outer circles (increased)
+  const cx = 50;
+  const cy = 50;
+  const hexRadius = 20;
+  const circleRadius = 5.5;
+  const orbitRadius = 36;
   const numCircles = 8;
+  const arcGap = 3;
+  const lineGapInner = 2.5;
+  const lineGapOuter = 3.5;
+  const strokeWidth = 2.25;
   
-  // Generate hexagon points (flat-top orientation)
+  // Generate hexagon points
   const hexPoints = [];
   for (let i = 0; i < 6; i++) {
     const angle = (Math.PI / 3) * i - Math.PI / 2;
@@ -33,34 +34,28 @@ export default function SymposiaLogo({ size = 80, className = '' }) {
     });
   }
   
-  // Generate arc segments between adjacent circles (solid with larger gaps at circles)
+  // Generate arcs
   const arcs = [];
   for (let i = 0; i < numCircles; i++) {
     const c1 = circles[i];
     const c2 = circles[(i + 1) % numCircles];
-    
-    // Calculate start and end angles for the arc
     const angle1 = c1.angle;
     const angle2 = c2.angle + (i === numCircles - 1 ? 2 * Math.PI : 0);
-    
-    // Larger gap so the connecting lines are more visible
-    const gap = (circleRadius + 4) / orbitRadius;
+    const gap = (circleRadius + arcGap) / orbitRadius;
     const a1 = angle1 + gap;
     const a2 = angle2 - gap;
-    
-    const x1 = cx + orbitRadius * Math.cos(a1);
-    const y1 = cy + orbitRadius * Math.sin(a1);
-    const x2 = cx + orbitRadius * Math.cos(a2);
-    const y2 = cy + orbitRadius * Math.sin(a2);
-    
-    arcs.push({ x1, y1, x2, y2, large: 0 });
+    arcs.push({
+      x1: cx + orbitRadius * Math.cos(a1),
+      y1: cy + orbitRadius * Math.sin(a1),
+      x2: cx + orbitRadius * Math.cos(a2),
+      y2: cy + orbitRadius * Math.sin(a2)
+    });
   }
   
-  // Generate lines from hexagon edge midpoints toward outer circles
-  const lines = circles.map((c) => {
-    // Line from a point closer to hexagon edge toward the circle
-    const innerDist = hexRadius + 2;
-    const outerDist = orbitRadius - circleRadius - 2;
+  // Generate lines
+  const lines = circles.map(c => {
+    const innerDist = hexRadius + lineGapInner;
+    const outerDist = orbitRadius - circleRadius - lineGapOuter;
     return {
       x1: cx + innerDist * Math.cos(c.angle),
       y1: cy + innerDist * Math.sin(c.angle),
@@ -69,7 +64,6 @@ export default function SymposiaLogo({ size = 80, className = '' }) {
     };
   });
   
-  // Unique ID for this instance's filter
   const filterId = `logo-shadow-${Math.random().toString(36).substr(2, 9)}`;
   
   return (
@@ -90,10 +84,8 @@ export default function SymposiaLogo({ size = 80, className = '' }) {
       </defs>
       
       <g filter={`url(#${filterId})`}>
-        {/* Central hexagon */}
         <path d={hexPath} fill="currentColor" />
         
-        {/* Radial connecting lines */}
         {lines.map((line, i) => (
           <line
             key={`line-${i}`}
@@ -102,24 +94,22 @@ export default function SymposiaLogo({ size = 80, className = '' }) {
             x2={line.x2}
             y2={line.y2}
             stroke="currentColor"
-            strokeWidth="2.5"
+            strokeWidth={strokeWidth}
             strokeLinecap="round"
           />
         ))}
         
-        {/* Solid arcs between circles (with gaps at the dots) */}
         {arcs.map((arc, i) => (
           <path
             key={`arc-${i}`}
-            d={`M ${arc.x1} ${arc.y1} A ${orbitRadius} ${orbitRadius} 0 ${arc.large} 1 ${arc.x2} ${arc.y2}`}
+            d={`M ${arc.x1} ${arc.y1} A ${orbitRadius} ${orbitRadius} 0 0 1 ${arc.x2} ${arc.y2}`}
             stroke="currentColor"
-            strokeWidth="2.5"
+            strokeWidth={strokeWidth}
             strokeLinecap="round"
             fill="none"
           />
         ))}
         
-        {/* Outer circles */}
         {circles.map((c, i) => (
           <circle
             key={`circle-${i}`}
