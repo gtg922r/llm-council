@@ -77,8 +77,10 @@ export default function Sidebar({
         <div className="sidebar-header">
           <div className="sidebar-header-top">
             <UserMenu />
-            <SymposiaLogo size={24} className="sidebar-logo" />
-            <h1>Symposia</h1>
+            <div className="sidebar-brand">
+              <SymposiaLogo size={22} className="sidebar-logo" />
+              <h1>Symposia</h1>
+            </div>
           <div className="sidebar-settings" ref={settingsRef}>
             <button
               type="button"
