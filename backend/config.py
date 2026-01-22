@@ -53,3 +53,7 @@ DATA_DIR = "data/conversations"
 # Environment detection
 IS_CODESPACE = os.getenv("CODESPACES") == "true"
 DEBUG_MODE = os.getenv("DEBUG") == "true"
+
+# Dev auth mode - allows bypassing Firebase auth for local development/testing
+# NEVER enable this in production!
+DEV_AUTH = os.getenv("DEV_AUTH") == "true"

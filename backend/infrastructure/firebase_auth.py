@@ -9,8 +9,16 @@ from firebase_admin import auth, credentials
 from fastapi import HTTPException, Request, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
+from ..config import DEV_AUTH
+
 # Security scheme for OpenAPI docs
 security = HTTPBearer(auto_error=False)
+
+# Dev auth constants
+DEV_USER_UID = "dev-user-12345"
+DEV_USER_EMAIL = "dev@symposia.local"
+DEV_USER_NAME = "Dev User"
+DEV_AUTH_TOKEN = "dev-token-symposia"
 
 
 @lru_cache()
@@ -107,6 +115,15 @@ async def get_current_user(
         )
     
     token = credentials.credentials
+    
+    # Dev auth bypass - only available when DEV_AUTH=true
+    if DEV_AUTH and token == DEV_AUTH_TOKEN:
+        return AuthenticatedUser(
+            uid=DEV_USER_UID,
+            email=DEV_USER_EMAIL,
+            name=DEV_USER_NAME
+        )
+    
     decoded = verify_token(token)
     
     return AuthenticatedUser(

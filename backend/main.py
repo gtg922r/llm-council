@@ -113,6 +113,28 @@ async def health_check():
     return {"status": "ok", "service": "Symposia API"}
 
 
+@app.get("/api/auth/dev-info")
+async def dev_auth_info():
+    """Return dev auth configuration (unauthenticated).
+    
+    Returns whether dev auth is enabled and the token to use.
+    Only returns sensitive info when DEV_AUTH is enabled.
+    """
+    from .infrastructure.firebase_auth import DEV_AUTH_TOKEN, DEV_USER_UID, DEV_USER_EMAIL, DEV_USER_NAME
+    
+    if config.DEV_AUTH:
+        return {
+            "dev_auth_enabled": True,
+            "token": DEV_AUTH_TOKEN,
+            "user": {
+                "uid": DEV_USER_UID,
+                "email": DEV_USER_EMAIL,
+                "displayName": DEV_USER_NAME
+            }
+        }
+    return {"dev_auth_enabled": False}
+
+
 @app.get("/api/conversations", response_model=List[ConversationMetadata])
 async def list_conversations(user: AuthenticatedUser = Depends(get_current_user)):
     """List all conversations for the authenticated user."""

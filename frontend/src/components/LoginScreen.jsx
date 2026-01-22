@@ -7,8 +7,9 @@ import SymposiaLogo from '../assets/SymposiaLogo';
 import './LoginScreen.css';
 
 export default function LoginScreen() {
-  const { signInWithGoogle, authState, error } = useAuth();
+  const { signInWithGoogle, signInWithDevAuth, authState, error, devAuthAvailable } = useAuth();
   const [isSigningIn, setIsSigningIn] = useState(false);
+  const [isDevSigningIn, setIsDevSigningIn] = useState(false);
 
   const handleSignIn = async () => {
     setIsSigningIn(true);
@@ -18,6 +19,17 @@ export default function LoginScreen() {
       // Error is already handled in context
     } finally {
       setIsSigningIn(false);
+    }
+  };
+
+  const handleDevSignIn = async () => {
+    setIsDevSigningIn(true);
+    try {
+      await signInWithDevAuth();
+    } catch (err) {
+      // Error is already handled in context
+    } finally {
+      setIsDevSigningIn(false);
     }
   };
 
@@ -63,6 +75,19 @@ export default function LoginScreen() {
                 </svg>
                 {isSigningIn ? 'Signing in...' : 'Sign in with Google'}
               </button>
+
+              {devAuthAvailable && (
+                <button
+                  className="login-button dev"
+                  onClick={handleDevSignIn}
+                  disabled={isDevSigningIn}
+                >
+                  <svg className="dev-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M16 18l6-6-6-6M8 6l-6 6 6 6" />
+                  </svg>
+                  {isDevSigningIn ? 'Signing in...' : 'Dev Login'}
+                </button>
+              )}
 
               {error && (
                 <div className="login-error">

@@ -1,7 +1,13 @@
 /**
  * Authentication context providing Firebase auth state to the app.
+ * 
+ * Supports two modes:
+ * 1. Firebase auth (production) - Uses Firebase Google Sign-In
+ * 2. Dev auth (development) - Uses a static token for easy testing
+ * 
+ * Dev auth is only available when the backend has DEV_AUTH=true.
  */
-import { createContext, useContext, useEffect, useState, useMemo } from 'react';
+import { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react';
 import { 
   onAuthStateChanged, 
   signInWithPopup, 
@@ -21,6 +27,9 @@ export const AuthState = {
   ERROR: 'error'
 };
 
+// Storage key for dev auth session
+const DEV_AUTH_STORAGE_KEY = 'symposia_dev_auth';
+
 /**
  * Provider component that wraps the app and provides auth state.
  */
@@ -28,8 +37,52 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [authState, setAuthState] = useState(AuthState.LOADING);
   const [error, setError] = useState(null);
+  
+  // Dev auth state
+  const [devAuthAvailable, setDevAuthAvailable] = useState(false);
+  const [devAuthInfo, setDevAuthInfo] = useState(null);
+  const [isDevAuth, setIsDevAuth] = useState(false);
+
+  // Check for dev auth availability on mount
+  useEffect(() => {
+    const checkDevAuth = async () => {
+      try {
+        const response = await fetch('/api/auth/dev-info');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.dev_auth_enabled) {
+            setDevAuthAvailable(true);
+            setDevAuthInfo(data);
+            
+            // Check if we have a stored dev auth session
+            const storedDevAuth = sessionStorage.getItem(DEV_AUTH_STORAGE_KEY);
+            if (storedDevAuth === 'true') {
+              // Restore dev auth session
+              setUser({
+                uid: data.user.uid,
+                email: data.user.email,
+                displayName: data.user.displayName,
+                photoURL: null
+              });
+              setIsDevAuth(true);
+              setAuthState(AuthState.AUTHENTICATED);
+              return; // Skip Firebase auth listener setup
+            }
+          }
+        }
+      } catch (err) {
+        // Dev auth not available, continue with Firebase
+        console.debug('Dev auth not available:', err.message);
+      }
+    };
+    
+    checkDevAuth();
+  }, []);
 
   useEffect(() => {
+    // Skip Firebase listener if using dev auth
+    if (isDevAuth) return;
+    
     const unsubscribe = onAuthStateChanged(
       auth,
       (firebaseUser) => {
@@ -43,8 +96,11 @@ export function AuthProvider({ children }) {
           setAuthState(AuthState.AUTHENTICATED);
           setError(null);
         } else {
-          setUser(null);
-          setAuthState(AuthState.UNAUTHENTICATED);
+          // Only set unauthenticated if not using dev auth
+          if (!isDevAuth) {
+            setUser(null);
+            setAuthState(AuthState.UNAUTHENTICATED);
+          }
         }
       },
       (err) => {
@@ -55,7 +111,7 @@ export function AuthProvider({ children }) {
     );
 
     return () => unsubscribe();
-  }, []);
+  }, [isDevAuth]);
 
   /**
    * Sign in with Google popup.
@@ -78,12 +134,48 @@ export function AuthProvider({ children }) {
   };
 
   /**
+   * Sign in with dev auth (only available when DEV_AUTH=true on backend).
+   * @returns {Promise<void>}
+   */
+  const signInWithDevAuth = useCallback(async () => {
+    if (!devAuthAvailable || !devAuthInfo) {
+      setError('Dev auth is not available');
+      return;
+    }
+    
+    try {
+      setError(null);
+      setUser({
+        uid: devAuthInfo.user.uid,
+        email: devAuthInfo.user.email,
+        displayName: devAuthInfo.user.displayName,
+        photoURL: null
+      });
+      setIsDevAuth(true);
+      setAuthState(AuthState.AUTHENTICATED);
+      sessionStorage.setItem(DEV_AUTH_STORAGE_KEY, 'true');
+    } catch (err) {
+      console.error('Dev sign in error:', err);
+      setError(err.message);
+      throw err;
+    }
+  }, [devAuthAvailable, devAuthInfo]);
+
+  /**
    * Sign out the current user.
    * @returns {Promise<void>}
    */
   const signOut = async () => {
     try {
-      await firebaseSignOut(auth);
+      if (isDevAuth) {
+        // Clear dev auth session
+        setUser(null);
+        setIsDevAuth(false);
+        setAuthState(AuthState.UNAUTHENTICATED);
+        sessionStorage.removeItem(DEV_AUTH_STORAGE_KEY);
+      } else {
+        await firebaseSignOut(auth);
+      }
     } catch (err) {
       console.error('Sign out error:', err);
       setError(err.message);
@@ -96,6 +188,11 @@ export function AuthProvider({ children }) {
    * @returns {Promise<string|null>}
    */
   const getIdToken = async () => {
+    // Return dev token if using dev auth
+    if (isDevAuth && devAuthInfo) {
+      return devAuthInfo.token;
+    }
+    
     const currentUser = auth.currentUser;
     if (!currentUser) return null;
     try {
@@ -111,11 +208,15 @@ export function AuthProvider({ children }) {
     authState,
     error,
     signInWithGoogle,
+    signInWithDevAuth,
     signOut,
     getIdToken,
     isAuthenticated: authState === AuthState.AUTHENTICATED,
-    isLoading: authState === AuthState.LOADING
-  }), [user, authState, error]);
+    isLoading: authState === AuthState.LOADING,
+    // Dev auth specific
+    devAuthAvailable,
+    isDevAuth
+  }), [user, authState, error, signInWithDevAuth, devAuthAvailable, isDevAuth]);
 
   return (
     <AuthContext.Provider value={value}>
