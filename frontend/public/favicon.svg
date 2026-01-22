@@ -1,0 +1,41 @@
+<svg width="32" height="32" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#5B6CC9" />
+      <stop offset="100%" stop-color="#4a5ab8" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Central hexagon -->
+  <path d="M 50 32 L 65.59 41 L 65.59 59 L 50 68 L 34.41 59 L 34.41 41 Z" fill="url(#logoGradient)" />
+  
+  <!-- Radial connecting lines -->
+  <line x1="50" y1="29.5" x2="50" y2="18" stroke="url(#logoGradient)" stroke-width="2.25" stroke-linecap="round" />
+  <line x1="64.14" y1="37.67" x2="72.73" y2="32.71" stroke="url(#logoGradient)" stroke-width="2.25" stroke-linecap="round" />
+  <line x1="64.14" y1="62.33" x2="72.73" y2="67.29" stroke="url(#logoGradient)" stroke-width="2.25" stroke-linecap="round" />
+  <line x1="50" y1="70.5" x2="50" y2="82" stroke="url(#logoGradient)" stroke-width="2.25" stroke-linecap="round" />
+  <line x1="35.86" y1="62.33" x2="27.27" y2="67.29" stroke="url(#logoGradient)" stroke-width="2.25" stroke-linecap="round" />
+  <line x1="35.86" y1="37.67" x2="27.27" y2="32.71" stroke="url(#logoGradient)" stroke-width="2.25" stroke-linecap="round" />
+  <line x1="29.5" y1="50" x2="18" y2="50" stroke="url(#logoGradient)" stroke-width="2.25" stroke-linecap="round" />
+  <line x1="70.5" y1="50" x2="82" y2="50" stroke="url(#logoGradient)" stroke-width="2.25" stroke-linecap="round" />
+  
+  <!-- Arcs between circles -->
+  <path d="M 52.95 9.22 A 36 36 0 0 1 72.87 17.13" stroke="url(#logoGradient)" stroke-width="2.25" stroke-linecap="round" fill="none" />
+  <path d="M 79.78 22.95 A 36 36 0 0 1 87.69 42.87" stroke="url(#logoGradient)" stroke-width="2.25" stroke-linecap="round" fill="none" />
+  <path d="M 87.69 57.13 A 36 36 0 0 1 79.78 77.05" stroke="url(#logoGradient)" stroke-width="2.25" stroke-linecap="round" fill="none" />
+  <path d="M 72.87 82.87 A 36 36 0 0 1 52.95 90.78" stroke="url(#logoGradient)" stroke-width="2.25" stroke-linecap="round" fill="none" />
+  <path d="M 47.05 90.78 A 36 36 0 0 1 27.13 82.87" stroke="url(#logoGradient)" stroke-width="2.25" stroke-linecap="round" fill="none" />
+  <path d="M 20.22 77.05 A 36 36 0 0 1 12.31 57.13" stroke="url(#logoGradient)" stroke-width="2.25" stroke-linecap="round" fill="none" />
+  <path d="M 12.31 42.87 A 36 36 0 0 1 20.22 22.95" stroke="url(#logoGradient)" stroke-width="2.25" stroke-linecap="round" fill="none" />
+  <path d="M 27.13 17.13 A 36 36 0 0 1 47.05 9.22" stroke="url(#logoGradient)" stroke-width="2.25" stroke-linecap="round" fill="none" />
+  
+  <!-- Outer circles -->
+  <circle cx="50" cy="14" r="5.5" fill="url(#logoGradient)" />
+  <circle cx="75.46" cy="25.46" r="5.5" fill="url(#logoGradient)" />
+  <circle cx="86" cy="50" r="5.5" fill="url(#logoGradient)" />
+  <circle cx="75.46" cy="74.54" r="5.5" fill="url(#logoGradient)" />
+  <circle cx="50" cy="86" r="5.5" fill="url(#logoGradient)" />
+  <circle cx="24.54" cy="74.54" r="5.5" fill="url(#logoGradient)" />
+  <circle cx="14" cy="50" r="5.5" fill="url(#logoGradient)" />
+  <circle cx="24.54" cy="25.46" r="5.5" fill="url(#logoGradient)" />
+</svg>
