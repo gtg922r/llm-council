@@ -383,10 +383,10 @@ if FRONTEND_DIR.exists():
     # Serve static assets (JS, CSS, etc.)
     app.mount("/assets", StaticFiles(directory=FRONTEND_DIR / "assets"), name="static")
     
-    # Serve other static files like vite.svg
-    @app.get("/vite.svg")
-    async def serve_vite_svg():
-        return FileResponse(FRONTEND_DIR / "vite.svg")
+    # Serve favicon
+    @app.get("/favicon.svg")
+    async def serve_favicon():
+        return FileResponse(FRONTEND_DIR / "favicon.svg")
     
     # Catch-all route for SPA - must be last
     @app.get("/{full_path:path}")
