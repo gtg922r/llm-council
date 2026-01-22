@@ -7,7 +7,7 @@ export default function SymposiaLogo({ size = 80, color = 'currentColor', classN
   const hexRadius = 18; // radius of hexagon
   const circleRadius = 6; // radius of outer circles
   const orbitRadius = 34; // distance from center to outer circles
-  const numCircles = 7;
+  const numCircles = 8;
   
   // Generate hexagon points (flat-top orientation)
   const hexPoints = [];
