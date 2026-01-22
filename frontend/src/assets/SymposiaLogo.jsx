@@ -33,7 +33,7 @@ export default function SymposiaLogo({ size = 80, color = 'currentColor', classN
     });
   }
   
-  // Generate arc segments between adjacent circles (dashed)
+  // Generate arc segments between adjacent circles (solid with gaps at circles)
   const arcs = [];
   for (let i = 0; i < numCircles; i++) {
     const c1 = circles[i];
@@ -43,8 +43,8 @@ export default function SymposiaLogo({ size = 80, color = 'currentColor', classN
     const angle1 = c1.angle;
     const angle2 = c2.angle + (i === numCircles - 1 ? 2 * Math.PI : 0);
     
-    // Shorten arcs so they don't overlap with circles
-    const gap = circleRadius / orbitRadius + 0.08;
+    // Shorten arcs so they don't overlap with circles (gap for the circle radius)
+    const gap = (circleRadius + 2) / orbitRadius;
     const a1 = angle1 + gap;
     const a2 = angle2 - gap;
     
@@ -96,7 +96,7 @@ export default function SymposiaLogo({ size = 80, color = 'currentColor', classN
         />
       ))}
       
-      {/* Dashed arcs between circles */}
+      {/* Solid arcs between circles (with gaps at the dots) */}
       {arcs.map((arc, i) => (
         <path
           key={`arc-${i}`}
@@ -104,7 +104,6 @@ export default function SymposiaLogo({ size = 80, color = 'currentColor', classN
           stroke={color}
           strokeWidth="2.5"
           strokeLinecap="round"
-          strokeDasharray="5 4"
           fill="none"
         />
       ))}
