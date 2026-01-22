@@ -172,7 +172,7 @@
     <h1>Symposia Logo Playground</h1>
     
     <div class="preview" id="preview">
-      <img src="original-icon.png" class="overlay-icon" alt="Original icon" />
+      <img id="overlayImg" class="overlay-icon" alt="Overlay icon" />
       <svg id="logo" width="150" height="150" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
       </svg>
     </div>
@@ -181,7 +181,12 @@
       <div class="theme-toggle">
         <button id="lightBtn" class="active" onclick="setTheme('light')">Light Mode</button>
         <button id="darkBtn" onclick="setTheme('dark')">Dark Mode</button>
-        <button id="overlayBtn" onclick="toggleOverlay()">Show Overlay</button>
+        <button id="overlayBtn" onclick="toggleOverlay()" disabled>Show Overlay</button>
+      </div>
+      
+      <div class="control-group">
+        <label>Upload Overlay Image</label>
+        <input type="file" id="overlayUpload" accept="image/*" onchange="handleOverlayUpload(event)" style="width:100%" />
       </div>
       
       <div class="control-group">
@@ -253,6 +258,19 @@
       document.getElementById('preview').classList.toggle('show-overlay', showOverlay);
       document.getElementById('overlayBtn').classList.toggle('active', showOverlay);
       document.getElementById('overlayBtn').textContent = showOverlay ? 'Hide Overlay' : 'Show Overlay';
+    }
+    
+    function handleOverlayUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = document.getElementById('overlayImg');
+        img.src = e.target.result;
+        document.getElementById('overlayBtn').disabled = false;
+      };
+      reader.readAsDataURL(file);
     }
     
     function updateOverlaySize() {
