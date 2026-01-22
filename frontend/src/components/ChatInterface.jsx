@@ -20,6 +20,7 @@ import FollowUpInput from './FollowUpInput';
 import ChatInput from './ChatInput';
 
 import './ChatInterface.css';
+import SymposiaLogo from '../assets/SymposiaLogo';
 
 export default function ChatInterface({
   conversation,
@@ -137,6 +138,7 @@ export default function ChatInterface({
           </div>
         )}
         <div className="empty-state">
+          <SymposiaLogo size={80} className="empty-state-logo" />
           <h2>Welcome to Symposia</h2>
           <p>Create a new conversation to get started</p>
           
@@ -237,6 +239,7 @@ export default function ChatInterface({
       <div className="messages-container">
         {messages.length === 0 ? (
           <div className="empty-state">
+            <SymposiaLogo size={80} className="empty-state-logo" />
             <h2>Start a conversation</h2>
             <p>Ask a question to consult the AI Council</p>
           </div>

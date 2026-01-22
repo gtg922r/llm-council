@@ -3,6 +3,7 @@
  */
 import { useState } from 'react';
 import { useAuth, AuthState } from '../context/AuthContext';
+import SymposiaLogo from '../assets/SymposiaLogo';
 import './LoginScreen.css';
 
 export default function LoginScreen() {
@@ -24,6 +25,7 @@ export default function LoginScreen() {
     <div className="login-screen">
       <div className="login-container">
         <div className="login-header">
+          <SymposiaLogo size={100} className="login-logo" />
           <h1 className="login-title">Symposia</h1>
           <p className="login-subtitle">Collaborative AI Deliberation</p>
         </div>

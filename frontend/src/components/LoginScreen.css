@@ -21,6 +21,11 @@
   margin-bottom: 2rem;
 }
 
+.login-logo {
+  color: var(--color-primary, #5B6CC9);
+  margin-bottom: 1rem;
+}
+
 .login-title {
   font-size: 2rem;
   font-weight: 700;
