@@ -214,6 +214,24 @@ In production, the FastAPI backend serves both:
 ```
 This runs backend on port 8001 and Vite dev server on port 5173 with hot reload.
 
+### Dev Auth Mode
+`start.sh` automatically sets `DEV_AUTH=true` which enables:
+- A **Dev Login** button on the login screen (green, with `<>` icon)
+- Static auth token `dev-token-symposia` accepted by backend
+- No Firebase/Google sign-in required for testing
+
+To manually enable dev auth:
+```bash
+DEV_AUTH=true uv run python -m backend.main
+```
+
+Dev auth creates a user with:
+- UID: `dev-user-12345`
+- Email: `dev@symposia.local`
+- Name: `Dev User`
+
+**Security**: Dev auth is NEVER enabled in production (the systemd service doesn't set `DEV_AUTH`).
+
 ### Running Tests
 ```bash
 source .venv/bin/activate
