@@ -12,6 +12,7 @@ import {
 import ThemeToggle from './ThemeToggle';
 import ModelModeToggle from './ModelModeToggle';
 import UserMenu from './UserMenu';
+import SymposiaLogo from '../assets/SymposiaLogo';
 import './Sidebar.css';
 
 export default function Sidebar({
@@ -76,6 +77,7 @@ export default function Sidebar({
         <div className="sidebar-header">
           <div className="sidebar-header-top">
             <UserMenu />
+            <SymposiaLogo size={24} className="sidebar-logo" />
             <h1>Symposia</h1>
           <div className="sidebar-settings" ref={settingsRef}>
             <button
