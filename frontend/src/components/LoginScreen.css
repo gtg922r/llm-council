@@ -22,8 +22,12 @@
 }
 
 .login-logo {
-  color: var(--color-primary, #5B6CC9);
+  --logo-color: #333;
   margin-bottom: 1rem;
+}
+
+[data-theme="dark"] .login-logo {
+  --logo-color: #fff;
 }
 
 .login-title {

@@ -136,9 +136,12 @@
 }
 
 .empty-state-logo {
-  color: var(--color-primary, #5B6CC9);
+  --logo-color: #333;
   margin-bottom: 16px;
-  opacity: 0.85;
+}
+
+[data-theme="dark"] .empty-state-logo {
+  --logo-color: #fff;
 }
 
 .empty-state h2 {
