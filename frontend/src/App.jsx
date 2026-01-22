@@ -664,9 +664,12 @@ function AppContent() {
         />
         <ChatInterface
           conversation={currentConversation}
+          conversations={conversations}
           onSendMessage={handleSendMessage}
           onHeaderAction={handleHeaderAction}
           onUpdateTitle={handleUpdateTitle}
+          onNewConversation={handleNewConversation}
+          onSelectConversation={handleSelectConversation}
           isLoading={isLoading}
           isMobile={isMobile}
           onMenuClick={() => setIsSidebarOpen(true)}
