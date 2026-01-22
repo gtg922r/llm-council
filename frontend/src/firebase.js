@@ -1,17 +1,20 @@
 /**
  * Firebase configuration and initialization.
+ * 
+ * Firebase Web API keys are designed to be public (restricted by Security Rules
+ * and domain restrictions), but we use env vars for cleanliness and easy rotation.
  */
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 import { getFirestore, initializeFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
-  projectId: "pyronic-apps",
-  appId: "1:427543310857:web:702ae82ac6b7604e537ed8",
-  storageBucket: "pyronic-apps.firebasestorage.app",
-  apiKey: "AIzaSyCf53RsceJN1gwlfQ6pvzylAyKBySvPs7c",
-  authDomain: "pyronic-apps.firebaseapp.com",
-  messagingSenderId: "427543310857"
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID
 };
 
 // Initialize Firebase
