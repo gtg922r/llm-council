@@ -29,8 +29,9 @@
 }
 
 .sidebar-logo {
-  --logo-color: var(--color-text, #333);
+  --logo-color: var(--color-muted, #999);
   flex-shrink: 0;
+  opacity: 0.5;
 }
 
 .sidebar-header h1 {
