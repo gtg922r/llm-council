@@ -5,7 +5,14 @@
  * and domain restrictions), but we use env vars for cleanliness and easy rotation.
  */
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider } from 'firebase/auth';
+import { 
+  initializeAuth,
+  browserLocalPersistence,
+  browserSessionPersistence,
+  indexedDBLocalPersistence,
+  inMemoryPersistence,
+  GoogleAuthProvider 
+} from 'firebase/auth';
 import { getFirestore, initializeFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
@@ -21,7 +28,16 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 
 // Initialize services
-export const auth = getAuth(app);
+// Initialize auth with explicit persistence fallback chain
+// This prevents "No available storage method found" errors in restrictive environments
+export const auth = initializeAuth(app, {
+  persistence: [
+    indexedDBLocalPersistence,
+    browserLocalPersistence,
+    browserSessionPersistence,
+    inMemoryPersistence
+  ]
+});
 // Use the 'symposia' database instead of default
 export const db = initializeFirestore(app, {}, 'symposia');
 export const googleProvider = new GoogleAuthProvider();
