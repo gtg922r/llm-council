@@ -40,6 +40,7 @@ export default function ChatInterface({
   const [stagedFiles, setStagedFiles] = useState([]);
   const messagesEndRef = useRef(null);
   const menuRef = useRef(null);
+  const shouldScrollOnUpdateRef = useRef(false);
 
   useEffect(() => {
     // Reset manual input state when loading starts
@@ -47,6 +48,11 @@ export default function ChatInterface({
       setIsInputManual(false);
     }
   }, [isLoading]);
+
+  // Reset scroll behavior when switching conversations
+  useEffect(() => {
+    shouldScrollOnUpdateRef.current = false;
+  }, [conversation?.id]);
 
   const handleFilesDropped = (files) => {
     const MAX_SIZE = 1024 * 1024; // 1MB
@@ -98,12 +104,16 @@ export default function ChatInterface({
   };
 
   useEffect(() => {
-    scrollToBottom();
+    // Only scroll to bottom when user sends a message, not when loading a conversation
+    if (shouldScrollOnUpdateRef.current) {
+      scrollToBottom();
+    }
   }, [conversation]);
 
   const handleSendMessage = useCallback(async (content) => {
     // We pass the raw content and the files separately.
     // The concatenation for the LLM prompt will happen in the API handler.
+    shouldScrollOnUpdateRef.current = true; // Enable scroll-to-bottom for new messages
     onSendMessage(content, inputMode === 'chairman' ? 'chairman' : undefined, stagedFiles);
     
     setIsInputManual(false);
